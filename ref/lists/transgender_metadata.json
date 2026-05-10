@@ -1,0 +1,23 @@
+{
+  "fetched_at": "2026-05-10T06:09:07Z",
+  "tool_version": "0.1.0",
+  "list_id": "2050761003680641113",
+  "list_name": "transgender",
+  "total_users": 341,
+  "request_count": 4,
+  "user_fields_requested": "created_at,description,location,profile_image_url,public_metrics,verified",
+  "rate_limit_remaining": "886",
+  "rate_limit_reset": "1778394132",
+  "cli_args": {
+    "list_id_or_url": "x.com/i/lists/2050761003680641113",
+    "output_dir": ".",
+    "name": "transgender",
+    "fields": "created_at,description,location,profile_image_url,public_metrics,verified",
+    "max_results": 100,
+    "delay": 0.5,
+    "no_txt": false,
+    "no_json": false,
+    "no_csv": false,
+    "quiet": false
+  }
+}
