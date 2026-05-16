@@ -18,7 +18,7 @@
 
 于我个人而言，萌生这个想法是因为在X 上刷到的一个推文：
 
-> ![推文截图](assets\illustration\docs\README\Cld.png)
+> ![推文截图](assets/illustration/docs/README/Cld.png)
 
 > [X 上的 ☁️Cld🏳️‍⚧️🍥：“从fo中抽取了64张带跨旗的头像出来！组成了这样的大画面！ 我们跨性别是温暖的团体哦！](https://x.com/wtxycCO/status/1905998653095035205)
 
