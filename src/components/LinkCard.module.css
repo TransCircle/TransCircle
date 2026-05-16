@@ -1,0 +1,41 @@
+.heading {
+  color: var(--accent-pink);
+  font-size: 1.4em;
+  margin-top: 25px;
+  display: flex;
+  align-items: center;
+}
+
+.heading::before {
+  content: "🌸";
+  margin-right: 10px;
+  font-size: 0.8em;
+}
+
+.textLink {
+  color: var(--accent-pink);
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.textLink:hover {
+  color: var(--primary-pink);
+  text-decoration: underline;
+}
+
+.buttonLink {
+  display: inline-block;
+  background-color: var(--primary-pink);
+  color: white !important;
+  padding: 10px 20px;
+  border-radius: 50px;
+  margin-top: 10px;
+  text-decoration: none !important;
+  box-shadow: 0 4px 10px rgba(255, 133, 162, 0.3);
+}
+
+.buttonLink:hover {
+  background-color: var(--accent-pink);
+  transform: translateY(-2px);
+}

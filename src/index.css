@@ -1,0 +1,25 @@
+:root {
+  --primary-pink: #ff85a2;
+  --soft-pink: #ffccd5;
+  --bg-pink: #fff0f3;
+  --text-color: #5d4037;
+  --accent-pink: #f06292;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-pink);
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: var(--text-color);
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  line-height: 1.6;
+}
