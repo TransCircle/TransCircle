@@ -61,9 +61,15 @@ const App: React.FC = () => {
               />
 
               <LinkCard
-                title="联系"
-                url="https://x.com/nyaepheia"
-                label="Epheia"
+                title="X (Twitter)"
+                url="https://x.com/TransCircleOrg"
+                label="@TransCircleOrg"
+              />
+
+              <LinkCard
+                title="Bluesky"
+                url="https://bsky.app/profile/TransCircle.org"
+                label="TransCircle.org"
               />
             </div>
           </section>
