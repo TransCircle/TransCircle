@@ -1,0 +1,8 @@
+.title {
+  color: var(--primary-pink);
+  text-align: center;
+  font-size: 2.2em;
+  margin-bottom: 30px;
+  border-bottom: 2px dashed var(--soft-pink);
+  padding-bottom: 15px;
+}

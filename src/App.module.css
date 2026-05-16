@@ -1,0 +1,10 @@
+.container {
+  background-color: white;
+  max-width: 600px;
+  width: 90%;
+  padding: 40px;
+  border-radius: 30px;
+  box-shadow: 0 10px 25px rgba(255, 133, 162, 0.2);
+  border: 4px solid var(--soft-pink);
+  margin: 20px;
+}
