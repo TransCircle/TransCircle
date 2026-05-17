@@ -6,211 +6,17 @@
   flex-direction: column;
 }
 
-.layoutContainer {
-  display: flex;
-  flex: 1;
-  max-width: 1400px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-/* ── Mobile nav label (inside hamburger menu) ─── */
-
-/* ── Fixed open-tab (desktop only) ───────────── */
-
-.sidebarOpenBtn {
-  display: none;
-  position: fixed;
-  top: 3.6rem;
-  left: 0;
-  z-index: 200;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 32px;
-  background: var(--bg-color);
-  border: 1px solid var(--divider-color);
-  border-left: none;
-  border-radius: 0 6px 6px 0;
-  cursor: pointer;
-  color: var(--text-muted);
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
-  padding: 0;
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
-  transform: translateX(-100%);
-  /* no delay when hiding — disappears immediately as sidebar opens */
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0.15s;
-}
-
-.sidebarOpenBtnVisible {
-  opacity: 1;
-  pointer-events: auto;
-  visibility: visible;
-  transform: translateX(0);
-  /* appears after sidebar width finishes collapsing */
-  transition: opacity 0.18s ease 0.32s, transform 0.18s ease 0.32s, visibility 0s linear 0.32s;
-}
-
-.sidebarOpenBtn:hover {
-  background-color: #ffedf1;
-  color: var(--primary-pink);
-}
-
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .sidebarOpenBtn:hover {
-    background-color: color-mix(in srgb, var(--primary-pink) 15%, white);
-  }
-}
-
-@media (min-width: 769px) {
-  .sidebarOpenBtn {
-    display: flex;
-  }
-}
-
-/* ── Sidebar shell ────────────────────────────── */
-
-.sidebar {
-  flex: 0 0 180px;
-  overflow: hidden;
-  visibility: visible;
-  /* applied when expanding (sidebarCollapsed removed) */
-  transition:
-    flex-basis 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    visibility 0s linear 0s;
-}
-
-@supports (overflow: clip) {
-  .sidebar { overflow: clip; }
-}
-
-.sidebarCollapsed {
-  flex-basis: 0;
-  visibility: hidden;
-  /* applied when collapsing: width shrinks after content fades */
-  transition:
-    flex-basis 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.12s,
-    visibility 0s linear 0.42s;
-}
-
-/* ── Sidebar inner (sticky, fixed width) ──────── */
-
-.sidebarInner {
-  width: 180px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  opacity: 1;
-  /* applied when expanding: content fades in after width opens */
-  transition: opacity 0.2s ease 0.18s;
-}
-
-.sidebarInnerCollapsed {
-  opacity: 0;
-  /* applied when collapsing: content fades out first, before width shrinks */
-  transition: opacity 0.12s ease;
-}
-
-/* ── Sidebar header ───────────────────────────── */
-
-.sidebarHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.2rem 0.5rem 0.5rem 0.9rem;
-}
-
-.sidebarLabel {
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  user-select: none;
-}
-
-.sidebarCloseBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: var(--text-muted);
-  border-radius: 5px;
-  padding: 0;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.sidebarCloseBtn:hover {
-  background-color: #ffedf1;
-  color: var(--primary-pink);
-}
-
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .sidebarCloseBtn:hover {
-    background-color: color-mix(in srgb, var(--primary-pink) 15%, white);
-  }
-}
-
-/* ── Sidebar nav links ────────────────────────── */
-
-.sidebarNav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  padding: 0.2rem 0.5rem 1rem 0.5rem;
-}
-
-.sidebarLink {
-  display: block;
-  text-decoration: none;
-  font-size: 0.86rem;
-  color: var(--text-secondary);
-  padding: 0.4rem 0.65rem;
-  border-radius: 6px;
-  white-space: nowrap;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.sidebarLink:hover {
-  background-color: #ffedf1;
-  color: var(--primary-pink);
-}
-
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .sidebarLink:hover {
-    background-color: color-mix(in srgb, var(--primary-pink) 15%, white);
-  }
-}
-
-/* ── Vertical divider ─────────────────────────── */
-
-.verticalDivider {
-  width: 1px;
-  background-color: var(--divider-color);
-  align-self: stretch;
-  transition: opacity 0.2s ease;
-}
-
-.verticalDividerHidden {
-  opacity: 0;
-}
-
 /* ── Main content ─────────────────────────────── */
 
 .mainContent {
   flex: 1;
-  min-width: 0;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
   padding: 2.5rem 4rem;
   display: flex;
   flex-direction: column;
-  max-width: 820px;
+  box-sizing: border-box;
 }
 
 .contentHeader {
@@ -404,15 +210,6 @@
 /* ── Reduced motion ───────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  .sidebar,
-  .sidebarCollapsed,
-  .sidebarInner,
-  .sidebarInnerCollapsed,
-  .sidebarOpenBtn,
-  .sidebarOpenBtnVisible,
-  .sidebarCloseBtn,
-  .sidebarLink,
-  .verticalDivider,
   .ctaPrimary,
   .ctaSecondary,
   .socialLink {
@@ -423,14 +220,6 @@
 /* ── Responsive: tablet ───────────────────────── */
 
 @media (max-width: 1024px) {
-  .sidebar {
-    flex-basis: 160px;
-  }
-
-  .sidebarInner {
-    width: 160px;
-  }
-
   .mainContent {
     padding: 2rem 2.5rem;
   }
@@ -439,15 +228,6 @@
 /* ── Responsive: mobile ───────────────────────── */
 
 @media (max-width: 768px) {
-  .layoutContainer {
-    flex-direction: column;
-  }
-
-  .sidebar,
-  .verticalDivider {
-    display: none;
-  }
-
   .mainContent {
     padding: 1.5rem;
     max-width: 100%;
