@@ -68,12 +68,12 @@
 
 .navLinks li a:hover {
   color: var(--text-main);
-  background-color: #ffedf1;
+  background-color: var(--hover-bg);
 }
 
 @supports (background-color: color-mix(in srgb, red 15%, white)) {
   .navLinks li a:hover {
-    background-color: color-mix(in srgb, var(--primary-pink) 15%, white);
+    background-color: var(--hover-bg-mix);
   }
 }
 
@@ -165,7 +165,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--overlay-bg);
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
