@@ -79,7 +79,13 @@ body {
   margin: 0;
   padding: 0;
   color: var(--text-main);
-  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 仅在用户未偏好减少动画时启用主题切换过渡 */
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
 }
 
 :focus-visible {

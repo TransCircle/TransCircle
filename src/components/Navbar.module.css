@@ -107,6 +107,10 @@
     padding: 1rem 1.5rem;
   }
 
+  .rightSection {
+    display: none;
+  }
+
   .mobileDivider {
     display: block;
     height: 1px;
