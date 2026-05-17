@@ -16,6 +16,15 @@
   align-items: center;
 }
 
+.rightSection {
+  display: flex;
+  align-items: center;
+}
+
+.mobileThemeToggle {
+  display: none;
+}
+
 .leftSection {
   display: flex;
   align-items: center;
@@ -156,6 +165,21 @@
   .mobileOnly a:hover {
     background-color: var(--nav-bg);
     color: var(--primary-pink);
+  }
+
+  .mobileThemeToggle {
+    display: block;
+    padding: 0.8rem 2rem;
+  }
+
+  .mobileThemeLabel {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    user-select: none;
   }
 }
 
