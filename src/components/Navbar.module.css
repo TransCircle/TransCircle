@@ -1,6 +1,7 @@
 .navbar {
   width: 100%;
-  background-color: var(--nav-bg);
+  /* Fallback for browsers without backdrop-filter support (Safari < 9, older Android) */
+  background-color: var(--bg-color);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   padding: 0.75rem 3rem;
@@ -8,6 +9,13 @@
   top: 0;
   z-index: 1000;
   border-bottom: 1px solid var(--divider-color);
+}
+
+/* When backdrop-filter is supported, use the translucent nav background */
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+  .navbar {
+    background-color: var(--nav-bg);
+  }
 }
 
 .container {

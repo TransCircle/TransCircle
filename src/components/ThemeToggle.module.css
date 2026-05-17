@@ -43,7 +43,12 @@
   background-color: var(--accent-pink);
 }
 
-/* High contrast overrides */
+/*
+ * High contrast theme overrides.
+ * These colors are intentionally hardcoded (not CSS variables) to guarantee
+ * maximum contrast for color-vision-deficient users. WCAG 2.1 Level AAA
+ * requires contrast ratios ≥ 7:1; pure black/white/orange achieves this.
+ */
 [data-theme="contrast"] .toggleGroup {
   background-color: #000000;
   border-color: #ffffff;
