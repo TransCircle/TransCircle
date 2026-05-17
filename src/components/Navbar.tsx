@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type ReactNode } from "react";
+import ThemeToggle from "./ThemeToggle";
 import styles from "./Navbar.module.css";
 
 interface NavbarProps {
@@ -79,7 +80,15 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
                 ))}
               </>
             )}
+            <li className={styles.mobileDivider}></li>
+            <li className={`${styles.mobileOnly} ${styles.mobileThemeToggle}`}>
+              <div className={styles.mobileThemeLabel}>主题</div>
+              <ThemeToggle />
+            </li>
           </ul>
+          <div className={styles.rightSection}>
+            <ThemeToggle />
+          </div>
         </div>
       </nav>
       <div
