@@ -28,13 +28,6 @@
   letter-spacing: 0.05em;
 }
 
-.decor {
-  text-align: left;
-  font-size: 1.2em;
-  margin-top: 20px;
-  opacity: 0.8;
-}
-
 @media (max-width: 768px) {
   .footer {
     margin-top: 40px;
