@@ -9,6 +9,8 @@
   /* 主題色 */
   --primary-pink: #ff85a2;
   --soft-pink: #ffccd5;
+  --accent-pink: #f06292;
+  --bg-pink: #fff0f3;
   --nav-bg: rgba(255, 251, 252, 0.85);
   --divider-color: #ffccd5;
 }
@@ -25,5 +27,10 @@ body {
   margin: 0;
   padding: 0;
   color: var(--text-main);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
 }
 

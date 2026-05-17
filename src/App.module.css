@@ -1,3 +1,11 @@
+.appContainer {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  display: flex;
+  flex-direction: column;
+}
+
 .layoutContainer {
   display: flex;
   flex: 1;
@@ -86,14 +94,6 @@
   margin-bottom: 1rem;
 }
 
-.projectOrigin {
-  background-color: var(--nav-bg);
-  padding: 1rem;
-  border-radius: 8px;
-  margin: 1.5rem 0;
-  font-style: italic;
-}
-
 .emphasis {
   font-weight: 600;
   color: var(--text-main);
@@ -102,37 +102,22 @@
   margin: 2rem 0;
 }
 
-.projectComponents {
-  margin-top: 2.5rem;
-}
-
-.sectionTitle {
-  font-size: 1.3rem;
-  margin-bottom: 1.5rem;
-  color: var(--text-main);
-}
-
-.componentGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-}
-
-.componentItem h4 {
-  color: var(--primary-pink);
-  margin-bottom: 0.5rem;
-}
-
-.componentItem p {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
 .linksGrid {
   margin-top: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
+}
+
+@media (max-width: 1024px) {
+  .mainContent {
+    padding: 2.5rem;
+  }
+  
+  .sidebar {
+    flex: 0 0 200px;
+    padding: 2rem 1rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -149,7 +134,7 @@
   }
   
   .mainContent {
-    padding: 2rem;
+    padding: 1.5rem;
   }
 }
 
