@@ -46,9 +46,10 @@ const Navbar = ({ customMobileLinks }: NavbarProps) => {
         </div>
       </nav>
       {/* 遮罩层，用于移动端点击外部关闭菜单 */}
-      <div 
-        className={`${styles.overlay} ${isOpen ? styles.overlayActive : ''}`} 
+      <div
+        className={`${styles.overlay} ${isOpen ? styles.overlayActive : ''}`}
         onClick={closeMenu}
+        aria-hidden="true"
       ></div>
     </>
   );
