@@ -85,6 +85,17 @@
   display: none;
 }
 
+.mobileLinkLabel {
+  display: block;
+  padding: 0.55rem 2rem 0.1rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  user-select: none;
+}
+
 @media (max-width: 768px) {
   .navbar {
     padding: 1rem 1.5rem;
@@ -168,11 +179,21 @@
   background: rgba(0, 0, 0, 0.3);
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
   z-index: 999;
 }
 
 .overlayActive {
   opacity: 1;
   visibility: visible;
+  transition: opacity 0.3s ease, visibility 0s linear 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navLinks,
+  .bar,
+  .overlay,
+  .overlayActive {
+    transition: none;
+  }
 }

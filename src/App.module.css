@@ -16,17 +16,6 @@
 
 /* ── Mobile nav label (inside hamburger menu) ─── */
 
-.mobileNavLabel {
-  display: block;
-  padding: 0.55rem 2rem 0.1rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  user-select: none;
-}
-
 /* ── Fixed open-tab (desktop only) ───────────── */
 
 .sidebarOpenBtn {
@@ -49,17 +38,19 @@
   padding: 0;
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
   transform: translateX(-100%);
   /* no delay when hiding — disappears immediately as sidebar opens */
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0.15s;
 }
 
 .sidebarOpenBtnVisible {
   opacity: 1;
   pointer-events: auto;
+  visibility: visible;
   transform: translateX(0);
   /* appears after sidebar width finishes collapsing */
-  transition: opacity 0.18s ease 0.32s, transform 0.18s ease 0.32s;
+  transition: opacity 0.18s ease 0.32s, transform 0.18s ease 0.32s, visibility 0s linear 0.32s;
 }
 
 .sidebarOpenBtn:hover {
@@ -107,8 +98,6 @@
 /* ── Sidebar inner (sticky, fixed width) ──────── */
 
 .sidebarInner {
-  position: sticky;
-  top: 3.6rem;
   width: 180px;
   box-sizing: border-box;
   display: flex;

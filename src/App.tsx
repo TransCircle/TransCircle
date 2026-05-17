@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, type ReactNode } from "react";
 import Navbar from './components/Navbar';
 import LicenseFooter from './components/LicenseFooter';
 import styles from './App.module.css';
@@ -44,26 +44,24 @@ const App = () => {
   };
 
   const handleClose = () => {
+    closeBtnRef.current?.blur();
     setCollapsed(true);
-    setTimeout(() => openBtnRef.current?.focus(), 350);
+    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 350;
+    setTimeout(() => openBtnRef.current?.focus(), delay);
   };
 
-  const sidebarLinks = (close?: () => void) => (
-    <>
-      <a href="#about" className={styles.sidebarLink} onClick={close}>关于项目</a>
-      <a href="#join" className={styles.sidebarLink} onClick={close}>加入项目</a>
-      <a href="#follow" className={styles.sidebarLink} onClick={close}>关注我们</a>
-    </>
-  );
+  const sidebarLinks = (close?: () => void): ReactNode[] => [
+    <a key="about" href="#about" className={styles.sidebarLink} onClick={close}>关于项目</a>,
+    <a key="join" href="#join" className={styles.sidebarLink} onClick={close}>加入项目</a>,
+    <a key="follow" href="#follow" className={styles.sidebarLink} onClick={close}>关注我们</a>,
+  ];
 
   return (
     <div className={styles.appContainer}>
-      <Navbar customMobileLinks={(close) => (
-        <>
-          <span className={styles.mobileNavLabel}>目录</span>
-          {sidebarLinks(close)}
-        </>
-      )} />
+      <Navbar
+        customMobileLinkLabel="目录"
+        customMobileLinks={(close) => sidebarLinks(close)}
+      />
 
       <button
         ref={openBtnRef}
@@ -82,7 +80,7 @@ const App = () => {
           id="sidebar"
           className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''}`}
           aria-label="页内目录"
-          aria-hidden={collapsed}
+          inert={collapsed}
         >
           <div className={`${styles.sidebarInner} ${collapsed ? styles.sidebarInnerCollapsed : ''}`}>
             <div className={styles.sidebarHeader}>
@@ -100,7 +98,7 @@ const App = () => {
               </button>
             </div>
 
-            <nav className={styles.sidebarNav}>
+            <nav className={styles.sidebarNav} aria-label="页内目录">
               {sidebarLinks()}
             </nav>
           </div>
