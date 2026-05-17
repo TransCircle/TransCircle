@@ -14,7 +14,7 @@ const renderWithTheme = (ui: React.ReactElement) => {
 };
 
 /**
- * Helper: read current theme from document and localStorage.
+ * Helper: read current theme from document.
  */
 const getCurrentTheme = (): string | null => {
   return document.documentElement.getAttribute("data-theme");
@@ -38,6 +38,13 @@ describe("Theme system accessibility regression", () => {
       localStorage.setItem(STORAGE_KEY, "hacker-theme");
       renderWithTheme(<div data-testid="child"></div>);
       expect(getCurrentTheme()).toBe("light");
+    });
+
+    it("should clean up invalid stored theme values", () => {
+      localStorage.setItem(STORAGE_KEY, "invalid");
+      renderWithTheme(<div data-testid="child"></div>);
+      // Invalid value should be removed from localStorage
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     });
 
     it("should respect valid stored theme 'dark'", () => {
@@ -71,10 +78,10 @@ describe("Theme system accessibility regression", () => {
       });
 
       renderWithTheme(<ThemeToggle />);
-      const darkBtn = screen.getByRole("button", { name: /深色模式/i });
+      const darkRadio = screen.getByRole("radio", { name: "深色模式" });
 
       // Should not throw despite localStorage failure
-      expect(() => fireEvent.click(darkBtn)).not.toThrow();
+      expect(() => fireEvent.click(darkRadio)).not.toThrow();
       expect(getCurrentTheme()).toBe("dark");
 
       Storage.prototype.setItem = originalSetItem;
@@ -82,91 +89,141 @@ describe("Theme system accessibility regression", () => {
   });
 
   describe("ThemeToggle accessibility", () => {
-    it("should render three buttons with correct aria-labels", () => {
+    it("should render three radio buttons with correct labels", () => {
       renderWithTheme(<ThemeToggle />);
 
-      expect(screen.getByRole("button", { name: "切换到亮色模式" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "切换到深色模式" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "切换到高对比度模式" })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: "亮色模式" })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: "深色模式" })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: "高对比度模式" })).toBeInTheDocument();
     });
 
-    it("should set aria-pressed='true' only on the active theme button", () => {
+    it("should wrap buttons in a radiogroup with correct aria-label", () => {
       renderWithTheme(<ThemeToggle />);
 
-      const lightBtn = screen.getByRole("button", { name: "切换到亮色模式" });
-      const darkBtn = screen.getByRole("button", { name: "切换到深色模式" });
-      const contrastBtn = screen.getByRole("button", { name: "切换到高对比度模式" });
+      const group = screen.getByRole("radiogroup", { name: "主题选择" });
+      expect(group).toBeInTheDocument();
+      expect(group.children).toHaveLength(3);
+    });
+
+    it("should set aria-checked='true' only on the active theme radio", () => {
+      renderWithTheme(<ThemeToggle />);
+
+      const lightRadio = screen.getByRole("radio", { name: "亮色模式" });
+      const darkRadio = screen.getByRole("radio", { name: "深色模式" });
+      const contrastRadio = screen.getByRole("radio", { name: "高对比度模式" });
 
       // Default: light is active
-      expect(lightBtn).toHaveAttribute("aria-pressed", "true");
-      expect(darkBtn).toHaveAttribute("aria-pressed", "false");
-      expect(contrastBtn).toHaveAttribute("aria-pressed", "false");
+      expect(lightRadio).toHaveAttribute("aria-checked", "true");
+      expect(darkRadio).toHaveAttribute("aria-checked", "false");
+      expect(contrastRadio).toHaveAttribute("aria-checked", "false");
     });
 
-    it("should update aria-pressed when theme changes", () => {
+    it("should update aria-checked when theme changes", () => {
       renderWithTheme(<ThemeToggle />);
 
-      const lightBtn = screen.getByRole("button", { name: "切换到亮色模式" });
-      const darkBtn = screen.getByRole("button", { name: "切换到深色模式" });
-      const contrastBtn = screen.getByRole("button", { name: "切换到高对比度模式" });
+      const lightRadio = screen.getByRole("radio", { name: "亮色模式" });
+      const darkRadio = screen.getByRole("radio", { name: "深色模式" });
+      const contrastRadio = screen.getByRole("radio", { name: "高对比度模式" });
 
       // Switch to dark
-      fireEvent.click(darkBtn);
-      expect(lightBtn).toHaveAttribute("aria-pressed", "false");
-      expect(darkBtn).toHaveAttribute("aria-pressed", "true");
-      expect(contrastBtn).toHaveAttribute("aria-pressed", "false");
+      fireEvent.click(darkRadio);
+      expect(lightRadio).toHaveAttribute("aria-checked", "false");
+      expect(darkRadio).toHaveAttribute("aria-checked", "true");
+      expect(contrastRadio).toHaveAttribute("aria-checked", "false");
 
       // Switch to contrast
-      fireEvent.click(contrastBtn);
-      expect(lightBtn).toHaveAttribute("aria-pressed", "false");
-      expect(darkBtn).toHaveAttribute("aria-pressed", "false");
-      expect(contrastBtn).toHaveAttribute("aria-pressed", "true");
+      fireEvent.click(contrastRadio);
+      expect(lightRadio).toHaveAttribute("aria-checked", "false");
+      expect(darkRadio).toHaveAttribute("aria-checked", "false");
+      expect(contrastRadio).toHaveAttribute("aria-checked", "true");
     });
 
     it("should update data-theme attribute on the document element", () => {
       renderWithTheme(<ThemeToggle />);
 
-      const darkBtn = screen.getByRole("button", { name: "切换到深色模式" });
-      fireEvent.click(darkBtn);
+      const darkRadio = screen.getByRole("radio", { name: "深色模式" });
+      fireEvent.click(darkRadio);
       expect(getCurrentTheme()).toBe("dark");
 
-      const contrastBtn = screen.getByRole("button", { name: "切换到高对比度模式" });
-      fireEvent.click(contrastBtn);
+      const contrastRadio = screen.getByRole("radio", { name: "高对比度模式" });
+      fireEvent.click(contrastRadio);
       expect(getCurrentTheme()).toBe("contrast");
     });
 
     it("should persist theme selection to localStorage", () => {
       renderWithTheme(<ThemeToggle />);
 
-      const darkBtn = screen.getByRole("button", { name: "切换到深色模式" });
-      fireEvent.click(darkBtn);
+      const darkRadio = screen.getByRole("radio", { name: "深色模式" });
+      fireEvent.click(darkRadio);
 
       expect(localStorage.getItem(STORAGE_KEY)).toBe("dark");
     });
 
-    it("should be keyboard navigable", async () => {
+    it("should manage tabIndex so only active radio is tabbable", () => {
+      renderWithTheme(<ThemeToggle />);
+
+      const lightRadio = screen.getByRole("radio", { name: "亮色模式" });
+      const darkRadio = screen.getByRole("radio", { name: "深色模式" });
+      const contrastRadio = screen.getByRole("radio", { name: "高对比度模式" });
+
+      expect(lightRadio).toHaveAttribute("tabIndex", "0");
+      expect(darkRadio).toHaveAttribute("tabIndex", "-1");
+      expect(contrastRadio).toHaveAttribute("tabIndex", "-1");
+    });
+
+    it("should support arrow key navigation", async () => {
       const user = userEvent.setup();
       renderWithTheme(<ThemeToggle />);
 
-      const buttons = screen.getAllByRole("button");
-      const darkBtn = buttons[1];
+      const lightRadio = screen.getByRole("radio", { name: "亮色模式" });
+      const darkRadio = screen.getByRole("radio", { name: "深色模式" });
 
-      // Tab to focus the dark mode button
-      await user.tab();
-      await user.tab();
-      expect(darkBtn).toHaveFocus();
+      // Focus the active radio
+      await user.click(lightRadio);
+      expect(lightRadio).toHaveFocus();
 
-      // Activate with Enter
-      await user.keyboard("{Enter}");
+      // ArrowRight should move to next radio and select it
+      await user.keyboard("{ArrowRight}");
+      expect(darkRadio).toHaveFocus();
       expect(getCurrentTheme()).toBe("dark");
     });
 
-    it("should wrap buttons in a group with role='group' and aria-label", () => {
+    it("should cycle with arrow keys (wrap around)", async () => {
+      const user = userEvent.setup();
       renderWithTheme(<ThemeToggle />);
 
-      const group = screen.getByRole("group", { name: "主题切换" });
-      expect(group).toBeInTheDocument();
-      expect(group.children).toHaveLength(3);
+      const lightRadio = screen.getByRole("radio", { name: "亮色模式" });
+      const contrastRadio = screen.getByRole("radio", { name: "高对比度模式" });
+
+      // Click contrast (last item) to focus it
+      await user.click(contrastRadio);
+      expect(contrastRadio).toHaveFocus();
+
+      // ArrowRight from last should wrap to first
+      await user.keyboard("{ArrowRight}");
+      expect(lightRadio).toHaveFocus();
+      expect(getCurrentTheme()).toBe("light");
+    });
+
+    it("should support Home/End keys", async () => {
+      const user = userEvent.setup();
+      renderWithTheme(<ThemeToggle />);
+
+      const lightRadio = screen.getByRole("radio", { name: "亮色模式" });
+      const contrastRadio = screen.getByRole("radio", { name: "高对比度模式" });
+
+      // Focus contrast
+      await user.click(contrastRadio);
+
+      // Home should go to first
+      await user.keyboard("{Home}");
+      expect(lightRadio).toHaveFocus();
+      expect(getCurrentTheme()).toBe("light");
+
+      // End should go to last
+      await user.keyboard("{End}");
+      expect(contrastRadio).toHaveFocus();
+      expect(getCurrentTheme()).toBe("contrast");
     });
   });
 
