@@ -4,12 +4,6 @@
   padding-bottom: 40px;
 }
 
-@media (max-width: 768px) {
-  .footer {
-    margin-top: 40px;
-  }
-}
-
 .divider {
   width: 100%;
   height: 1px;
@@ -26,12 +20,6 @@
   line-height: 1.7;
 }
 
-@media (max-width: 768px) {
-  .content {
-    padding: 0 1.5rem;
-  }
-}
-
 .heading {
   color: var(--primary-pink);
   font-size: 1.1rem;
@@ -45,4 +33,14 @@
   font-size: 1.2em;
   margin-top: 20px;
   opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    margin-top: 40px;
+  }
+
+  .content {
+    padding: 0 1.5rem;
+  }
 }
