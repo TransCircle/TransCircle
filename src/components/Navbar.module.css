@@ -68,7 +68,13 @@
 
 .navLinks li a:hover {
   color: var(--text-main);
-  background-color: color-mix(in srgb, var(--primary-pink) 15%, white);
+  background-color: #ffedf1;
+}
+
+@supports (background-color: color-mix(in srgb, red 15%, white)) {
+  .navLinks li a:hover {
+    background-color: color-mix(in srgb, var(--primary-pink) 15%, white);
+  }
 }
 
 .mobileDivider {
@@ -146,7 +152,7 @@
     color: var(--text-main);
     font-size: 1rem;
   }
-  
+
   .mobileOnly a:hover {
     background-color: var(--nav-bg);
     color: var(--primary-pink);
@@ -170,4 +176,3 @@
   opacity: 1;
   visibility: visible;
 }
-

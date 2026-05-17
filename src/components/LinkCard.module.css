@@ -37,7 +37,13 @@
 }
 
 .buttonLink:hover {
-  background-color: color-mix(in srgb, var(--accent-pink) 85%, black);
+  background-color: #cc537c;
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(240, 98, 146, 0.4);
+}
+
+@supports (background-color: color-mix(in srgb, red 85%, black)) {
+  .buttonLink:hover {
+    background-color: color-mix(in srgb, var(--accent-pink) 85%, black);
+  }
 }
