@@ -11,14 +11,14 @@
     position: fixed;
     right: 2.5rem;
     top: 7rem;
-    background: rgba(255, 247, 250, 0.68);
+    background: var(--nav-bg);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 204, 213, 0.55);
+    border: 1px solid var(--divider-color);
     border-radius: 16px;
     padding: 1.4rem 1.1rem;
     box-shadow:
-      0 8px 32px rgba(255, 133, 162, 0.18),
+      0 8px 32px var(--shadow-color),
       0 2px 8px rgba(0, 0, 0, 0.06);
     z-index: 100;
   }
@@ -28,7 +28,7 @@
 @supports not (backdrop-filter: blur(1px)) {
   @media (min-width: 1100px) {
     .toc {
-      background: rgba(255, 249, 251, 0.97);
+      background: var(--bg-color);
     }
   }
 }
@@ -69,13 +69,13 @@
 }
 
 .link:hover {
-  background-color: #ffedf1;
+  background-color: var(--hover-bg);
   color: var(--primary-pink);
 }
 
 @supports (background-color: color-mix(in srgb, red 15%, white)) {
   .link:hover {
-    background-color: color-mix(in srgb, var(--primary-pink) 15%, white);
+    background-color: var(--hover-bg-mix);
   }
 }
 
