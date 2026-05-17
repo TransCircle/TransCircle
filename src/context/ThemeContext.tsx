@@ -22,17 +22,66 @@ const validateTheme = (value: string | null): Theme => {
   return DEFAULT_THEME;
 };
 
+/**
+ * 安全地读取 localStorage 中的主题设置。
+ * 读取失败时返回 null，调用方负责回退逻辑。
+ */
+const getStoredTheme = (): string | null => {
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * 安全地将主题写入 localStorage。
+ * 写入失败时静默忽略（如隐私模式、存储配额超限）。
+ */
+const setStoredTheme = (theme: Theme): void => {
+  try {
+    localStorage.setItem(STORAGE_KEY, theme);
+  } catch {
+    // 静默忽略写入失败
+  }
+};
+
+/**
+ * 清理 localStorage 中的无效主题值。
+ * 在发现脏数据时调用，避免脏数据持续影响后续逻辑。
+ */
+const clearStoredTheme = (): void => {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // 静默忽略
+  }
+};
+
+/**
+ * 将主题应用到 DOM：设置 data-theme 属性。
+ * 所有 DOM 副作用统一收口于此，避免分散管理导致的漏改风险。
+ */
+const applyTheme = (theme: Theme): void => {
+  document.documentElement.setAttribute("data-theme", theme);
+};
+
+/**
+ * 获取初始主题。
+ * 优先级：本地存储(校验后) > 系统偏好 > 默认值
+ */
 const getInitialTheme = (): Theme => {
   if (typeof window === "undefined") return DEFAULT_THEME;
 
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return validateTheme(stored);
+  const stored = getStoredTheme();
+  if (stored) {
+    const valid = validateTheme(stored);
+    if (valid === stored) {
+      return valid;
     }
-  } catch {
-    // localStorage 可能在隐私模式或禁用状态下抛出异常
-    // 静默回退到系统偏好或默认值
+    // 存储值无效，清理脏数据
+    clearStoredTheme();
+    return DEFAULT_THEME;
   }
 
   try {
@@ -51,30 +100,25 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const setTheme = (newTheme: Theme) => {
     const validTheme = validateTheme(newTheme);
     setThemeState(validTheme);
-    try {
-      localStorage.setItem(STORAGE_KEY, validTheme);
-    } catch {
-      // 静默忽略 localStorage 写入失败
-    }
-    document.documentElement.setAttribute("data-theme", validTheme);
+    setStoredTheme(validTheme);
+    applyTheme(validTheme);
   };
 
+  // 主题变更时同步 DOM
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
+    applyTheme(theme);
   }, [theme]);
 
+  // 监听系统主题偏好变化
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = (e: MediaQueryListEvent) => {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (!stored) {
-          const newTheme = e.matches ? "dark" : DEFAULT_THEME;
-          setThemeState(newTheme);
-          document.documentElement.setAttribute("data-theme", newTheme);
-        }
-      } catch {
-        // localStorage 读取失败时静默回退
+      const stored = getStoredTheme();
+      // 只有当存储值为空或无效时，才跟随系统主题
+      if (!stored || !VALID_THEMES.includes(stored as Theme)) {
+        const newTheme = e.matches ? "dark" : DEFAULT_THEME;
+        setThemeState(newTheme);
+        applyTheme(newTheme);
       }
     };
 
