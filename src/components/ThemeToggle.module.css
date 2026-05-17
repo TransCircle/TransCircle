@@ -1,0 +1,73 @@
+.toggleGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  background-color: var(--nav-bg);
+  border: 1px solid var(--divider-color);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  padding: 0;
+}
+
+.toggleBtn:hover {
+  background-color: var(--hover-bg);
+  color: var(--primary-pink);
+}
+
+.toggleBtn:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+
+.toggleBtn.active {
+  background-color: var(--primary-pink);
+  color: white;
+}
+
+.toggleBtn.active:hover {
+  background-color: var(--accent-pink);
+}
+
+/*
+ * High contrast theme overrides.
+ * These colors are intentionally hardcoded (not CSS variables) to guarantee
+ * maximum contrast for color-vision-deficient users. WCAG 2.1 Level AAA
+ * requires contrast ratios ≥ 7:1; pure black/white/orange achieves this.
+ */
+[data-theme="contrast"] .toggleGroup {
+  background-color: #000000;
+  border-color: #ffffff;
+}
+
+[data-theme="contrast"] .toggleBtn {
+  color: #ffffff;
+}
+
+[data-theme="contrast"] .toggleBtn:hover {
+  background-color: #332200;
+  color: #ffaa00;
+}
+
+[data-theme="contrast"] .toggleBtn.active {
+  background-color: #ffaa00;
+  color: #000000;
+}
+
+[data-theme="contrast"] .toggleBtn.active:hover {
+  background-color: #cc8800;
+}

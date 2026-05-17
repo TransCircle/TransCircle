@@ -4,6 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TransCircleProject</title>
+    <script>
+      // Prevent flash of unstyled content (FOUC) by setting theme before React mounts.
+      // Wrap in try-catch to gracefully handle privacy mode or localStorage restrictions.
+      (function() {
+        try {
+          var theme = localStorage.getItem('transcircle-theme');
+          if (theme && ['light', 'dark', 'contrast'].includes(theme)) {
+            document.documentElement.setAttribute('data-theme', theme);
+          } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+        } catch (e) {
+          // 静默回退：不设置 data-theme，等待 React 接管
+          // 确保不会因脚本异常导致页面无样式或 hydration 不匹配
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
