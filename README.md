@@ -46,9 +46,9 @@
 
 ### 🤝 社群互助
 
-如果您有任何有关HRT 等方面的资源，也欢迎进行投稿。虽然推荐您投稿到 [Ptoject-Trans](https://github.com/project-trans) 的项目中避免资源分散，但我们也接受投稿。
+如果您有任何有关HRT 等方面的资源，也欢迎进行投稿。虽然推荐您投稿到 [Project-Trans](https://github.com/project-trans) 的项目中避免资源分散，但我们也接受投稿。
 
-考虑到 [Ptoject-Trans](https://github.com/project-trans) 通常使用 GitHub 投稿，我们也提供更低门槛的表单投稿方式。
+考虑到 [Project-Trans](https://github.com/project-trans) 通常使用 GitHub 投稿，我们也提供更低门槛的表单投稿方式。
 
 ## 🔒 隐私、安全与开源协议
 
