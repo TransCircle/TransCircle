@@ -1,19 +1,8 @@
-import { useState, useRef, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import Navbar from './components/Navbar';
+import FloatingTOC, { type TOCItem } from './components/FloatingTOC';
 import LicenseFooter from './components/LicenseFooter';
 import styles from './App.module.css';
-
-const ChevronLeft = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-);
-
-const ChevronRight = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
 
 const GitHubIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -33,141 +22,85 @@ const BlueskyIcon = () => (
   </svg>
 );
 
-const App = () => {
-  const [collapsed, setCollapsed] = useState(false);
-  const openBtnRef = useRef<HTMLButtonElement>(null);
-  const closeBtnRef = useRef<HTMLButtonElement>(null);
+const TOC_ITEMS: TOCItem[] = [
+  { href: '#about', label: '关于项目' },
+  { href: '#join',  label: '加入项目' },
+  { href: '#follow', label: '关注我们' },
+];
 
-  const handleOpen = () => {
-    setCollapsed(false);
-    requestAnimationFrame(() => closeBtnRef.current?.focus());
-  };
+const mobileLinks = (close: () => void): ReactNode[] =>
+  TOC_ITEMS.map(({ href, label }) => (
+    <a key={href} href={href} onClick={close}>{label}</a>
+  ));
 
-  const handleClose = () => {
-    closeBtnRef.current?.blur();
-    setCollapsed(true);
-    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 350;
-    setTimeout(() => openBtnRef.current?.focus(), delay);
-  };
+const App = () => (
+  <div className={styles.appContainer}>
+    <Navbar
+      customMobileLinkLabel="目录"
+      customMobileLinks={mobileLinks}
+    />
+    <FloatingTOC items={TOC_ITEMS} />
 
-  const sidebarLinks = (close?: () => void): ReactNode[] => [
-    <a key="about" href="#about" className={styles.sidebarLink} onClick={close}>关于项目</a>,
-    <a key="join" href="#join" className={styles.sidebarLink} onClick={close}>加入项目</a>,
-    <a key="follow" href="#follow" className={styles.sidebarLink} onClick={close}>关注我们</a>,
-  ];
+    <main className={styles.mainContent}>
+      <header className={styles.contentHeader}>
+        <h1 className={styles.mainTitle}>TransCircle Project</h1>
+        <p className={styles.subTitle}>我们的存在，就是对恶意最大的反抗。</p>
+      </header>
 
-  return (
-    <div className={styles.appContainer}>
-      <Navbar
-        customMobileLinkLabel="目录"
-        customMobileLinks={(close) => sidebarLinks(close)}
-      />
+      <section id="about" className={styles.introSection}>
+        <p className={styles.greeting}>您好！我们正在进行 TransCircleProject 的初期准备。</p>
+        <div className={styles.readmeContent}>
+          <p>长此以往，中文 MtF 社群有个很奇怪的现象：我们确实有比较全面的社群 wiki，HRT 指南等，但几乎没有一个能见证我们社群存在与抗争的地方。</p>
+          <p>跨性别社群流动性极大，这里发生过很多故事，但没有人把它们完整地记录下来过。</p>
+          <p>因此，这个女性倾向跨性别社群史官工程应运而生。我们希望，把我们的故事归档记录，团结社群，争取跨性别权利。</p>
+        </div>
+        <p className={styles.emphasis}>
+          我们深信历史终将向前。这份记录，就是我们走过长夜的铁证。
+        </p>
+      </section>
 
-      <button
-        ref={openBtnRef}
-        type="button"
-        className={`${styles.sidebarOpenBtn} ${collapsed ? styles.sidebarOpenBtnVisible : ''}`}
-        onClick={handleOpen}
-        aria-label="展开目录"
-        aria-expanded={false}
-        aria-controls="sidebar"
-      >
-        <ChevronRight />
-      </button>
+      <section id="join" className={styles.actionSection}>
+        <h2 className={styles.sectionHeading}>加入项目</h2>
+        <div className={styles.ctaRow}>
+          <a href="https://transcircle.org/s/join" className={styles.ctaPrimary} target="_blank" rel="noopener noreferrer">
+            填写申请表单
+          </a>
+          <a href="https://x.com/i/chat/group_join/g2053071552552603876/fw9lZ8e4SH" className={styles.ctaSecondary} target="_blank" rel="noopener noreferrer">
+            加入 X 聊天群
+          </a>
+        </div>
+      </section>
 
-      <div className={styles.layoutContainer}>
-        <aside
-          id="sidebar"
-          className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''}`}
-          aria-label="页内目录"
-          inert={collapsed}
-        >
-          <div className={`${styles.sidebarInner} ${collapsed ? styles.sidebarInnerCollapsed : ''}`}>
-            <div className={styles.sidebarHeader}>
-              <span className={styles.sidebarLabel}>目录</span>
-              <button
-                ref={closeBtnRef}
-                type="button"
-                className={styles.sidebarCloseBtn}
-                onClick={handleClose}
-                aria-label="收起目录"
-                aria-expanded={true}
-                aria-controls="sidebar"
-              >
-                <ChevronLeft />
-              </button>
-            </div>
+      <section id="follow" className={styles.followSection}>
+        <h2 className={styles.sectionHeading}>关注我们</h2>
+        <ul className={styles.socialList}>
+          <li>
+            <a href="https://github.com/TransCircle/TransCircle" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
+              <span className={styles.socialIcon}><GitHubIcon /></span>
+              <span className={styles.socialName}>GitHub</span>
+              <span className={styles.socialHandle}>github.com/TransCircle/TransCircle</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://x.com/TransCircleOrg" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
+              <span className={styles.socialIcon}><XIcon /></span>
+              <span className={styles.socialName}>X (Twitter)</span>
+              <span className={styles.socialHandle}>@TransCircleOrg</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://bsky.app/profile/TransCircle.org" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
+              <span className={styles.socialIcon}><BlueskyIcon /></span>
+              <span className={styles.socialName}>Bluesky</span>
+              <span className={styles.socialHandle}>TransCircle.org</span>
+            </a>
+          </li>
+        </ul>
+      </section>
+    </main>
 
-            <nav className={styles.sidebarNav} aria-label="页内目录">
-              {sidebarLinks()}
-            </nav>
-          </div>
-        </aside>
-
-        <div className={`${styles.verticalDivider} ${collapsed ? styles.verticalDividerHidden : ''}`}></div>
-
-        <main className={styles.mainContent}>
-          <header className={styles.contentHeader}>
-            <h1 className={styles.mainTitle}>TransCircle Project</h1>
-            <p className={styles.subTitle}>我们的存在，就是对恶意最大的反抗。</p>
-          </header>
-
-          <section id="about" className={styles.introSection}>
-            <p className={styles.greeting}>您好！我们正在进行 TransCircleProject 的初期准备。</p>
-            <div className={styles.readmeContent}>
-              <p>长此以往，中文 MtF 社群有个很奇怪的现象：我们确实有比较全面的社群 wiki，HRT 指南等，但几乎没有一个能见证我们社群存在与抗争的地方。</p>
-              <p>跨性别社群流动性极大，这里发生过很多故事，但没有人把它们完整地记录下来过。</p>
-              <p>因此，这个女性倾向跨性别社群史官工程应运而生。我们希望，把我们的故事归档记录，团结社群，争取跨性别权利。</p>
-            </div>
-            <p className={styles.emphasis}>
-              我们深信历史终将向前。这份记录，就是我们走过长夜的铁证。
-            </p>
-          </section>
-
-          <section id="join" className={styles.actionSection}>
-            <h2 className={styles.sectionHeading}>加入项目</h2>
-            <div className={styles.ctaRow}>
-              <a href="https://transcircle.org/s/join" className={styles.ctaPrimary} target="_blank" rel="noopener noreferrer">
-                填写申请表单
-              </a>
-              <a href="https://x.com/i/chat/group_join/g2053071552552603876/fw9lZ8e4SH" className={styles.ctaSecondary} target="_blank" rel="noopener noreferrer">
-                加入 X 聊天群
-              </a>
-            </div>
-          </section>
-
-          <section id="follow" className={styles.followSection}>
-            <h2 className={styles.sectionHeading}>关注我们</h2>
-            <ul className={styles.socialList}>
-              <li>
-                <a href="https://github.com/TransCircle/TransCircle" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
-                  <span className={styles.socialIcon}><GitHubIcon /></span>
-                  <span className={styles.socialName}>GitHub</span>
-                  <span className={styles.socialHandle}>github.com/TransCircle/TransCircle</span>
-                </a>
-              </li>
-              <li>
-                <a href="https://x.com/TransCircleOrg" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
-                  <span className={styles.socialIcon}><XIcon /></span>
-                  <span className={styles.socialName}>X (Twitter)</span>
-                  <span className={styles.socialHandle}>@TransCircleOrg</span>
-                </a>
-              </li>
-              <li>
-                <a href="https://bsky.app/profile/TransCircle.org" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
-                  <span className={styles.socialIcon}><BlueskyIcon /></span>
-                  <span className={styles.socialName}>Bluesky</span>
-                  <span className={styles.socialHandle}>TransCircle.org</span>
-                </a>
-              </li>
-            </ul>
-          </section>
-        </main>
-      </div>
-
-      <LicenseFooter />
-    </div>
-  );
-};
+    <LicenseFooter />
+  </div>
+);
 
 export default App;
