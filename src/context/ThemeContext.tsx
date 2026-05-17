@@ -8,17 +8,39 @@ interface ThemeContextValue {
 }
 
 const STORAGE_KEY = "transcircle-theme";
+const VALID_THEMES: readonly Theme[] = ["light", "dark", "contrast"];
+const DEFAULT_THEME: Theme = "light";
+
+/**
+ * 验证主题值是否合法。
+ * 非法值回退到 DEFAULT_THEME，避免非法状态污染 DOM。
+ */
+const validateTheme = (value: string | null): Theme => {
+  if (value && VALID_THEMES.includes(value as Theme)) {
+    return value as Theme;
+  }
+  return DEFAULT_THEME;
+};
 
 const getInitialTheme = (): Theme => {
-  if (typeof window === "undefined") return "light";
+  if (typeof window === "undefined") return DEFAULT_THEME;
 
-  const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-  if (stored && ["light", "dark", "contrast"].includes(stored)) {
-    return stored;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return validateTheme(stored);
+    }
+  } catch {
+    // localStorage 可能在隐私模式或禁用状态下抛出异常
+    // 静默回退到系统偏好或默认值
   }
 
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  return prefersDark ? "dark" : "light";
+  try {
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return prefersDark ? "dark" : DEFAULT_THEME;
+  } catch {
+    return DEFAULT_THEME;
+  }
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -27,9 +49,14 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(getInitialTheme);
 
   const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem(STORAGE_KEY, newTheme);
-    document.documentElement.setAttribute("data-theme", newTheme);
+    const validTheme = validateTheme(newTheme);
+    setThemeState(validTheme);
+    try {
+      localStorage.setItem(STORAGE_KEY, validTheme);
+    } catch {
+      // 静默忽略 localStorage 写入失败
+    }
+    document.documentElement.setAttribute("data-theme", validTheme);
   };
 
   useEffect(() => {
@@ -39,11 +66,15 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = (e: MediaQueryListEvent) => {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) {
-        const newTheme = e.matches ? "dark" : "light";
-        setThemeState(newTheme);
-        document.documentElement.setAttribute("data-theme", newTheme);
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) {
+          const newTheme = e.matches ? "dark" : DEFAULT_THEME;
+          setThemeState(newTheme);
+          document.documentElement.setAttribute("data-theme", newTheme);
+        }
+      } catch {
+        // localStorage 读取失败时静默回退
       }
     };
 
