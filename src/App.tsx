@@ -5,25 +5,25 @@ import LinkCard from './components/LinkCard';
 import styles from './App.module.css';
 
 const App: React.FC = () => {
-  const sidebarLinks = (
+  const getSidebarLinks = (closeHandler?: () => void) => (
     <>
-      <a href="#" className={styles.sidebarLink}>TransCircle</a>
+      <a href="#" className={styles.sidebarLink} onClick={closeHandler}>TransCircle</a>
     </>
   );
 
   return (
-    <div style={{ width: '100%', minHeight: '100vh', backgroundColor: 'var(--bg-color)', display: 'flex', flexDirection: 'column' }}>
-      <Navbar customMobileLinks={sidebarLinks} />
+    <div className={styles.appContainer}>
+      <Navbar customMobileLinks={(close) => getSidebarLinks(close)} />
       
       <div className={styles.layoutContainer}>
         {/* 左侧侧边栏 (占据 1/5 宽度) */}
         <aside className={styles.sidebar}>
           <nav className={styles.sidebarNav}>
-            {sidebarLinks}
+            {getSidebarLinks()}
           </nav>
         </aside>
 
-        {/* 垂直分割线，增强视觉分区 */}
+        {/* 垂直分割线 */}
         <div className={styles.verticalDivider}></div>
 
         {/* 右侧正文 */}

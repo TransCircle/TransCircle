@@ -4,6 +4,12 @@
   padding-bottom: 40px;
 }
 
+@media (max-width: 768px) {
+  .footer {
+    margin-top: 40px;
+  }
+}
+
 .divider {
   width: 100%;
   height: 1px;
@@ -18,6 +24,12 @@
   font-size: 0.85em;
   color: var(--text-muted);
   line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 0 1.5rem;
+  }
 }
 
 .heading {
