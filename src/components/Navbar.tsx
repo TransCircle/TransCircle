@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import ThemeToggle from "./ThemeToggle";
 import styles from "./Navbar.module.css";
 
 interface NavbarProps {
@@ -42,7 +43,15 @@ const Navbar = ({ customMobileLinks }: NavbarProps) => {
                 </li>
               </>
             )}
+            <li className={styles.mobileDivider}></li>
+            <li className={`${styles.mobileOnly} ${styles.mobileThemeToggle}`}>
+              <div className={styles.mobileThemeLabel}>主题</div>
+              <ThemeToggle />
+            </li>
           </ul>
+          <div className={styles.rightSection}>
+            <ThemeToggle />
+          </div>
         </div>
       </nav>
       {/* 遮罩层，用于移动端点击外部关闭菜单 */}
