@@ -4,12 +4,14 @@
   margin-top: 25px;
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
-.heading::before {
-  content: "🌸";
-  margin-right: 10px;
-  font-size: 0.8em;
+.headingIcon {
+  display: flex;
+  align-items: center;
+  color: var(--primary-pink);
+  flex-shrink: 0;
 }
 
 .textLink {
@@ -32,18 +34,18 @@
   border-radius: 50px;
   margin-top: 10px;
   text-decoration: none;
-  box-shadow: 0 4px 10px rgba(255, 133, 162, 0.3);
+  box-shadow: 0 4px 10px var(--shadow-color);
   transition: all 0.2s ease;
 }
 
 .buttonLink:hover {
-  background-color: #cc537c;
+  background-color: var(--cta-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(240, 98, 146, 0.4);
+  box-shadow: 0 6px 15px var(--shadow-color-hover);
 }
 
 @supports (background-color: color-mix(in srgb, red 85%, black)) {
   .buttonLink:hover {
-    background-color: color-mix(in srgb, var(--accent-pink) 85%, black);
+    background-color: var(--cta-hover-mix);
   }
 }

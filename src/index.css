@@ -1,17 +1,70 @@
 :root {
-  /* 基础配色 */
+  /* ── Light Theme (Default) ───────────────────── */
   --bg-color: #fff9fb;
   --text-main: #000000;
   --text-secondary: #666666;
   --text-muted: #888888;
   --text-body: #333333;
 
-  /* 主題色 */
   --primary-pink: #ff85a2;
   --soft-pink: #ffccd5;
   --accent-pink: #f06292;
   --nav-bg: rgba(255, 251, 252, 0.85);
   --divider-color: #ffccd5;
+
+  --hover-bg: #ffedf1;
+  --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, white);
+  --cta-hover: #cc537c;
+  --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
+  --shadow-color: rgba(240, 98, 146, 0.25);
+  --shadow-color-hover: rgba(240, 98, 146, 0.4);
+  --overlay-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* ── Dark Theme ────────────────────────────────── */
+[data-theme="dark"] {
+  --bg-color: #12121a;
+  --text-main: #f0f0f5;
+  --text-secondary: #a0a0b0;
+  --text-muted: #808090;
+  --text-body: #c0c0d0;
+
+  --primary-pink: #ff85a2;
+  --soft-pink: #3a2a35;
+  --accent-pink: #ff6b9d;
+  --nav-bg: rgba(24, 24, 35, 0.85);
+  --divider-color: #2a2a3a;
+
+  --hover-bg: #2a1f25;
+  --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, #12121a);
+  --cta-hover: #cc537c;
+  --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
+  --shadow-color: rgba(255, 107, 157, 0.25);
+  --shadow-color-hover: rgba(255, 107, 157, 0.4);
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+}
+
+/* ── High Contrast Theme ───────────────────────── */
+[data-theme="contrast"] {
+  --bg-color: #000000;
+  --text-main: #ffffff;
+  --text-secondary: #ffffff;
+  --text-muted: #ffffff;
+  --text-body: #ffffff;
+
+  --primary-pink: #ffaa00;
+  --soft-pink: #332200;
+  --accent-pink: #ffaa00;
+  --nav-bg: rgba(0, 0, 0, 0.95);
+  --divider-color: #ffffff;
+
+  --hover-bg: #332200;
+  --hover-bg-mix: #332200;
+  --cta-hover: #cc8800;
+  --cta-hover-mix: #cc8800;
+  --shadow-color: rgba(255, 170, 0, 0.3);
+  --shadow-color-hover: rgba(255, 170, 0, 0.5);
+  --overlay-bg: rgba(0, 0, 0, 0.8);
 }
 
 *,
@@ -26,6 +79,13 @@ body {
   margin: 0;
   padding: 0;
   color: var(--text-main);
+}
+
+/* 仅在用户未偏好减少动画时启用主题切换过渡 */
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
 }
 
 :focus-visible {
