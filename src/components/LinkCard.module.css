@@ -4,12 +4,14 @@
   margin-top: 25px;
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
-.heading::before {
-  content: "🌸";
-  margin-right: 10px;
-  font-size: 0.8em;
+.headingIcon {
+  display: flex;
+  align-items: center;
+  color: var(--primary-pink);
+  flex-shrink: 0;
 }
 
 .textLink {
