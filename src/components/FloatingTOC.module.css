@@ -1,0 +1,86 @@
+/* hidden on narrow screens — shown via media query below */
+.toc {
+  display: none;
+}
+
+/* ── Visible at 1100px+ ───────────────────────── */
+
+@media (min-width: 1100px) {
+  .toc {
+    display: block;
+    position: fixed;
+    right: 2.5rem;
+    top: 7rem;
+    background: var(--nav-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--divider-color);
+    border-radius: 16px;
+    padding: 1.4rem 1.1rem;
+    box-shadow:
+      0 8px 32px var(--shadow-color),
+      0 2px 8px rgba(0, 0, 0, 0.06);
+    z-index: 100;
+  }
+}
+
+/* fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(1px)) {
+  @media (min-width: 1100px) {
+    .toc {
+      background: var(--bg-color);
+    }
+  }
+}
+
+/* ── Heading ──────────────────────────────────── */
+
+.heading {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--primary-pink);
+  padding: 0 0.6rem 0.75rem;
+  user-select: none;
+}
+
+/* ── Link list ────────────────────────────────── */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.link {
+  display: block;
+  text-decoration: none;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.link:hover {
+  background-color: var(--hover-bg);
+  color: var(--primary-pink);
+}
+
+@supports (background-color: color-mix(in srgb, red 15%, white)) {
+  .link:hover {
+    background-color: var(--hover-bg-mix);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link {
+    transition: none;
+  }
+}
