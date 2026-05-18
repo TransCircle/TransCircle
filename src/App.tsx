@@ -1,4 +1,3 @@
-import { type ReactNode } from "react";
 import Navbar from './components/Navbar';
 import FloatingTOC, { type TOCItem } from './components/FloatingTOC';
 import LicenseFooter from './components/LicenseFooter';
@@ -28,10 +27,11 @@ const TOC_ITEMS: TOCItem[] = [
   { href: '#follow', label: '关注我们' },
 ];
 
-const mobileLinks = (close: () => void): ReactNode[] =>
-  TOC_ITEMS.map(({ href, label }) => (
-    <a key={href} href={href} onClick={close}>{label}</a>
-  ));
+const mobileLinks = (close: () => void) =>
+  TOC_ITEMS.map(({ href, label }) => ({
+    key: href,
+    node: <a href={href} onClick={close}>{label}</a>,
+  }));
 
 const App = () => (
   <div className={styles.appContainer}>
