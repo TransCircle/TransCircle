@@ -2,8 +2,13 @@ import { useState, useRef, useEffect, type ReactNode } from "react";
 import ThemeToggle from "./ThemeToggle";
 import styles from "./Navbar.module.css";
 
+interface MobileLink {
+  key: string;
+  node: ReactNode;
+}
+
 interface NavbarProps {
-  customMobileLinks?: (closeMenu: () => void) => ReactNode[];
+  customMobileLinks?: (closeMenu: () => void) => MobileLink[];
   customMobileLinkLabel?: string;
 }
 
@@ -62,7 +67,7 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
             </button>
             <div className={styles.logo}>TransCircle</div>
           </div>
-          <ul ref={menuRef} id="nav-menu" className={`${styles.navLinks} ${isOpen ? styles.active : ""}`}>
+          <ul ref={menuRef} id="nav-menu" inert={!isOpen} className={`${styles.navLinks} ${isOpen ? styles.active : ""}`}>
             <li><a href="/" onClick={closeMenu}>首页</a></li>
             <li><a href="#stories" onClick={closeMenu}>故事征集（开发中）</a></li>
             <li><a href="#archive" onClick={closeMenu}>人物归档（开发中）</a></li>
@@ -75,8 +80,8 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
                     <span className={styles.mobileLinkLabel}>{customMobileLinkLabel}</span>
                   </li>
                 )}
-                {mobileLinks.map((link, i) => (
-                  <li key={i} className={styles.mobileOnly}>{link}</li>
+                {mobileLinks.map(({ key, node }) => (
+                  <li key={key} className={styles.mobileOnly}>{node}</li>
                 ))}
               </>
             )}
