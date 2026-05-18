@@ -22,9 +22,17 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
   const openMenu = () => {
     setIsOpen(true);
     requestAnimationFrame(() => {
-      menuRef.current?.querySelector<HTMLElement>("a")?.focus();
+      menuRef.current
+        ?.querySelector<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')
+        ?.focus();
     });
   };
+
+  useEffect(() => {
+    const main = document.querySelector<HTMLElement>('main');
+    if (main) main.inert = isOpen;
+    return () => { if (main) main.inert = false; };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -57,7 +65,7 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
               type="button"
               className={styles.hamburger}
               onClick={() => (isOpen ? closeMenu() : openMenu())}
-              aria-label="Toggle menu"
+              aria-label={isOpen ? "关闭菜单" : "打开菜单"}
               aria-expanded={isOpen}
               aria-controls="nav-menu"
             >
