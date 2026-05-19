@@ -140,14 +140,14 @@
 }
 
 .ctaSecondary:hover {
-  background-color: #ffedf1;
+  background-color: var(--hover-bg);
   color: var(--accent-pink);
   border-color: var(--accent-pink);
 }
 
 @supports (background-color: color-mix(in srgb, red 15%, white)) {
   .ctaSecondary:hover {
-    background-color: color-mix(in srgb, var(--primary-pink) 15%, white);
+    background-color: var(--hover-bg-mix);
   }
 }
 
@@ -174,12 +174,12 @@
 }
 
 .socialLink:hover {
-  background-color: #ffedf1;
+  background-color: var(--hover-bg);
 }
 
 @supports (background-color: color-mix(in srgb, red 15%, white)) {
   .socialLink:hover {
-    background-color: color-mix(in srgb, var(--primary-pink) 15%, white);
+    background-color: var(--hover-bg-mix);
   }
 }
 
