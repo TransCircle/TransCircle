@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import ThemeToggle from "./ThemeToggle";
 import styles from "./Navbar.module.css";
+import { Link } from 'react-router-dom'
 
 interface MobileLink {
   key: string;
@@ -14,6 +15,8 @@ interface NavbarProps {
 
 const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] =
+    useState(window.innerWidth <= 768);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
 
@@ -52,6 +55,25 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
       window.removeEventListener("resize", handleResize);
     };
   }, [isOpen]);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(
+        window.innerWidth <= 768
+      );
+    };
+  
+    window.addEventListener(
+      "resize",
+      handleResize
+    );
+  
+    return () => {
+      window.removeEventListener(
+        "resize",
+        handleResize
+      );
+    };
+  }, []);
 
   const mobileLinks = customMobileLinks?.(closeMenu);
 
@@ -75,9 +97,20 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
             </button>
             <div className={styles.logo}>TransCircle</div>
           </div>
-          <ul ref={menuRef} id="nav-menu" inert={!isOpen} className={`${styles.navLinks} ${isOpen ? styles.active : ""}`}>
+          <ul
+            ref={menuRef}
+            id="nav-menu"
+            inert={
+              isMobile
+                ? !isOpen
+                : undefined
+            } className={`${styles.navLinks} ${isOpen ? styles.active : ""}`}>
             <li><a href="/" onClick={closeMenu}>首页</a></li>
-            <li><a href="#stories" onClick={closeMenu}>故事征集（开发中）</a></li>
+            <li>
+                <Link to="/submit" onClick={closeMenu}>
+                    故事征集
+                </Link>
+            </li>
             <li><a href="#archive" onClick={closeMenu}>人物归档（开发中）</a></li>
             <li><a href="#community" onClick={closeMenu}>社群互助（开发中）</a></li>
             {mobileLinks && (
