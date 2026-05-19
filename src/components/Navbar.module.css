@@ -195,6 +195,14 @@
     padding: 0.8rem 2rem;
   }
 
+  .mobileThemeToggleGroup {
+    background-color: var(--surface-card);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    width: fit-content;
+    max-width: 100%;
+  }
+
   .mobileThemeLabel {
     font-size: 0.68rem;
     font-weight: 600;
