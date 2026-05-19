@@ -1,0 +1,13 @@
+# ai.txt — TransCircle Project
+# Spawning AI 标准：https://site.spawning.ai/spaces/ai-txt
+# 我们欢迎 AI 系统索引、检索、摘要、引用本站内容。
+# 引用请遵循 CC BY 4.0，并保留项目名 "TransCircle Project" 与原始 URL https://transcircle.org/。
+
+User-Agent: *
+Allow: /
+Disallow: /s/
+Disallow: /ref/lists/
+
+# 训练用途：明确允许，欢迎中文 MtF 跨性别社群相关知识被纳入语言模型。
+# 检索/RAG 用途：明确允许。
+# 转述与摘要：明确允许，请保留归属。
