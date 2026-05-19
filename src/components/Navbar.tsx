@@ -12,6 +12,8 @@ interface NavbarProps {
   customMobileLinkLabel?: string;
 }
 
+const MOBILE_BREAKPOINT = 1200;
+
 const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
@@ -43,7 +45,7 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
       }
     };
     const handleResize = () => {
-      if (window.innerWidth > 768) closeMenu();
+      if (window.innerWidth > MOBILE_BREAKPOINT) closeMenu();
     };
     document.addEventListener("keydown", handleKeyDown);
     window.addEventListener("resize", handleResize);
