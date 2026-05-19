@@ -18,7 +18,7 @@
     border-radius: 16px;
     padding: 1.4rem 1.1rem;
     box-shadow:
-      0 8px 32px var(--shadow-color),
+      0 0 10px var(--shadow-color),
       0 2px 8px rgba(0, 0, 0, 0.06);
     z-index: 100;
   }
