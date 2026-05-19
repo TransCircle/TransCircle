@@ -9,6 +9,7 @@
   top: 0;
   z-index: 1000;
   border-bottom: 1px solid var(--divider-color);
+  box-shadow: 0 1px 2px var(--shadow-color);
 }
 
 /* When backdrop-filter is supported, use the translucent nav background */
@@ -126,7 +127,8 @@
     display: block;
     height: 1px;
     background-color: var(--divider-color);
-    margin: 0.2rem 1.5rem;
+    width: calc(100% - 3rem);
+    margin: 0.2rem auto;
     opacity: 0.5;
   }
 
@@ -177,6 +179,11 @@
     color: var(--text-main);
   }
 
+  .navLinks li a:hover {
+    margin: 0 3px;
+    width: calc(100% - 6px);
+  }
+
   .mobileOnly a {
     display: block;
     padding: 0.8rem 2rem;
@@ -185,14 +192,35 @@
     font-size: 1rem;
   }
 
+  .mobileTOCGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.2rem 0 0.6rem;
+  }
+
+  .navLinks .mobileTOCItem a {
+    padding: 0.3rem 2rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+
+  @supports (background-color: color-mix(in srgb, red 15%, white)) {
+    .mobileTOCItem a:hover {
+      background-color: var(--hover-bg-mix);
+    }
+  }
+
   .mobileOnly a:hover {
+    margin: 0 3px;
+    width: calc(100% - 6px);
     background-color: var(--nav-bg);
     color: var(--primary-pink);
   }
 
   .mobileThemeToggle {
     display: block;
-    padding: 0.8rem 2rem;
+    padding: 0.8rem 1.5rem;
   }
 
   .mobileThemeToggleGroup {

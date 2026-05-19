@@ -88,9 +88,13 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
                     <span className={styles.mobileLinkLabel}>{customMobileLinkLabel}</span>
                   </li>
                 )}
-                {mobileLinks.map(({ key, node }) => (
-                  <li key={key} className={styles.mobileOnly}>{node}</li>
-                ))}
+                <li className={styles.mobileOnly}>
+                  <div className={styles.mobileTOCGroup}>
+                    {mobileLinks.map(({ key, node }) => (
+                      <div key={key} className={styles.mobileTOCItem}>{node}</div>
+                    ))}
+                  </div>
+                </li>
               </>
             )}
             <li className={styles.mobileDivider}></li>
