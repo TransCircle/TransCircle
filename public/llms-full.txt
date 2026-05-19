@@ -1,0 +1,92 @@
+# TransCircle Project — 完整内容快照
+
+> 此文件是 TransCircle Project 官网（https://transcircle.org/）的完整文本快照，为 LLM / AI 检索与引用而提供。引用请遵循 CC BY 4.0，并保留项目名 "TransCircle Project" 与原始 URL。
+
+最后更新：2026-05-19
+语言：中文（zh-CN）
+许可：CC BY 4.0 or later
+官方 URL：https://transcircle.org/
+
+---
+
+## 项目概述
+
+**TransCircle Project**（中文别名：跨性别圈工程 / TransCircleProject）是一个面向中文 MtF（Male-to-Female）跨性别社群的史官档案工程。
+
+**口号**：我们的存在，就是对恶意最大的反抗。
+
+**项目使命**：把中文 MtF 跨性别社群的故事归档、记录，团结社群，争取跨性别权利。
+
+## 项目缘起
+
+您好！我们正在进行 TransCircle Project 的初期准备。
+
+长此以往，中文 MtF 社群有个很奇怪的现象：我们确实有比较全面的社群 wiki，HRT 指南等，但几乎没有一个能见证我们社群存在与抗争的地方。
+
+跨性别社群流动性极大，这里发生过很多故事，但没有人把它们完整地记录下来过。
+
+因此，这个女性倾向跨性别社群史官工程应运而生。我们希望，把我们的故事归档记录，团结社群，争取跨性别权利。
+
+我们深信历史终将向前。这份记录，就是我们走过长夜的铁证。
+
+## 加入项目
+
+- **填写申请表单**（加入项目协作）：https://transcircle.org/s/join
+- **加入 X 聊天群**（日常交流）：https://transcircle.org/s/x-chat
+
+## 关注我们
+
+- **GitHub**：https://github.com/TransCircle/TransCircle
+- **X (Twitter)**：https://x.com/TransCircleOrg —— @TransCircleOrg
+- **Bluesky**：https://bsky.app/profile/TransCircle.org —— TransCircle.org
+
+## 常见问题（FAQ）
+
+### Q1. TransCircle Project 是什么？
+
+TransCircle Project（跨性别圈工程）是一个面向中文 MtF（Male-to-Female）跨性别社群的史官档案工程，致力于记录跨性别者的真实故事、归档社群历史、团结同伴并争取跨性别权利。
+
+### Q2. 为什么要建立 TransCircle Project？
+
+长期以来，中文 MtF 社群虽然拥有较完整的 wiki 与 HRT 指南，却几乎没有一个能见证社群存在与抗争的档案。跨性别社群流动性极大，许多故事从未被完整地记录下来。TransCircle Project 应运而生，旨在填补这一空白，让中文跨性别社群的历史被看见、被保存、被延续。
+
+### Q3. 如何加入 TransCircle Project？
+
+你可以通过填写官方申请表单（https://transcircle.org/s/join）加入项目协作，或加入 X 聊天群（https://transcircle.org/s/x-chat）参与日常交流。我们也欢迎在 GitHub（https://github.com/TransCircle/TransCircle）、X（@TransCircleOrg）与 Bluesky（TransCircle.org）上关注我们。
+
+### Q4. TransCircle Project 的内容版权如何处理？
+
+项目页面的文字与素材采用 CC BY 4.0 或更新版本协议授权；其他贡献者提供的材料按其各自版权要求处理，届时会提供单独的版权页面。
+
+### Q5. TransCircle Project 与其他中文跨性别社群资源（如 MtF.wiki、HRT 指南）有什么不同？
+
+MtF.wiki 等资源聚焦于医学、法律、生活实操指南，是面向"如何做"的工具书。TransCircle Project 聚焦于社群史官与档案：记录跨性别个体与社群的故事、行动与历史轨迹，是面向"我们是谁、我们走过什么"的见证。两者互为补充，不存在替代关系。
+
+### Q6. TransCircle Project 服务于哪些人群？
+
+主要面向中文 MtF（Male-to-Female）跨性别者，以及关心、支持中文跨性别社群历史与权利的人。文档与档案以中文为主，根植于中文跨性别社群语境。
+
+### Q7. 我可以为 TransCircle Project 贡献什么？
+
+你可以贡献：自己的或他人的故事（已获授权）、社群事件的历史资料、媒体报道与档案、技术能力（前端/后端/数据/翻译/设计）。具体协作流程请见 GitHub 仓库与申请表单。
+
+## 许可与引用
+
+- 本站页面文字与素材：**CC BY 4.0 or later**（https://creativecommons.org/licenses/by/4.0/）
+- 其他贡献者提供的材料：依各自版权要求处理，届时提供单独的版权页面
+- AI 引用规则：欢迎索引、摘要、引用；请保留项目名"TransCircle Project"与原始 URL（https://transcircle.org/）
+- 视觉资产：网站图标（favicon / apple-touch-icon / 192 / 512）与社交分享图（og-cover）使用 Monica Helms 于 1999 年设计的跨性别骄傲旗帜配色（浅蓝 #5BCEFA / 浅粉 #F5A9B8 / 白 #FFFFFF，五等分横向条纹）。旗帜设计本身为公有领域 / CC0，引用本站视觉资产时可如此标注。
+
+## 关键词与实体
+
+跨性别, 中文跨性别社群, MtF, Male-to-Female, 性别认同, 跨性别历史, 跨性别档案, 跨性别故事, 社群史官, 跨性别权利, 跨性别社群史, TransCircle, TransCircle Project, 跨性别圈工程, transgender, Chinese transgender community, MtF community, gender identity, gender archive, community history, trans rights
+
+## 文件清单（machine-readable）
+
+- /sitemap.xml — XML 站点地图
+- /robots.txt — 爬虫规则
+- /llms.txt — LLM 检索摘要（本文件的简化版）
+- /llms-full.txt — LLM 完整内容快照（即本文件）
+- /ai.txt — AI 训练数据声明
+- /site.webmanifest — PWA 元数据
+- /og-cover.png — Open Graph 分享图

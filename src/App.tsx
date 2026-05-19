@@ -48,7 +48,7 @@ const App = () => (
       </header>
 
       <section id="about" className={styles.introSection}>
-        <p className={styles.greeting}>您好！我们正在进行 TransCircleProject 的初期准备。</p>
+        <p className={styles.greeting}>您好！我们正在进行 TransCircle Project 的初期准备。</p>
         <div className={styles.readmeContent}>
           <p>长此以往，中文 MtF 社群有个很奇怪的现象：我们确实有比较全面的社群 wiki，HRT 指南等，但几乎没有一个能见证我们社群存在与抗争的地方。</p>
           <p>跨性别社群流动性极大，这里发生过很多故事，但没有人把它们完整地记录下来过。</p>
@@ -65,7 +65,7 @@ const App = () => (
           <a href="https://transcircle.org/s/join" className={styles.ctaPrimary} target="_blank" rel="noopener noreferrer">
             填写申请表单
           </a>
-          <a href="https://x.com/i/chat/group_join/g2053071552552603876/fw9lZ8e4SH" className={styles.ctaSecondary} target="_blank" rel="noopener noreferrer">
+          <a href="https://transcircle.org/s/x-chat" className={styles.ctaSecondary} target="_blank" rel="noopener noreferrer">
             加入 X 聊天群
           </a>
         </div>
