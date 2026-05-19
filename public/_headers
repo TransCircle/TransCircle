@@ -1,0 +1,72 @@
+# ── 静态资源：长缓存（带 hash，安全可变） ──────────────
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/og-cover.png
+  Cache-Control: public, max-age=86400
+  Content-Type: image/png
+
+/favicon.ico
+  Cache-Control: public, max-age=604800
+  Content-Type: image/vnd.microsoft.icon
+
+/favicon.png
+  Cache-Control: public, max-age=604800
+  Content-Type: image/png
+
+/apple-touch-icon.png
+  Cache-Control: public, max-age=604800
+  Content-Type: image/png
+
+/icon-192.png
+  Cache-Control: public, max-age=604800
+  Content-Type: image/png
+
+/icon-512.png
+  Cache-Control: public, max-age=604800
+  Content-Type: image/png
+
+/icon-maskable.png
+  Cache-Control: public, max-age=604800
+  Content-Type: image/png
+
+# ── SEO / GEO 索引文件：短缓存，便于更新 ───────────────
+/robots.txt
+  Cache-Control: public, max-age=3600
+  X-Robots-Tag: noindex
+
+/sitemap.xml
+  Cache-Control: public, max-age=3600
+  Content-Type: application/xml; charset=utf-8
+
+/llms.txt
+  Cache-Control: public, max-age=3600
+  Content-Type: text/plain; charset=utf-8
+
+/llms-full.txt
+  Cache-Control: public, max-age=3600
+  Content-Type: text/plain; charset=utf-8
+
+/ai.txt
+  Cache-Control: public, max-age=3600
+  Content-Type: text/plain; charset=utf-8
+
+/site.webmanifest
+  Cache-Control: public, max-age=86400
+  Content-Type: application/manifest+json
+
+# ── HTML：不缓存 + 单独宣示索引策略 ────────────────────
+/
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Robots-Tag: index, follow, max-image-preview:large, max-snippet:-1
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Robots-Tag: index, follow, max-image-preview:large, max-snippet:-1
+
+# ── 全站共享安全头（仅在 /* 出现一次，避免重复合并） ──
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: interest-cohort=(), browsing-topics=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
