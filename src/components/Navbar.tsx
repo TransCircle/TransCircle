@@ -96,7 +96,7 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
             <li className={styles.mobileDivider}></li>
             <li className={`${styles.mobileOnly} ${styles.mobileThemeToggle}`}>
               <div className={styles.mobileThemeLabel}>主题</div>
-              <ThemeToggle />
+              <ThemeToggle className={styles.mobileThemeToggleGroup} />
             </li>
           </ul>
           <div className={styles.rightSection}>
