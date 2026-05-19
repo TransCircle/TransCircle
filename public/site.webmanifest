@@ -1,7 +1,7 @@
 {
   "name": "TransCircle Project",
   "short_name": "TransCircle",
-  "description": "中文 MtF 跨性别社群史官工程：归档故事、记录历史、团结社群、争取跨性别权利。",
+  "description": "跨环（TransCircle Project）— 中文 MtF 跨性别社群史官工程：归档故事、记录历史、团结社群、争取跨性别权利。",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
