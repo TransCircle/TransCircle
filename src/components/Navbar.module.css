@@ -67,7 +67,7 @@
   color: var(--text-main);
 }
 
-.logo a, .logo :global(a){
+.logo a{
   text-decoration: none; /* 移除下划线 */
   color: inherit;        /* 继承父元素颜色，不显示默认链接蓝 */
   cursor: pointer;       /* 保持手型光标 */
