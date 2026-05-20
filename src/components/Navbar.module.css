@@ -64,20 +64,14 @@
   font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: -0.02em;
+  color: var(--text-main);
 }
 
-.logo a {
+.logo a, .logo :global(a){
   text-decoration: none; /* 移除下划线 */
   color: inherit;        /* 继承父元素颜色，不显示默认链接蓝 */
   cursor: pointer;       /* 保持手型光标 */
 }
-
-.logo a:hover {
-  /* 悬停时保持不变，防止浏览器默认样式重新介入 */
-  text-decoration: none;
-  color: inherit;
-}
-
 
 .navLinks {
   list-style: none;
