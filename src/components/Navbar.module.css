@@ -63,8 +63,14 @@
 .logo {
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--text-main);
   letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.logo a{
+  text-decoration: none; /* 移除下划线 */
+  color: inherit;        /* 继承父元素颜色，不显示默认链接蓝 */
+  cursor: pointer;       /* 保持手型光标 */
 }
 
 .navLinks {

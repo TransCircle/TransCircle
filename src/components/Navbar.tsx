@@ -75,7 +75,7 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
               <span className={styles.bar}></span>
               <span className={styles.bar}></span>
             </button>
-            <div className={styles.logo}>TransCircle</div>
+            <div className={styles.logo}><a href="/">TransCircle</a></div>
           </div>
           <ul ref={menuRef} id="nav-menu" inert={!isOpen} className={`${styles.navLinks} ${isOpen ? styles.active : ""}`}>
             <li><a href="/" onClick={closeMenu}>首页</a></li>
