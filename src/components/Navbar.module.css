@@ -99,23 +99,34 @@
 }
 
 .dropdownTrigger {
+  font-family: inherit;
+  background: none;
+  border: none;
   text-decoration: none;
   color: var(--text-secondary);
   font-size: 0.9rem;
   transition: color 0.2s ease, background-color 0.2s ease;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-  cursor: default;
+  cursor: pointer;
   user-select: none;
+  line-height: inherit;
 }
 
-.dropdown:hover .dropdownTrigger {
+.dropdownTrigger:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+
+.dropdown:hover .dropdownTrigger,
+.dropdownOpen .dropdownTrigger {
   color: var(--text-main);
   background-color: var(--hover-bg);
 }
 
 @supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .dropdown:hover .dropdownTrigger {
+  .dropdown:hover .dropdownTrigger,
+  .dropdownOpen .dropdownTrigger {
     background-color: var(--hover-bg-mix);
   }
 }
@@ -139,7 +150,8 @@
   z-index: 1001;
 }
 
-.dropdown:hover .dropdownMenu {
+.dropdown:hover .dropdownMenu,
+.dropdownOpen .dropdownMenu {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
