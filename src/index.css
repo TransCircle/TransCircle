@@ -16,7 +16,7 @@
   --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, white);
   --cta-hover: #cc537c;
   --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
-  --shadow-color: rgba(240, 98, 146, 0.25);
+  --shadow-color: rgba(240, 98, 145, 0.128);
   --shadow-color-hover: rgba(240, 98, 146, 0.4);
   --overlay-bg: rgba(0, 0, 0, 0.3);
 }
@@ -39,7 +39,7 @@
   --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, #12121a);
   --cta-hover: #cc537c;
   --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
-  --shadow-color: rgba(255, 107, 157, 0.25);
+  --shadow-color: rgba(255, 107, 156, 0.098);
   --shadow-color-hover: rgba(255, 107, 157, 0.4);
   --overlay-bg: rgba(0, 0, 0, 0.5);
 }
@@ -81,8 +81,16 @@ body {
   color: var(--text-main);
 }
 
+html {
+  scroll-behavior: auto;
+}
+
 /* 仅在用户未偏好减少动画时启用主题切换过渡 */
 @media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     transition: background-color 0.3s ease, color 0.3s ease;
   }

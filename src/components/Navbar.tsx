@@ -18,6 +18,7 @@ const ExternalLinkIcon = () => (
     <path d="M14 2 4 12" />
   </svg>
 );
+const MOBILE_BREAKPOINT = 1200;
 
 const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -52,7 +53,7 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
       }
     };
     const handleResize = () => {
-      if (window.innerWidth > 768) closeMenu();
+      if (window.innerWidth > MOBILE_BREAKPOINT) closeMenu();
     };
     document.addEventListener("keydown", handleKeyDown);
     window.addEventListener("resize", handleResize);
@@ -116,7 +117,7 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
               <span className={styles.bar}></span>
               <span className={styles.bar}></span>
             </button>
-            <div className={styles.logo}>TransCircle</div>
+            <div className={styles.logo}><a href="/">TransCircle</a></div>
           </div>
           <ul ref={menuRef} id="nav-menu" className={`${styles.navLinks} ${isOpen ? styles.active : ""}`}>
             <li><a href="/" onClick={closeMenu}>首页</a></li>
@@ -156,15 +157,19 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
                     <span className={styles.mobileLinkLabel}>{customMobileLinkLabel}</span>
                   </li>
                 )}
-                {mobileLinks.map(({ key, node }) => (
-                  <li key={key} className={styles.mobileOnly}>{node}</li>
-                ))}
+                <li className={styles.mobileOnly}>
+                  <div className={styles.mobileTOCGroup}>
+                    {mobileLinks.map(({ key, node }) => (
+                      <div key={key} className={styles.mobileTOCItem}>{node}</div>
+                    ))}
+                  </div>
+                </li>
               </>
             )}
             <li className={styles.mobileDivider}></li>
             <li className={`${styles.mobileOnly} ${styles.mobileThemeToggle}`}>
               <div className={styles.mobileThemeLabel}>主题</div>
-              <ThemeToggle />
+              <ThemeToggle className={styles.mobileThemeToggleGroup} />
             </li>
           </ul>
           <div className={styles.rightSection}>
