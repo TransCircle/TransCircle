@@ -21,8 +21,10 @@ const ExternalLinkIcon = () => (
 
 const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
+  const dropdownRef = useRef<HTMLButtonElement>(null);
 
   const closeMenu = () => setIsOpen(false);
 
@@ -62,6 +64,40 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
 
   const mobileLinks = customMobileLinks?.(closeMenu);
 
+  const handleDropdownToggle = () => {
+    setDropdownOpen((prev) => !prev);
+  };
+
+  const handleDropdownKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+      e.preventDefault();
+      setDropdownOpen(true);
+      requestAnimationFrame(() => {
+        dropdownRef.current
+          ?.closest(`.${styles.dropdown}`)
+          ?.querySelector<HTMLElement>('.dropdown-menu-link')
+          ?.focus();
+      });
+    } else if (e.key === "Escape") {
+      setDropdownOpen(false);
+      dropdownRef.current?.focus();
+    }
+  };
+
+  const handleDropdownMenuKeyDown = (e: React.KeyboardEvent<HTMLUListElement>) => {
+    if (e.key === "Escape") {
+      setDropdownOpen(false);
+      dropdownRef.current?.focus();
+    }
+  };
+
+  const handleDropdownBlur = (e: React.FocusEvent<HTMLElement>) => {
+    // Close dropdown when focus leaves the dropdown entirely
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDropdownOpen(false);
+    }
+  };
+
   return (
     <>
       <nav className={styles.navbar} aria-label="主导航">
@@ -84,11 +120,29 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
           </div>
           <ul ref={menuRef} id="nav-menu" className={`${styles.navLinks} ${isOpen ? styles.active : ""}`}>
             <li><a href="/" onClick={closeMenu}>首页</a></li>
-            <li className={styles.dropdown}>
-              <span className={styles.dropdownTrigger}>链接</span>
-              <ul className={styles.dropdownMenu}>
-                <li><a href="https://blog.transcircle.org/" target="_blank" rel="noopener noreferrer" onClick={closeMenu}>博客<ExternalLinkIcon /></a></li>
-                <li><a href="https://search.transcircle.org/" target="_blank" rel="noopener noreferrer" onClick={closeMenu}>搜索<ExternalLinkIcon /></a></li>
+            <li
+              className={`${styles.dropdown} ${dropdownOpen ? styles.dropdownOpen : ""}`}
+              onBlur={handleDropdownBlur}
+            >
+              <button
+                ref={dropdownRef}
+                type="button"
+                className={styles.dropdownTrigger}
+                aria-haspopup="menu"
+                aria-expanded={dropdownOpen}
+                onClick={handleDropdownToggle}
+                onKeyDown={handleDropdownKeyDown}
+              >
+                链接
+              </button>
+              <ul
+                className={styles.dropdownMenu}
+                aria-label="外部链接"
+                role="menu"
+                onKeyDown={handleDropdownMenuKeyDown}
+              >
+                <li role="none"><a role="menuitem" className="dropdown-menu-link" href="https://blog.transcircle.org/" target="_blank" rel="noopener noreferrer" onClick={closeMenu}>博客<ExternalLinkIcon /></a></li>
+                <li role="none"><a role="menuitem" className="dropdown-menu-link" href="https://search.transcircle.org/" target="_blank" rel="noopener noreferrer" onClick={closeMenu}>搜索<ExternalLinkIcon /></a></li>
               </ul>
             </li>
             <li><a href="#stories" onClick={closeMenu}>故事征集（开发中）</a></li>
