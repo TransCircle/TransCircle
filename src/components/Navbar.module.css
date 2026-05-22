@@ -82,25 +82,87 @@
   flex-wrap: nowrap;
 }
 
-.navLinks li a {
+.navLinks li a,
+.dropdownTrigger {
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
   color: var(--text-secondary);
   font-size: 0.9rem;
+  line-height: 1.5;
   transition: color 0.2s ease, background-color 0.2s ease;
   padding: 0.5rem 1rem;
   border-radius: 8px;
+  box-sizing: border-box;
   white-space: nowrap;
 }
 
-.navLinks li a:hover {
+.navLinks li a:hover,
+.dropdown:hover .dropdownTrigger,
+.dropdownOpen .dropdownTrigger {
   color: var(--text-main);
   background-color: var(--hover-bg);
 }
 
 @supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .navLinks li a:hover {
+  .navLinks li a:hover,
+  .dropdown:hover .dropdownTrigger,
+  .dropdownOpen .dropdownTrigger {
     background-color: var(--hover-bg-mix);
   }
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdownTrigger {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  background: none;
+  border: none;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dropdownTrigger:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0;
+  background-color: var(--bg-color);
+  border: 1px solid var(--divider-color);
+  border-radius: 8px;
+  min-width: 100px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, visibility 0s linear 0.15s, transform 0.15s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+}
+
+.dropdown:hover .dropdownMenu,
+.dropdownOpen .dropdownMenu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition: opacity 0.15s ease, visibility 0s linear 0s, transform 0.15s ease;
+}
+
+.dropdownMenu li a {
+  display: block;
+  padding: 0.5rem 1.2rem;
+  white-space: nowrap;
 }
 
 .mobileDivider {
@@ -239,6 +301,32 @@
     width: calc(100% - 6px);
     background-color: var(--nav-bg);
     color: var(--primary-pink);
+  }
+
+  .dropdownTrigger {
+    display: block;
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    color: var(--text-main);
+  }
+
+  .dropdownMenu {
+    position: static;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .dropdownMenu li a {
+    padding: 0.6rem 2rem 0.6rem 3rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
   }
 
   .mobileThemeToggle {
