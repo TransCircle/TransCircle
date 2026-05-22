@@ -180,12 +180,7 @@ const Navbar = ({
                 }
               ></span>
             </button>
-
-            <div
-              className={styles.logo}
-            >
-              TransCircle
-            </div>
+            <div className={styles.logo}><a href="/">TransCircle</a></div>
           </div>
 
           <ul
