@@ -71,7 +71,11 @@ const themes: { id: Theme; label: string; icon: React.FC }[] = [
   { id: "contrast", label: "高对比度模式", icon: ContrastIcon },
 ];
 
-const ThemeToggle = () => {
+interface ThemeToggleProps {
+  className?: string;
+}
+
+const ThemeToggle = ({ className = "" }: ThemeToggleProps) => {
   const { theme, setTheme } = useTheme();
   const radioRefs = useRef<HTMLButtonElement[]>([]);
 
@@ -114,7 +118,7 @@ const ThemeToggle = () => {
 
   return (
     <div
-      className={styles.toggleGroup}
+      className={`${styles.toggleGroup} ${className}`.trim()}
       role="radiogroup"
       aria-label="主题选择"
     >
