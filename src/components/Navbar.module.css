@@ -162,6 +162,17 @@
   transition: opacity 0.15s ease, visibility 0s linear 0s, transform 0.15s ease;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .navLinks li a,
+  .dropdownTrigger,
+  .dropdownMenu,
+  .dropdown:hover .dropdownMenu,
+  .dropdownOpen .dropdownMenu {
+    transition: none;
+    transform: none;
+  }
+}
+
 .dropdownMenu li a {
   display: block;
   padding: 0.5rem 1.2rem;
@@ -205,11 +216,7 @@
 
 @media (max-width: 1200px) {
   .navbar {
-    padding: 1rem 1.5rem;
-  }
-
-  .rightSection {
-    display: none;
+    padding: 0.75rem 1.5rem;
   }
 
   .mobileDivider {
@@ -326,20 +333,26 @@
 
   .dropdownMenu {
     position: static;
-    display: none;
-    opacity: 1;
-    visibility: visible;
-    transform: none;
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
     background: transparent;
     border: none;
     box-shadow: none;
     padding: 0;
     margin: 0;
     border-radius: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease, opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
   }
 
   .dropdownOpen .dropdownMenu {
-    display: block;
+    max-height: 60vh;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition: max-height 0.2s ease, opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0s;
   }
 
   .dropdownMenu li a {
@@ -369,6 +382,30 @@
     color: var(--text-muted);
     margin-bottom: 0.5rem;
     user-select: none;
+  }
+}
+
+@media (max-width: 1200px) and (prefers-reduced-motion: reduce) {
+  .navLinks li a,
+  .mobileOnly a,
+  .mobileTOCItem a,
+  .dropdownMenu,
+  .dropdownOpen .dropdownMenu,
+  .dropdownTrigger,
+  .navLinks,
+  .navLinks.active {
+    transition: none;
+  }
+
+  .dropdownMenu,
+  .dropdownOpen .dropdownMenu {
+    transform: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .rightSection {
+    display: none;
   }
 }
 
