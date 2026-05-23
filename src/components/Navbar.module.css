@@ -119,7 +119,8 @@
 .dropdownTrigger {
   appearance: none;
   -webkit-appearance: none;
-  font: inherit;
+  font-family: inherit;
+  font-size: 0.9rem;
   background: none;
   border: none;
   margin: 0;
@@ -193,7 +194,8 @@
     gap: 1rem;
   }
 
-  .navLinks li a {
+  .navLinks li a,
+  .dropdownTrigger {
     font-size: 0.85rem;
     padding: 0.45rem 0.7rem;
   }
@@ -304,14 +306,25 @@
   }
 
   .dropdownTrigger {
-    display: block;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    text-align: left;
     padding: 0.8rem 2rem;
     font-size: 1rem;
     color: var(--text-main);
+    transition: all 0.2s ease;
+  }
+
+  .dropdownTrigger:hover {
+    margin: 0 3px;
+    width: calc(100% - 6px);
   }
 
   .dropdownMenu {
     position: static;
+    display: none;
     opacity: 1;
     visibility: visible;
     transform: none;
@@ -321,6 +334,10 @@
     padding: 0;
     margin: 0;
     border-radius: 0;
+  }
+
+  .dropdownOpen .dropdownMenu {
+    display: block;
   }
 
   .dropdownMenu li a {
