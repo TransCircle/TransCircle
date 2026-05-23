@@ -82,6 +82,27 @@ body {
   margin: 0;
   padding: 0;
   color: var(--text-main);
+  scrollbar-color: var(--soft-pink) var(--bg-color);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--soft-pink);
+  border-radius: 999px;
+  border: 1px solid var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary-pink);
 }
 
 html {
