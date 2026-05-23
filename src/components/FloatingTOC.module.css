@@ -21,6 +21,8 @@
       0 0 10px var(--shadow-color),
       0 2px 8px rgba(0, 0, 0, 0.06);
     z-index: 100;
+    user-select: none;
+    -webkit-user-select: none;
   }
 }
 
