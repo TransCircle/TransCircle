@@ -10,6 +10,8 @@
   z-index: 1000;
   border-bottom: 1px solid var(--divider-color);
   box-shadow: 0 1px 2px var(--shadow-color);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* When backdrop-filter is supported, use the translucent nav background */
