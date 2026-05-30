@@ -130,6 +130,16 @@
   user-select: none;
 }
 
+.chevron {
+  margin-left: 6px;
+  transition: transform 0.2s ease;
+}
+
+.dropdownOpen .chevron,
+.dropdownTrigger[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
 .dropdownTrigger:focus-visible {
   outline: 2px solid var(--primary-pink);
   outline-offset: 2px;
@@ -168,6 +178,13 @@
   .dropdownMenu,
   .dropdown:hover .dropdownMenu,
   .dropdownOpen .dropdownMenu {
+    transition: none;
+    transform: none;
+  }
+
+  .chevron,
+  .dropdownOpen .chevron,
+  .dropdownTrigger[aria-expanded="true"] .chevron {
     transition: none;
     transform: none;
   }
@@ -276,8 +293,7 @@
   }
 
   .navLinks li a:hover {
-    margin: 0 3px;
-    width: calc(100% - 6px);
+    transform: translateX(3px);
   }
 
   .mobileOnly a {
@@ -308,8 +324,7 @@
   }
 
   .mobileOnly a:hover {
-    margin: 0 3px;
-    width: calc(100% - 6px);
+    transform: translateX(3px);
     background-color: var(--nav-bg);
     color: var(--primary-pink);
   }
@@ -323,12 +338,11 @@
     padding: 0.8rem 2rem;
     font-size: 1rem;
     color: var(--text-main);
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
   }
 
   .dropdownTrigger:hover {
-    margin: 0 3px;
-    width: calc(100% - 6px);
+    transform: translateX(3px);
   }
 
   .dropdownMenu {
@@ -392,6 +406,7 @@
   .dropdownMenu,
   .dropdownOpen .dropdownMenu,
   .dropdownTrigger,
+  .chevron,
   .navLinks,
   .navLinks.active {
     transition: none;
@@ -399,6 +414,12 @@
 
   .dropdownMenu,
   .dropdownOpen .dropdownMenu {
+    transform: none;
+  }
+
+  .navLinks li a:hover,
+  .mobileOnly a:hover,
+  .dropdownTrigger:hover {
     transform: none;
   }
 }

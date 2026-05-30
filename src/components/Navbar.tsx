@@ -136,6 +136,7 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
               >
                 链接
                 <svg
+                  className={styles.chevron}
                   width="12"
                   height="12"
                   viewBox="0 0 24 24"
@@ -144,11 +145,6 @@ const Navbar = ({ customMobileLinks, customMobileLinkLabel }: NavbarProps) => {
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  style={{
-                    marginLeft: "6px",
-                    transition: "transform 0.2s ease",
-                    transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-                  }}
                   aria-hidden="true"
                 >
                   <path d="m6 9 6 6 6-6" />

@@ -83,12 +83,7 @@ body {
   padding: 0;
   color: var(--text-main);
   scrollbar-color: var(--soft-pink) var(--bg-color);
-  scrollbar-width: thin;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  scrollbar-width: auto;
 }
 
 ::-webkit-scrollbar-track {
@@ -103,6 +98,17 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--primary-pink);
+}
+
+@media (pointer: fine) {
+  body {
+    scrollbar-width: thin;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
 }
 
 html {
