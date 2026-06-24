@@ -1,0 +1,32 @@
+.avatar {
+  --avatar-size: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--accent-pink), var(--primary-pink));
+  color: var(--on-accent);
+  font-weight: 600;
+  font-size: calc(var(--avatar-size) * 0.42);
+  line-height: 1;
+  user-select: none;
+}
+
+[data-theme="contrast"] .avatar {
+  background: #ffaa00;
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.initial {
+  display: block;
+}

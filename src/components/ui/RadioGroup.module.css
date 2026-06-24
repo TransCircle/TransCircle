@@ -1,0 +1,134 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* 仅横向排列时等宽分摊；纵向靠 group 默认 align-items:stretch 占满整行，避免被 flex-grow 异常拉伸。 */
+.horizontal .option {
+  flex: 1;
+}
+
+.option {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-height: 40px;
+  padding: 0.65rem 0.8rem;
+  border: 1.5px solid var(--divider-color);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-card);
+  color: var(--text-body);
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.option:hover:not(:disabled) {
+  border-color: var(--primary-pink);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+
+.option:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.option.checked {
+  border-color: var(--primary-pink);
+  background-color: var(--hover-bg);
+}
+
+@supports (background-color: color-mix(in srgb, red 15%, white)) {
+  .option.checked {
+    background-color: var(--hover-bg-mix);
+  }
+}
+
+.option.invalid {
+  border-color: var(--error-border);
+}
+
+.dot {
+  flex-shrink: 0;
+  position: relative;
+  width: 18px;
+  height: 18px;
+  margin-top: 0.1rem;
+  border: 1.5px solid var(--divider-color);
+  border-radius: 50%;
+  background-color: var(--surface-card);
+  transition: border-color 0.15s ease;
+}
+
+.option.checked .dot {
+  border-color: var(--accent-pink);
+}
+
+.option.checked .dot::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background-color: var(--accent-pink);
+}
+
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.optionLabel {
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.optionHint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+[data-theme='contrast'] .option.checked {
+  border-color: #ffaa00;
+  background-color: #332200;
+}
+
+[data-theme='contrast'] .option.checked .dot,
+[data-theme='contrast'] .option.checked .dot::after {
+  border-color: #ffaa00;
+  background-color: #ffaa00;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .option,
+  .dot {
+    transition: none;
+  }
+}

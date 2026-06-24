@@ -1,0 +1,120 @@
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.4rem;
+}
+
+.icon {
+  display: inline-flex;
+  margin-bottom: 0.5rem;
+}
+
+.success .icon {
+  color: var(--soft-success-text);
+}
+
+.error .icon {
+  color: #c62828;
+}
+
+.info .icon {
+  color: var(--accent-pink);
+}
+
+[data-theme='dark'] .error .icon {
+  color: #ef5350;
+}
+
+[data-theme='contrast'] .error .icon {
+  color: #ff6666;
+}
+
+/* Cancel PageHeader's bottom margin inside the stacked screen. */
+.header {
+  margin-bottom: 0;
+}
+
+.detail {
+  margin: 0.25rem 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1.1rem;
+}
+
+/* Link-as-button for navigation actions — mirrors AdminButton geometry so the
+   anchor keeps its semantics (open-in-new-tab, etc.) while matching the kit. */
+.linkBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.25rem;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid transparent;
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.linkPrimary {
+  background-color: var(--accent-pink);
+  color: #ffffff;
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.linkPrimary:hover {
+  background-color: var(--cta-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--shadow-color-hover);
+}
+
+@supports (background-color: color-mix(in srgb, red 85%, black)) {
+  .linkPrimary:hover {
+    background-color: var(--cta-hover-mix);
+  }
+}
+
+[data-theme='contrast'] .linkPrimary {
+  color: #000000;
+}
+
+.linkSecondary {
+  background-color: var(--surface-card);
+  color: var(--text-main);
+  border-color: var(--divider-color);
+}
+
+.linkSecondary:hover {
+  border-color: var(--primary-pink);
+  background-color: var(--hover-bg);
+}
+
+@supports (background-color: color-mix(in srgb, red 15%, white)) {
+  .linkSecondary:hover {
+    background-color: var(--hover-bg-mix);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linkBtn {
+    transition: none;
+  }
+  .linkPrimary:hover {
+    transform: none;
+  }
+}

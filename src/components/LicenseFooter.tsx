@@ -1,13 +1,23 @@
+import { useTranslation } from "react-i18next";
 import styles from "./LicenseFooter.module.css";
 
+/** 紧凑单行页脚，与故事站 LicenseFooter 保持一致。 */
 function LicenseFooter() {
+  const { t } = useTranslation();
+  const year = new Date().getFullYear();
+
   return (
     <footer className={styles.footer}>
-      <div className={styles.divider}></div>
-      <div className={styles.content}>
-        <h2 className={styles.heading}>LICENSE</h2>
-        <p>对于此页面的文字和素材：CC BY 4.0 or later</p>
-        <p>对于其他人提供的材料，依照她们的版权要求。届时我们会提供单独的版权页面。</p>
+      <div className={styles.bar}>
+        <p className={styles.license}>
+          <span className={styles.heading}>{t("footer.heading")}</span>
+          <span>{t("footer.text1")}</span>
+          <span className={styles.sep} aria-hidden="true">
+            ·
+          </span>
+          <span>{t("footer.text2")}</span>
+        </p>
+        <p className={styles.copyright}>{t("footer.copyright", { year })}</p>
       </div>
     </footer>
   );

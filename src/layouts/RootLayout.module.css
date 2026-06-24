@@ -1,0 +1,63 @@
+.app {
+  /* 固定页脚高度：页脚 position:fixed，故在此预留底部空间，避免遮挡内容；
+     侧栏 sticky 的 max-height 也据此扣除（CSS 变量经 DOM 继承到后代）。 */
+  --footer-h: 3rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background-color: var(--bg-color);
+  padding-bottom: var(--footer-h);
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.main:focus {
+  outline: none;
+}
+
+/* 跳到主内容：键盘焦点前隐藏，聚焦时滑入左上角（无障碍）。 */
+.skipLink {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.55rem 1rem;
+  background-color: var(--accent-pink);
+  color: var(--on-accent);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--shadow-pop);
+  transform: translateY(-150%);
+  transition: transform 0.15s ease;
+}
+
+.skipLink:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skipLink {
+    transition: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app {
+    /* 窄屏页脚可能换行成两行，预留多一点 */
+    --footer-h: 4.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app {
+    /* 极窄屏：本地化版权 + 许可信息可能换到三行，避免固定页脚遮挡正文末尾 */
+    --footer-h: 5.25rem;
+  }
+}
