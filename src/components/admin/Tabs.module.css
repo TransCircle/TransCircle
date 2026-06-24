@@ -1,0 +1,110 @@
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.tab:hover {
+  color: var(--text-main);
+}
+
+/* 横向滚动容器会裁剪向外偏移的焦点环；改用内描边（负偏移）避免被裁剪 */
+.tab:focus-visible {
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+.tabLabel {
+  display: inline-flex;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  padding: 0 0.35rem;
+  border-radius: 50px;
+  background-color: var(--hover-bg);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* ── Underline variant ───────────────────────────────────── */
+
+.underline {
+  border-bottom: 1px solid var(--divider-color);
+}
+
+.underline .tab {
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  border-radius: 8px 8px 0 0;
+}
+
+.underline .tab.active {
+  color: var(--accent-pink);
+  border-bottom-color: var(--accent-pink);
+}
+
+.underline .tab.active .badge {
+  background-color: var(--accent-pink);
+  color: #ffffff;
+}
+
+[data-theme='contrast'] .underline .tab.active .badge {
+  color: #000000;
+}
+
+/* ── Segmented variant ───────────────────────────────────── */
+
+.segmented {
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background-color: var(--hover-bg);
+  border: 1px solid var(--divider-color);
+  border-radius: 12px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.segmented .tab {
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+}
+
+.segmented .tab.active {
+  color: var(--accent-pink);
+  background-color: var(--surface-card);
+  box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab {
+    transition: none;
+  }
+}

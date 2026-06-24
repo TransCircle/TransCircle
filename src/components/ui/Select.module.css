@@ -1,0 +1,178 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.wrap {
+  position: relative;
+  width: 100%;
+}
+
+/* Trigger mirrors Field .input geometry exactly. */
+.trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.55rem 0.8rem;
+  border: 1.5px solid var(--divider-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--text-main);
+  background-color: var(--surface-card);
+  cursor: pointer;
+  text-align: left;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.trigger:focus-visible,
+.trigger.open {
+  border-color: var(--primary-pink);
+  box-shadow: 0 0 0 3px rgba(255, 133, 162, 0.18);
+}
+
+@supports (box-shadow: 0 0 0 3px color-mix(in srgb, red 18%, transparent)) {
+  .trigger:focus-visible,
+  .trigger.open {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-pink) 22%, transparent);
+  }
+}
+
+.trigger.invalid {
+  border-color: var(--error-border);
+}
+
+.trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.placeholder {
+  color: var(--text-muted);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.trigger.open .chevron {
+  transform: rotate(180deg);
+}
+
+/* ── Listbox popover ─────────────────────────────────────── */
+
+.listbox {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+  background-color: var(--surface-card);
+  border: 1px solid var(--divider-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+.optionLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.option.active {
+  background-color: var(--hover-bg);
+  color: var(--text-main);
+}
+
+@supports (background-color: color-mix(in srgb, red 15%, white)) {
+  .option.active {
+    background-color: var(--hover-bg-mix);
+  }
+}
+
+.option.selected {
+  color: var(--accent-pink);
+  font-weight: 600;
+}
+
+.optionDisabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.check {
+  flex-shrink: 0;
+  color: var(--accent-pink);
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.hintError {
+  color: var(--error-color);
+}
+
+[data-theme='contrast'] .option.active {
+  background-color: #332200;
+  color: #ffaa00;
+}
+
+[data-theme='contrast'] .option.selected,
+[data-theme='contrast'] .check {
+  color: #ffaa00;
+}
+
+@media (pointer: coarse) {
+  .trigger {
+    min-height: 44px;
+  }
+  .option {
+    padding: 0.65rem 0.7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trigger,
+  .chevron {
+    transition: none;
+  }
+}

@@ -1,0 +1,91 @@
+.group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  background-color: var(--nav-bg);
+  border: 1px solid var(--divider-color);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.group.plain {
+  background: none;
+  border: none;
+  padding: 0;
+  backdrop-filter: none;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 32px;
+  padding: 0 0.6rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn:hover {
+  background-color: var(--hover-bg);
+  color: var(--primary-pink);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+
+.btn.active {
+  background-color: var(--primary-pink);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.btn.active:hover {
+  background-color: var(--accent-pink);
+}
+
+[data-theme='contrast'] .group {
+  background-color: #000000;
+  border-color: #ffffff;
+}
+
+[data-theme='contrast'] .group.plain {
+  background: none;
+  border: none;
+}
+
+[data-theme='contrast'] .btn {
+  color: #ffffff;
+}
+
+[data-theme='contrast'] .btn:hover {
+  background-color: #332200;
+  color: #ffaa00;
+}
+
+[data-theme='contrast'] .btn.active {
+  background-color: #ffaa00;
+  color: #000000;
+}
+
+@media (pointer: coarse) {
+  .btn {
+    height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+}

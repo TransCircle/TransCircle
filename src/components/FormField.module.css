@@ -1,0 +1,22 @@
+.fieldWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.required {
+  color: var(--accent-pink);
+  margin-left: 2px;
+}
+
+.error {
+  font-size: 0.8rem;
+  color: var(--error-color);
+  margin: 0;
+}

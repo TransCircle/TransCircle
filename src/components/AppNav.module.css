@@ -1,0 +1,278 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: var(--nav-bg);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  backdrop-filter: blur(12px) saturate(180%);
+  border-bottom: 1px solid var(--divider-color);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: var(--width-content);
+  margin-inline: auto;
+  padding: 0.6rem 1.5rem;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.brand:hover { color: var(--accent-pink); }
+
+/* ── Desktop links ─────────────────────────────────────── */
+.links {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.link:hover {
+  color: var(--text-main);
+  background-color: var(--hover-bg);
+}
+@supports (background-color: color-mix(in srgb, red 15%, white)) {
+  .link:hover { background-color: var(--hover-bg-mix); }
+}
+
+.extIcon { margin-left: 0.15rem; opacity: 0.7; }
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
+.adminLink {
+  color: var(--accent-pink);
+  font-weight: 500;
+}
+
+.toggles {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ── Dropdown menus ────────────────────────────────────── */
+.dropdown { position: relative; }
+
+.menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  min-width: 11rem;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background-color: var(--surface-card);
+  border: 1px solid var(--divider-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  z-index: 60;
+  animation: menuIn 0.15s ease;
+}
+.menuRight { left: auto; right: 0; }
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text-body);
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.menuItem:hover {
+  background-color: var(--hover-bg);
+  color: var(--text-main);
+}
+@supports (background-color: color-mix(in srgb, red 15%, white)) {
+  .menuItem:hover { background-color: var(--hover-bg-mix); }
+}
+
+/* ── Account button ────────────────────────────────────── */
+.acctBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.25rem 0.5rem 0.25rem 0.3rem;
+  border: 1px solid var(--divider-color);
+  background-color: var(--surface-card);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  color: var(--text-main);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.acctBtn:hover { border-color: var(--primary-pink); background-color: var(--hover-bg); }
+.acctName {
+  font-size: 0.88rem;
+  font-weight: 500;
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loginCta {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 1.1rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--accent-pink);
+  color: var(--on-accent);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+.loginCta:hover { background-color: var(--cta-hover); transform: translateY(-1px); }
+@supports (background-color: color-mix(in srgb, red 85%, black)) {
+  .loginCta:hover { background-color: var(--cta-hover-mix); }
+}
+
+/* ── Hamburger + drawer (mobile) ───────────────────────── */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  width: 38px;
+  height: 38px;
+  padding: 9px 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.hamburger:hover { background-color: var(--hover-bg); }
+.bar {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background-color: var(--text-main);
+  border-radius: 2px;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 84vw;
+  z-index: 70;
+  background-color: var(--surface-card);
+  border-right: 1px solid var(--divider-color);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  overflow-y: auto;
+}
+.drawerOpen { transform: translateX(0); }
+
+.drawerInner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1.25rem 1rem;
+}
+.drawerLink {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 0.8rem;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--text-body);
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.drawerLink:hover { background-color: var(--hover-bg); }
+.drawerDivider {
+  height: 1px;
+  background-color: var(--divider-color);
+  margin: 0.5rem 0;
+}
+.drawerToggles {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.8rem;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  border: none;
+  background-color: var(--overlay-bg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.overlayOn { opacity: 1; pointer-events: auto; }
+
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+
+@media (max-width: 1100px) {
+  .hamburger { display: flex; }
+  .links { display: none; }
+  .toggles { display: none; }
+  .acctName { display: none; }
+  .adminLink { display: none; }
+  .inner { padding: 0.6rem 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link, .menuItem, .acctBtn, .loginCta, .drawer, .overlay, .hamburger { transition: none; }
+  .menu { animation: none; }
+  .loginCta:hover { transform: none; }
+}

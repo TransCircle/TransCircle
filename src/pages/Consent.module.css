@@ -1,0 +1,51 @@
+.scopeList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.scopeItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  background-color: var(--hover-bg);
+  border: 1px solid var(--divider-color);
+  border-radius: var(--radius-md);
+}
+
+.scopeDot {
+  width: 8px;
+  height: 8px;
+  margin-top: 0.45rem;
+  border-radius: 50%;
+  background-color: var(--accent-pink);
+  flex-shrink: 0;
+}
+
+.scopeText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.scopeName {
+  font-size: 0.9rem;
+  color: var(--text-body);
+}
+
+.scopeCode {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}

@@ -6,11 +6,16 @@
   --text-muted: #888888;
   --text-body: #333333;
 
+  --error-color: #d32f2f;
+  --error-border: #ef9a9a;
+  --success-color: #2e7d32;
+
   --primary-pink: #ff85a2;
   --soft-pink: #ffccd5;
   --accent-pink: #f06292;
   --nav-bg: rgba(255, 251, 252, 0.85);
   --divider-color: #ffccd5;
+  --surface-card: #ffffff;
 
   --hover-bg: #ffedf1;
   --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, white);
@@ -20,9 +25,70 @@
   --shadow-color-hover: rgba(240, 98, 146, 0.4);
   --overlay-bg: rgba(0, 0, 0, 0.3);
   --select: #ffe2e8;
+
+  /* Soft success surface (light) — used by Alert/StatusScreen success states */
+  --soft-success-bg: #e7f6ec;
+  --soft-success-border: #a9d8b6;
+  --soft-success-text: #1e7d34;
+
+  /* ── Shared scales (theme-invariant) ─────────────────────── */
+  /* Radius scale: inputs/selects, rows/popovers, cards, full pill. */
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  /* Elevation — resolved lazily against the active theme's --shadow-color. */
+  --shadow-card: 0 1px 2px var(--shadow-color);
+  --shadow-card-hover: 0 4px 14px var(--shadow-color-hover);
+  --shadow-pop: 0 8px 24px var(--shadow-color);
+
+  /* Layout rails — fluid: pages fill the viewport up to these caps.
+     content = wide browse/list pages; reading = comfortable measure for
+     long-form text + forms; form = focused auth/status card. */
+  --width-content: 1280px;
+  --width-reading: 60rem;
+  --width-form: 26rem;
+
+  /* 统一导航栏高度：供文档滚动下的 sticky 列表头偏移，避免被吸附在导航栏之后。 */
+  --app-nav-height: 57px;
+
+  /* accent-pink 上的前景色（高对比度下改黑）。 */
+  --on-accent: #ffffff;
 }
 
-/* ── Dark Theme ────────────────────────────────── */
+/* ── Dark Theme (via system preference, JS-less fallback) ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg-color: #12121a;
+    --text-main: #f0f0f5;
+    --text-secondary: #a0a0b0;
+    --text-muted: #808090;
+    --text-body: #c0c0d0;
+
+    --primary-pink: #ff85a2;
+    --soft-pink: #3a2a35;
+    --accent-pink: #ff6b9d;
+    --nav-bg: rgba(24, 24, 35, 0.85);
+    --divider-color: #2a2a3a;
+    --surface-card: #1e1e2e;
+
+    --hover-bg: #2a1f25;
+    --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, #12121a);
+    --cta-hover: #cc537c;
+    --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
+    --shadow-color: rgba(255, 107, 156, 0.098);
+    --shadow-color-hover: rgba(255, 107, 157, 0.4);
+    --overlay-bg: rgba(0, 0, 0, 0.5);
+    --select: #664e5e;
+
+    --soft-success-bg: rgba(46, 160, 75, 0.12);
+    --soft-success-border: rgba(46, 160, 75, 0.3);
+    --soft-success-text: #66bb6a;
+  }
+}
+
+/* ── Dark Theme (JS-controlled) ────────────────── */
 [data-theme="dark"] {
   --bg-color: #12121a;
   --text-main: #f0f0f5;
@@ -35,6 +101,7 @@
   --accent-pink: #ff6b9d;
   --nav-bg: rgba(24, 24, 35, 0.85);
   --divider-color: #2a2a3a;
+  --surface-card: #1e1e2e;
 
   --hover-bg: #2a1f25;
   --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, #12121a);
@@ -44,21 +111,26 @@
   --shadow-color-hover: rgba(255, 107, 157, 0.4);
   --overlay-bg: rgba(0, 0, 0, 0.5);
   --select: #664e5e;
+
+  --soft-success-bg: rgba(46, 160, 75, 0.12);
+  --soft-success-border: rgba(46, 160, 75, 0.3);
+  --soft-success-text: #66bb6a;
 }
 
 /* ── High Contrast Theme ───────────────────────── */
 [data-theme="contrast"] {
   --bg-color: #000000;
   --text-main: #ffffff;
-  --text-secondary: #ffffff;
-  --text-muted: #ffffff;
-  --text-body: #ffffff;
+  --text-secondary: #e0e0e0;
+  --text-muted: #cccccc;
+  --text-body: #f0f0f0;
 
   --primary-pink: #ffaa00;
   --soft-pink: #332200;
   --accent-pink: #ffaa00;
   --nav-bg: rgba(0, 0, 0, 0.95);
   --divider-color: #ffffff;
+  --surface-card: #000000;
 
   --hover-bg: #332200;
   --hover-bg-mix: #332200;
@@ -68,6 +140,12 @@
   --shadow-color-hover: rgba(255, 170, 0, 0.5);
   --overlay-bg: rgba(0, 0, 0, 0.8);
   --select: #cc8800;
+
+  --soft-success-bg: #000000;
+  --soft-success-border: #66ff66;
+  --soft-success-text: #66ff66;
+
+  --on-accent: #000000;
 }
 
 *,
@@ -123,6 +201,16 @@ html {
 
   body {
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
