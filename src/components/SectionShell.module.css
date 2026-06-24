@@ -1,0 +1,192 @@
+.wrap {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  gap: 2rem;
+  width: 100%;
+  max-width: var(--width-content);
+  margin-inline: auto;
+  padding: 2rem 1.5rem 3.5rem;
+  align-items: start;
+}
+
+/* 侧栏 = 一块连贯的设置导轨：身份卡 + 导航共处同一表面，消除「两个漂浮方块」的割裂感。 */
+.sidebar {
+  position: sticky;
+  top: 4.75rem;
+  align-self: start;
+  /* 限高到视口（扣除顶栏 4.75rem、固定页脚 --footer-h 与留白）；过高则侧栏内部滚动，
+     保证侧栏始终固定可见、不随内容上下乱动。 */
+  max-height: calc(100dvh - 4.75rem - var(--footer-h, 3rem) - 1rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface-card);
+  border: 1px solid var(--divider-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 0.5rem;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.6rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid var(--divider-color);
+}
+
+.idText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.eyebrow {
+  font-size: 0.64rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+.idName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.idSub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 40px;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-body);
+  text-decoration: none;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.navItem:hover {
+  background-color: var(--hover-bg);
+  color: var(--text-main);
+}
+@supports (background-color: color-mix(in srgb, red 15%, white)) {
+  .navItem:hover { background-color: var(--hover-bg-mix); }
+}
+.navItemActive,
+.navItemActive:hover {
+  background-color: var(--hover-bg);
+  color: var(--accent-pink);
+  font-weight: 600;
+}
+@supports (background-color: color-mix(in srgb, red 15%, white)) {
+  .navItemActive,
+  .navItemActive:hover { background-color: var(--hover-bg-mix); }
+}
+/* 选中态：左侧 3px 粉色指示条（沿用 Card accent 的品牌语言），加强寻路感。 */
+.navItemActive::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 1.15rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--accent-pink);
+}
+.navIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.navLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.content {
+  min-width: 0;
+}
+
+/* 触控设备：放大点按目标至 ≥44px（DESIGN.md 触控目标约定）。 */
+@media (pointer: coarse) {
+  .navItem { min-height: 44px; }
+}
+
+/* ── 平板 / 手机：侧栏退化为「身份卡 + 水平 pill 标签条」 ─────────────── */
+@media (max-width: 768px) {
+  .wrap {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.25rem 1rem 2.5rem;
+  }
+  .sidebar {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding: 0.5rem 0.6rem;
+  }
+  .identity {
+    margin-bottom: 0.5rem;
+  }
+  .nav {
+    flex-direction: row;
+    gap: 0.4rem;
+    overflow-x: auto;
+    /* 四周留白让键盘焦点环（outline 2px + offset 2px ≈ 4px）不被滚动容器边缘裁掉；
+       scroll-padding 让聚焦/选中项滚入时避开右缘渐隐区（mask 末端 28px）。 */
+    padding: 0.3rem 0.3rem;
+    scroll-padding-inline: 34px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* 右缘渐隐，提示「可横向滚动、还有更多」 */
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+  }
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+  .navItem {
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 0.5rem 0.95rem;
+    border: 1px solid var(--divider-color);
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-card);
+    scroll-snap-align: start;
+  }
+  /* pill 标签条上不再画左侧指示条，改为整枚填充表达选中。 */
+  .navItemActive::before {
+    display: none;
+  }
+  .navItemActive,
+  .navItemActive:hover {
+    background-color: var(--accent-pink);
+    color: var(--on-accent);
+    border-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navItem { transition: none; }
+}

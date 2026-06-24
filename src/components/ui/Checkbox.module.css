@@ -1,0 +1,134 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-body);
+  line-height: 1.5;
+}
+
+.row.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Visually hidden but focusable native control. */
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.box {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--divider-color);
+  border-radius: 6px;
+  background-color: var(--surface-card);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.check {
+  color: #ffffff;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.dash {
+  position: absolute;
+  width: 10px;
+  height: 2px;
+  border-radius: 2px;
+  background-color: #ffffff;
+  opacity: 0;
+}
+
+.input:checked + .box {
+  background-color: var(--accent-pink);
+  border-color: var(--accent-pink);
+}
+
+.input:checked + .box .check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.input:indeterminate + .box {
+  background-color: var(--accent-pink);
+  border-color: var(--accent-pink);
+}
+
+.input:indeterminate + .box .check {
+  opacity: 0;
+}
+
+.input:indeterminate + .box .dash {
+  opacity: 1;
+}
+
+.input:focus-visible + .box {
+  border-color: var(--primary-pink);
+  box-shadow: 0 0 0 3px rgba(255, 133, 162, 0.18);
+}
+
+@supports (box-shadow: 0 0 0 3px color-mix(in srgb, red 18%, transparent)) {
+  .input:focus-visible + .box {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-pink) 22%, transparent);
+  }
+}
+
+.invalid .box {
+  border-color: var(--error-border);
+}
+
+.labelText {
+  min-width: 0;
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.hintError {
+  color: var(--error-color);
+}
+
+[data-theme='contrast'] .check,
+[data-theme='contrast'] .dash {
+  color: #000000;
+  background-color: #000000;
+}
+
+@media (pointer: coarse) {
+  .row {
+    min-height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box,
+  .check {
+    transition: none;
+  }
+}

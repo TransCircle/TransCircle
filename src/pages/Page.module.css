@@ -1,0 +1,366 @@
+/* 后台各页共享的页面级布局类（行级控件统一来自 components/admin 原语）。 */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  /* 顶部留白由页面自身提供（详情页直接生效；列表页由 .stickyHead 负边距抵消并自带） */
+  padding-top: 1.3rem;
+}
+
+/* Reading / form pages: keep a comfortable measure (not full browse width)
+   centered within the wide content rail, so long-form text and single-column
+   forms don't sprawl on large screens. */
+.pageNarrow {
+  width: 100%;
+  max-width: var(--width-reading);
+  margin-inline: auto;
+}
+
+/* 列表页头部（标签/搜索栏）：随内容区滚动时固定在顶部，不跟列表一起滑走。
+   负上边距抵消 .page 的 padding-top，并把该留白纳入 sticky 头部自身，
+   使其贴住滚动容器顶端、完整覆盖滚动经过的内容。 */
+.stickyHead {
+  position: sticky;
+  top: var(--app-nav-height);
+  z-index: 3;
+  margin-top: -1.3rem;
+  background-color: var(--bg-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1.3rem 0 0.7rem;
+}
+
+/* Non-sticky page header group for customer (document-scroll) pages, where a
+   sticky header would pin underneath RootLayout's sticky navbar. Admin pages
+   keep .stickyHead because they scroll inside an internal container. */
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* 独立类（非后代选择器）：随处可用——含 Surface 版 <Toolbar> 组件内的搜索框，
+   否则因 CSS Modules 各自哈希，.toolbar .grow 的祖先选择器命不中 <Toolbar>。 */
+.grow {
+  flex: 1;
+  min-width: min(220px, 100%);
+}
+
+.count {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+}
+
+.tabpanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  outline: none;
+}
+
+/* ── Data list ───────────────────────────────────────────── */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.rowBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+  padding: 0.9rem 1.1rem;
+  background-color: var(--surface-card);
+  border: 1px solid var(--divider-color);
+  border-radius: 12px;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.rowBtn:hover {
+  border-color: var(--primary-pink);
+  background-color: var(--hover-bg);
+  box-shadow: 0 2px 10px var(--shadow-color);
+}
+
+@supports (background-color: color-mix(in srgb, red 15%, white)) {
+  .rowBtn:hover {
+    background-color: var(--hover-bg-mix);
+  }
+}
+
+/* 静态行（无下钻，如审计日志） */
+.rowStatic {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  background-color: var(--surface-card);
+  border: 1px solid var(--divider-color);
+  border-radius: 12px;
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rowTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowMeta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  align-items: center;
+  word-break: break-word;
+}
+
+/* Optional 2-line body excerpt inside a list row (e.g. the public feed summary). */
+.rowSummary {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+}
+
+.rowMetaSep {
+  opacity: 0.5;
+}
+
+.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  background-color: var(--hover-bg);
+  padding: 0.05rem 0.4rem;
+  border-radius: 5px;
+  /* 长 ID / 令牌（无空格长串）必须可断行，否则横向撑破页面、出现横向滚动条，
+     而 sticky 侧栏只在垂直方向钉住，横向滚动时会被整行拖着移动。 */
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.rowRight {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.chevron {
+  display: inline-flex;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ── Detail view ─────────────────────────────────────────── */
+
+.detailHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.detailTitle {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.stackSm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.contentBlock {
+  padding: 1.1rem 1.25rem;
+  background-color: var(--hover-bg);
+  border: 1px solid var(--divider-color);
+  border-radius: 10px;
+  line-height: 1.75;
+  font-size: 0.92rem;
+  color: var(--text-body);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* Rendered (sanitized) rich-text article body. */
+.prose {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--text-body);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.prose pre {
+  overflow-x: auto;
+  padding: 0.9rem 1.1rem;
+  background-color: var(--hover-bg);
+  border-radius: var(--radius-sm);
+}
+
+.prose a {
+  color: var(--accent-pink);
+}
+
+.prose :first-child {
+  margin-top: 0;
+}
+
+.prose :last-child {
+  margin-bottom: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.loadMoreWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+/* ── History / timeline ──────────────────────────────────── */
+
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.historyItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--divider-color);
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+}
+
+.historyHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.historyTime {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.noteText {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-body);
+}
+
+.subtleNote {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.subtleNoteSpaced {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.detailTitleSub {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.inlineMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .rowBtn,
+  .rowStatic {
+    align-items: flex-start;
+  }
+}

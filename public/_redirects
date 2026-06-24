@@ -8,3 +8,6 @@
 /s/list-tool https://github.com/epheiamoe/x-list-members 302
 # 表单
 /s/join https://docs.google.com/forms/d/e/1FAIpQLSdDdB-WUlqgej2zNzIPLIU98heCYiMkezZ8YnHNPQCTlgIABQ/viewform?usp=publish-editor 302
+
+# SPA fallback：所有其余路径交由前端路由处理（必须置于具体规则之后）
+/* /index.html 200

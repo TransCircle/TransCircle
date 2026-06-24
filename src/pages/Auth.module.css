@@ -1,0 +1,123 @@
+/* Shared layout helpers for the centered-card auth pages
+   (Login, Register, RegisterDirect, ForgotPassword, ResetPassword, EmailResend). */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.aside {
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Column content inside an Alert (e.g. warning text + a checkbox row). */
+.infoStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.link {
+  color: var(--accent-pink);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* Field + sub-affordance (e.g. password + "forgot password") hugging together */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.forgotRow {
+  text-align: right;
+}
+
+.forgotLink {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.forgotLink:hover {
+  color: var(--accent-pink);
+  text-decoration: underline;
+}
+
+/* Centered MFA code entry */
+.mfaCode {
+  text-align: center;
+  font-size: 1.2rem;
+  letter-spacing: 0.4em;
+}
+
+/* OAuth / alternate-action button stack */
+.oauthSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.oauthRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* "or" divider between primary form and OAuth options */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--divider-color);
+}
+
+/* 管理员登录入口：统一收纳于登录页底部（无独立 /admin/login），样式克制。 */
+.adminEntry {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--divider-color);
+}
+
+.adminLink {
+  background: none;
+  border: none;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.adminLink:hover {
+  color: var(--accent-pink);
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adminLink {
+    transition: none;
+  }
+}

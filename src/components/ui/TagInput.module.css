@@ -1,0 +1,149 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Container mirrors Field .input, lights the pink ring on inner focus. */
+.box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 40px;
+  padding: 0.35rem 0.5rem;
+  border: 1.5px solid var(--divider-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-card);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.box:focus-within {
+  border-color: var(--primary-pink);
+  box-shadow: 0 0 0 3px rgba(255, 133, 162, 0.18);
+}
+
+@supports (box-shadow: 0 0 0 3px color-mix(in srgb, red 18%, transparent)) {
+  .box:focus-within {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-pink) 22%, transparent);
+  }
+}
+
+.box.invalid {
+  border-color: var(--error-border);
+}
+
+/* Chip — matches the Pill visual language (pill radius, hover-bg surface). */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.1rem 0.2rem 0.1rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--hover-bg);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 500;
+  max-width: 100%;
+}
+
+.chipLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remove {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Expand the tap target to >=40px without bloating the chip visually. */
+.remove::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}
+
+.remove:hover {
+  background-color: var(--surface-card);
+  color: var(--text-main);
+}
+
+.remove:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 1px;
+}
+
+.input {
+  flex: 1;
+  min-width: 8ch;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.2rem 0.3rem;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.hintError {
+  color: var(--error-color);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[data-theme='contrast'] .chip {
+  border: 1px solid var(--divider-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box,
+  .remove {
+    transition: none;
+  }
+}

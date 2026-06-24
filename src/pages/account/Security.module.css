@@ -1,0 +1,108 @@
+/* Bespoke bits for the security settings page that have no shared primitive.
+   Everything else uses @/components/ui + Page.module.css. */
+
+.section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--divider-color);
+}
+
+.subHeading {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--text-main);
+}
+
+.note {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* Permissions overview (我的权限) — role/permission chip groups */
+.permGroup {
+  margin-top: 1rem;
+}
+
+.permGroup:first-of-type {
+  margin-top: 0;
+}
+
+.permGroupLabel {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Inline register row (passkey name + button) */
+.inlineRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.inlineRow .grow {
+  flex: 1;
+  min-width: min(220px, 100%);
+}
+
+/* TOTP enrolment */
+.qr {
+  display: block;
+  width: 200px;
+  height: 200px;
+  margin: 1rem auto;
+  border-radius: var(--radius-sm);
+}
+
+.secretLine {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0 0 1rem;
+}
+
+.secret {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  margin-left: 0.25rem;
+  word-break: break-all;
+}
+
+.codeNarrow {
+  max-width: 240px;
+  margin: 0 auto;
+}
+
+.codeInput {
+  text-align: center;
+  font-size: 1.2rem;
+  letter-spacing: 0.3em;
+}
+
+.centerActions {
+  display: flex;
+  justify-content: center;
+}
+
+/* Recovery codes (inside the Modal) */
+.recoveryCodes {
+  background-color: var(--hover-bg);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 2;
+  word-break: break-all;
+}

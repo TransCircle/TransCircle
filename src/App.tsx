@@ -1,6 +1,4 @@
-import Navbar from './components/Navbar';
 import FloatingTOC, { type TOCItem } from './components/FloatingTOC';
-import LicenseFooter from './components/LicenseFooter';
 import styles from './App.module.css';
 
 const GitHubIcon = () => (
@@ -27,21 +25,11 @@ const TOC_ITEMS: TOCItem[] = [
   { href: '#follow', label: '关注我们' },
 ];
 
-const mobileLinks = (close: () => void) =>
-  TOC_ITEMS.map(({ href, label }) => ({
-    key: href,
-    node: <a href={href} onClick={close}>{label}</a>,
-  }));
-
 const App = () => (
-  <div className={styles.appContainer}>
-    <Navbar
-      customMobileLinkLabel="目录"
-      customMobileLinks={mobileLinks}
-    />
+  <>
     <FloatingTOC items={TOC_ITEMS} />
 
-    <main className={styles.mainContent}>
+    <div className={styles.mainContent}>
       <header className={styles.contentHeader}>
         <h1 className={styles.mainTitle}>TransCircle Project</h1>
         <p className={styles.subTitle}>我们的存在，就是对恶意最大的反抗。</p>
@@ -97,10 +85,8 @@ const App = () => (
           </li>
         </ul>
       </section>
-    </main>
-
-    <LicenseFooter />
-  </div>
+    </div>
+  </>
 );
 
 export default App;

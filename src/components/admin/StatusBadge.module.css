@@ -1,0 +1,127 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.6rem 0.2rem 0.5rem;
+  border-radius: 50px;
+  border: 1px solid transparent;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.badge.sm {
+  font-size: 0.72rem;
+  padding: 0.12rem 0.5rem 0.12rem 0.42rem;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: currentColor;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+/* ── Light tones ─────────────────────────────────────────── */
+
+.tone_amber {
+  color: #b26a00;
+  background-color: #fff3e0;
+}
+.tone_blue {
+  color: #1a56c4;
+  background-color: #e9f1ff;
+}
+.tone_green {
+  color: #1e7d34;
+  background-color: #e7f6ec;
+}
+.tone_red {
+  color: #c62828;
+  background-color: #fbe9e7;
+}
+.tone_accent {
+  color: var(--accent-pink);
+  background-color: var(--hover-bg);
+}
+.tone_muted {
+  color: var(--text-muted);
+  background-color: var(--hover-bg);
+}
+.tone_neutral {
+  color: var(--text-secondary);
+  background-color: var(--hover-bg);
+}
+
+/* ── Dark tones ──────────────────────────────────────────── */
+
+[data-theme='dark'] .tone_amber {
+  color: #e0a32e;
+  background-color: rgba(245, 166, 35, 0.13);
+}
+[data-theme='dark'] .tone_blue {
+  color: #6ea8ff;
+  background-color: rgba(59, 130, 246, 0.14);
+}
+[data-theme='dark'] .tone_green {
+  color: #66bb6a;
+  background-color: rgba(46, 160, 75, 0.14);
+}
+[data-theme='dark'] .tone_red {
+  color: #ef5350;
+  background-color: rgba(244, 67, 54, 0.12);
+}
+
+/* ── Contrast: black bg + bright text/border + colored dot ── */
+
+[data-theme='contrast'] .badge {
+  background-color: #000000;
+  border-color: currentColor;
+}
+[data-theme='contrast'] .tone_amber {
+  color: #ffaa00;
+}
+[data-theme='contrast'] .tone_blue {
+  color: #66ccff;
+}
+[data-theme='contrast'] .tone_green {
+  color: #66ff66;
+}
+[data-theme='contrast'] .tone_red {
+  color: #ff6666;
+}
+[data-theme='contrast'] .tone_accent {
+  color: #ffaa00;
+}
+[data-theme='contrast'] .tone_muted,
+[data-theme='contrast'] .tone_neutral {
+  color: #ffffff;
+}
+
+/* ── Pill (neutral marker) ───────────────────────────────── */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 50px;
+  background-color: var(--hover-bg);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pillAccent {
+  color: var(--accent-pink);
+}
+
+[data-theme='contrast'] .pill {
+  border: 1px solid var(--divider-color);
+}

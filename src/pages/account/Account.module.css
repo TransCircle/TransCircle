@@ -1,0 +1,158 @@
+/* 账户中心各页共享的轻量布局类（行级控件来自 components/ui 原语）。 */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.cardStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* 设置式列表：单张卡片内以分隔线分行，取代「每行一个重边框卡片」的重复 chrome。
+   行内复用 .rowMain / .rowText / .rowTitle / .rowMeta / .providerIcon / .actions。 */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.listRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1.1rem;
+}
+.listRow + .listRow {
+  border-top: 1px solid var(--divider-color);
+}
+
+/* 卡片头部：区块标签 + 状态徽章同一行居中对齐（修复 SectionLabel 默认下边距造成的错位）。 */
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.cardHeadLabel {
+  margin: 0;
+}
+
+/* 危险区：以红色（语义色 token）表达危险，而非品牌粉，避免「不像危险操作」。 */
+.dangerCard {
+  border-color: var(--error-border);
+  border-left: 3px solid var(--error-color);
+}
+[data-theme="dark"] .dangerCard {
+  border-color: rgba(244, 67, 54, 0.3);
+  border-left-color: #ef5350;
+}
+[data-theme="contrast"] .dangerCard {
+  border-color: #ff6666;
+  border-left-color: #ff6666;
+}
+
+.rowMain {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.rowMeta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.providerIcon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--hover-bg);
+  color: var(--text-main);
+  flex-shrink: 0;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.codeList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 1rem;
+}
+
+.codeItem {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  color: var(--text-body);
+}
+
+@media (max-width: 480px) {
+  .codeList {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 头像区 */
+.avatarRow {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+.avatarActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
