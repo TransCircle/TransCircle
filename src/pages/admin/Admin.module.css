@@ -74,6 +74,17 @@
   border-top: 1px dashed var(--divider-color);
 }
 
+/* 卡片底部操作行（编辑 / 轮换密钥 / 启停）：与上方 .kv 行用实线分隔。 */
+.cardActions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--divider-color);
+}
+
 @media (max-width: 640px) {
   .kv {
     grid-template-columns: 1fr;
