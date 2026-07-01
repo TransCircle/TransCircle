@@ -7,22 +7,24 @@
   --text-body: #333333;
 
   --error-color: #d32f2f;
-  --error-border: #ef9a9a;
+  --error-border: #f0c2c2;
   --success-color: #2e7d32;
 
-  --primary-pink: #ff85a2;
+  --primary-pink: #ec9eb0;
   --soft-pink: #ffccd5;
-  --accent-pink: #f06292;
+  --accent-pink: #e67690;
   --nav-bg: rgba(255, 251, 252, 0.85);
   --divider-color: #ffccd5;
   --surface-card: #ffffff;
 
   --hover-bg: #ffedf1;
   --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, white);
-  --cta-hover: #cc537c;
-  --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
-  --shadow-color: rgba(240, 98, 145, 0.128);
-  --shadow-color-hover: rgba(240, 98, 146, 0.4);
+  --cta-bg: #ffd8d8;
+  --cta-color: #412a2a;
+  --cta-hover: #f7bcbc;
+  --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, rgb(255, 255, 255));
+  --shadow-color: rgba(255, 255, 255, 0.06);
+  --shadow-color-hover: rgba(240, 98, 146, 0.15);
   --overlay-bg: rgba(0, 0, 0, 0.3);
   --select: #ffe2e8;
 
@@ -54,7 +56,7 @@
   --app-nav-height: 57px;
 
   /* accent-pink 上的前景色（高对比度下改黑）。 */
-  --on-accent: #ffffff;
+  --on-accent: #412a2a;
 }
 
 /* ── Dark Theme (via system preference, JS-less fallback) ── */
@@ -75,10 +77,12 @@
 
     --hover-bg: #2a1f25;
     --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, #12121a);
+    --cta-bg: #ff85a2;
+    --cta-color: #f5d6dd;
     --cta-hover: #cc537c;
     --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
-    --shadow-color: rgba(255, 107, 156, 0.098);
-    --shadow-color-hover: rgba(255, 107, 157, 0.4);
+    --shadow-color: rgba(255, 107, 156, 0.04);
+    --shadow-color-hover: rgba(255, 107, 157, 0.15);
     --overlay-bg: rgba(0, 0, 0, 0.5);
     --select: #664e5e;
 
@@ -105,47 +109,18 @@
 
   --hover-bg: #2a1f25;
   --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, #12121a);
+  --cta-bg: #ff85a2;
+  --cta-color: #f4e7ea;
   --cta-hover: #cc537c;
   --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
-  --shadow-color: rgba(255, 107, 156, 0.098);
-  --shadow-color-hover: rgba(255, 107, 157, 0.4);
+  --shadow-color: rgba(255, 107, 156, 0.04);
+  --shadow-color-hover: rgba(255, 107, 157, 0.15);
   --overlay-bg: rgba(0, 0, 0, 0.5);
   --select: #664e5e;
 
   --soft-success-bg: rgba(46, 160, 75, 0.12);
   --soft-success-border: rgba(46, 160, 75, 0.3);
   --soft-success-text: #66bb6a;
-}
-
-/* ── High Contrast Theme ───────────────────────── */
-[data-theme="contrast"] {
-  --bg-color: #000000;
-  --text-main: #ffffff;
-  --text-secondary: #e0e0e0;
-  --text-muted: #cccccc;
-  --text-body: #f0f0f0;
-
-  --primary-pink: #ffaa00;
-  --soft-pink: #332200;
-  --accent-pink: #ffaa00;
-  --nav-bg: rgba(0, 0, 0, 0.95);
-  --divider-color: #ffffff;
-  --surface-card: #000000;
-
-  --hover-bg: #332200;
-  --hover-bg-mix: #332200;
-  --cta-hover: #cc8800;
-  --cta-hover-mix: #cc8800;
-  --shadow-color: rgba(255, 170, 0, 0.3);
-  --shadow-color-hover: rgba(255, 170, 0, 0.5);
-  --overlay-bg: rgba(0, 0, 0, 0.8);
-  --select: #cc8800;
-
-  --soft-success-bg: #000000;
-  --soft-success-border: #66ff66;
-  --soft-success-text: #66ff66;
-
-  --on-accent: #000000;
 }
 
 *,
@@ -219,7 +194,51 @@ html {
   outline-offset: 2px;
 }
 
+/* 移除移动端默认 tap 高亮，改用自定义样式。 */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 输入框使用 box-shadow 作为聚焦指示，不需要外边框。 */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
 ::selection {
   background-color: var(--select);
   color: var(--text-main);
+}
+
+/* ══════════════════════════════════════════════════
+   View Transitions — Theme switch circle reveal
+   ══════════════════════════════════════════════════ */
+/* Old snapshot fades out quickly, new snapshot grows from click origin */
+::view-transition-old(root) {
+  animation: vt-fade-out 0.15s ease-out both;
+}
+::view-transition-new(root) {
+  animation: vt-theme-grow 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+
+@keyframes vt-fade-out {
+  to { opacity: 0; }
+}
+@keyframes vt-theme-grow {
+  from {
+    clip-path: circle(0 at var(--vt-origin-x, 50%) var(--vt-origin-y, 50%));
+    opacity: 1;
+  }
+  to {
+    clip-path: circle(var(--vt-final-radius, 3000px) at var(--vt-origin-x, 50%) var(--vt-origin-y, 50%));
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms !important;
+  }
 }

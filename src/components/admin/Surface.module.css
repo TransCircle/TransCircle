@@ -139,18 +139,11 @@
 }
 
 [data-theme='dark'] .voteApprove {
-  background-color: #43a047;
+  background-color: #4CAF50;
 }
 [data-theme='dark'] .voteReject {
-  background-color: #ef5350;
+  background-color: var(--error-color);
 }
-[data-theme='contrast'] .voteApprove {
-  background-color: #66ff66;
-}
-[data-theme='contrast'] .voteReject {
-  background-color: #ff6666;
-}
-
 .voteLegend {
   display: flex;
   align-items: center;
@@ -180,12 +173,6 @@
   background-color: #e5534b;
 }
 
-[data-theme='contrast'] .voteDotApprove {
-  background-color: #66ff66;
-}
-[data-theme='contrast'] .voteDotReject {
-  background-color: #ff6666;
-}
 
 .voteThresholdLabel {
   margin-left: auto;
