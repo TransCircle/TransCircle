@@ -16,9 +16,6 @@
   user-select: none;
 }
 
-[data-theme="contrast"] .avatar {
-  background: #ffaa00;
-}
 
 .img {
   width: 100%;

@@ -42,9 +42,32 @@
   transform: translateY(0);
 }
 
+/* ── 页面切换动画 ─────────────────────────────── */
+
+.pageWrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  animation: pageEnter 0.25s ease-out;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .skipLink {
     transition: none;
+  }
+  .pageWrap {
+    animation: none;
   }
 }
 

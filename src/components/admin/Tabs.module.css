@@ -76,10 +76,6 @@
   color: #ffffff;
 }
 
-[data-theme='contrast'] .underline .tab.active .badge {
-  color: #000000;
-}
-
 /* ── Segmented variant ───────────────────────────────────── */
 
 .segmented {

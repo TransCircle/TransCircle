@@ -76,9 +76,9 @@
 }
 
 .alert_error {
-  background-color: #fbe9e7;
-  border-color: #ef9a9a;
-  color: #c62828;
+  background-color: #FFF0EE;
+  border-color: var(--error-border);
+  color: var(--error-color);
 }
 
 .alert_success {
@@ -94,9 +94,9 @@
 }
 
 [data-theme='dark'] .alert_error {
-  background-color: rgba(244, 67, 54, 0.1);
-  border-color: rgba(244, 67, 54, 0.25);
-  color: #ef5350;
+  background-color: rgba(255, 180, 171, 0.1);
+  border-color: rgba(115, 51, 45, 0.5);
+  color: var(--error-color);
 }
 
 [data-theme='dark'] .alert_success {
@@ -109,24 +109,6 @@
   background-color: rgba(59, 130, 246, 0.12);
   border-color: rgba(59, 130, 246, 0.3);
   color: #6ea8ff;
-}
-
-[data-theme='contrast'] .alert_error {
-  background-color: #000000;
-  border-color: #ff6666;
-  color: #ff6666;
-}
-
-[data-theme='contrast'] .alert_success {
-  background-color: #000000;
-  border-color: #66ff66;
-  color: #66ff66;
-}
-
-[data-theme='contrast'] .alert_info {
-  background-color: #000000;
-  border-color: #66ccff;
-  color: #66ccff;
 }
 
 /* ── EmptyState ──────────────────────────────────────────── */

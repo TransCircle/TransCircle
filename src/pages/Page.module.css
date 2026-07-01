@@ -98,13 +98,8 @@
 .rowBtn:hover {
   border-color: var(--primary-pink);
   background-color: var(--hover-bg);
+  background-color: var(--hover-bg-mix, var(--hover-bg));
   box-shadow: 0 2px 10px var(--shadow-color);
-}
-
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .rowBtn:hover {
-    background-color: var(--hover-bg-mix);
-  }
 }
 
 /* 静态行（无下钻，如审计日志） */
