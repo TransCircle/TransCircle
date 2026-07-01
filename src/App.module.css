@@ -19,6 +19,8 @@
   box-sizing: border-box;
 }
 
+
+
 .contentHeader {
   margin-bottom: 1.5rem;
 }
@@ -104,33 +106,27 @@
 
 .ctaPrimary {
   display: inline-block;
-  background-color: var(--accent-pink);
-  color: white;
+  background-color: var(--cta-bg);
+  color: var(--cta-color);
   padding: 0.5rem 1.2rem;
   border-radius: 50px;
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(240, 98, 146, 0.25);
+  box-shadow: 0 2px 8px var(--shadow-color);
   transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .ctaPrimary:hover {
-  background-color: #cc537c;
+  background-color: var(--cta-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(240, 98, 146, 0.4);
-}
-
-@supports (background-color: color-mix(in srgb, red 85%, black)) {
-  .ctaPrimary:hover {
-    background-color: color-mix(in srgb, var(--accent-pink) 85%, black);
-  }
+  box-shadow: 0 4px 12px var(--shadow-color-hover);
 }
 
 .ctaSecondary {
   display: inline-block;
   border: 1.5px solid var(--primary-pink);
-  color: var(--primary-pink);
+  color: var(--accent-pink);
   padding: 0.5rem 1.2rem;
   border-radius: 50px;
   text-decoration: none;
@@ -141,14 +137,7 @@
 
 .ctaSecondary:hover {
   background-color: var(--hover-bg);
-  color: var(--accent-pink);
   border-color: var(--accent-pink);
-}
-
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .ctaSecondary:hover {
-    background-color: var(--hover-bg-mix);
-  }
 }
 
 /* ── Social links ─────────────────────────────── */
@@ -175,12 +164,7 @@
 
 .socialLink:hover {
   background-color: var(--hover-bg);
-}
-
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .socialLink:hover {
-    background-color: var(--hover-bg-mix);
-  }
+  background-color: var(--hover-bg-mix, var(--hover-bg));
 }
 
 .socialIcon {

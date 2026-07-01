@@ -47,8 +47,8 @@
 /* ── Primary ─────────────────────────────────────────────── */
 
 .primary {
-  background-color: var(--accent-pink);
-  color: #ffffff;
+  background-color: var(--cta-bg);
+  color: var(--cta-color);
   box-shadow: 0 2px 8px var(--shadow-color);
 }
 
@@ -56,17 +56,6 @@
   background-color: var(--cta-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px var(--shadow-color-hover);
-}
-
-@supports (background-color: color-mix(in srgb, red 85%, black)) {
-  .primary:not(:disabled):hover {
-    background-color: var(--cta-hover-mix);
-  }
-}
-
-/* 高对比度：橙色底配黑字（白字对比不足） */
-[data-theme='contrast'] .primary {
-  color: #000000;
 }
 
 /* ── Secondary ───────────────────────────────────────────── */
@@ -80,12 +69,7 @@
 .secondary:not(:disabled):hover {
   border-color: var(--primary-pink);
   background-color: var(--hover-bg);
-}
-
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .secondary:not(:disabled):hover {
-    background-color: var(--hover-bg-mix);
-  }
+  background-color: var(--hover-bg-mix, var(--hover-bg));
 }
 
 /* ── Ghost ───────────────────────────────────────────────── */
@@ -103,34 +87,23 @@
 
 .danger {
   background-color: var(--surface-card);
-  color: #c62828;
-  border-color: #ef9a9a;
+  color: var(--error-color);
+  border-color: var(--error-border);
 }
 
 .danger:not(:disabled):hover {
-  border-color: #e57373;
-  background-color: #fbe9e7;
+  border-color: #D4A09E;
+  background-color: #FFF0EE;
 }
 
 [data-theme='dark'] .danger {
   background-color: transparent;
-  color: #ef5350;
-  border-color: rgba(244, 67, 54, 0.3);
+  color: var(--error-color);
+  border-color: rgba(255, 180, 171, 0.25);
 }
 
 [data-theme='dark'] .danger:not(:disabled):hover {
-  background-color: rgba(244, 67, 54, 0.08);
-}
-
-[data-theme='contrast'] .danger {
-  background-color: #000000;
-  color: #ff6666;
-  border-color: #ffaa00;
-}
-
-[data-theme='contrast'] .danger:not(:disabled):hover {
-  border-color: #ffaa00;
-  background-color: #332200;
+  background-color: rgba(255, 180, 171, 0.08);
 }
 
 /* Comfortable touch targets on touch devices. */
