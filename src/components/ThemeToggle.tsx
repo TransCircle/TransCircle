@@ -1,45 +1,39 @@
-import { useCallback, useRef } from "react";
-import { flushSync } from "react-dom";
+import { useCallback, useRef, useState } from "react";
 import { useTheme, type Theme } from "../context/ThemeContext";
 import styles from "./ThemeToggle.module.css";
 
+interface RippleEffect {
+  id: number;
+  x: number;
+  y: number;
+  radius: number;
+  theme: Theme;
+}
+
 /**
- * Circle-reveal theme switch using the View Transitions API.
- * The browser captures screenshots of old & new page states, then
- * animates clip-path to reveal the new theme from the click origin.
- * Page content is preserved throughout (no solid overlay).
+ * Circle-reveal theme switch using custom CSS animations.
+ * Allows multiple simultaneous ripple effects when clicked rapidly.
  */
 const animateThemeSwitch = (
   nextTheme: Theme,
   button: HTMLButtonElement,
   setTheme: (t: Theme) => void,
+  addRipple: (x: number, y: number, radius: number, theme: Theme) => void,
 ): void => {
   const rect = button.getBoundingClientRect();
   const originX = rect.left + rect.width / 2;
   const originY = rect.top + rect.height / 2;
 
   // Calculate the exact pixel radius needed to cover the viewport
-  // from the click origin (diagonal of the viewport + safety margin)
   const dx = Math.max(originX, innerWidth - originX);
   const dy = Math.max(originY, innerHeight - originY);
   const finalR = Math.ceil(Math.sqrt(dx * dx + dy * dy)) + 60;
 
-  document.documentElement.style.setProperty("--vt-origin-x", `${originX}px`);
-  document.documentElement.style.setProperty("--vt-origin-y", `${originY}px`);
-  document.documentElement.style.setProperty("--vt-final-radius", `${finalR}px`);
-
-  if (
-    typeof document.startViewTransition === "function" &&
-    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  ) {
-    document.startViewTransition(() => {
-      flushSync(() => {
-        setTheme(nextTheme);
-      });
-    });
-  } else {
-    setTheme(nextTheme);
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    addRipple(originX, originY, finalR, nextTheme);
   }
+
+  setTheme(nextTheme);
 };
 
 const SunIcon = () => (
@@ -93,29 +87,72 @@ interface ThemeToggleProps {
 const ThemeToggle = ({ className = "" }: ThemeToggleProps) => {
   const { theme, setTheme } = useTheme();
   const btnRef = useRef<HTMLButtonElement>(null);
+  const [ripples, setRipples] = useState<RippleEffect[]>([]);
+  const rippleIdRef = useRef(0);
+
+  const addRipple = useCallback((x: number, y: number, radius: number, theme: Theme) => {
+    const id = rippleIdRef.current++;
+
+    // Limit to max 3 concurrent ripples to prevent queue buildup
+    setRipples((prev) => {
+      const limited = prev.slice(-2); // Keep only the last 2
+      return [...limited, { id, x, y, radius, theme }];
+    });
+
+    // Remove ripple after animation completes
+    setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== id));
+    }, 500);
+
+    // Return true to indicate ripple was added
+    return true;
+  }, []);
 
   const handleToggle = useCallback(() => {
+    // Check if we can add more ripples (limit to 3 concurrent)
+    if (ripples.length >= 3) {
+      // Don't toggle if queue is full - maintains parity
+      return;
+    }
+
     const nextTheme: Theme = theme === "light" ? "dark" : "light";
     const btn = btnRef.current;
     if (btn) {
-      animateThemeSwitch(nextTheme, btn, setTheme);
+      animateThemeSwitch(nextTheme, btn, setTheme, addRipple);
     } else {
       setTheme(nextTheme);
     }
-  }, [theme, setTheme]);
+  }, [theme, setTheme, addRipple, ripples.length]);
 
   const isDark = theme === "dark";
 
   return (
-    <button
-      ref={btnRef}
-      type="button"
-      className={`${styles.toggleBtn} ${className}`.trim()}
-      onClick={handleToggle}
-      aria-label={isDark ? "切換至亮色模式" : "切換至深色模式"}
-    >
-      {isDark ? <SunIcon /> : <MoonIcon />}
-    </button>
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`${styles.toggleBtn} ${className}`.trim()}
+        onClick={handleToggle}
+        aria-label={isDark ? "切換至亮色模式" : "切換至深色模式"}
+      >
+        {isDark ? <SunIcon /> : <MoonIcon />}
+      </button>
+
+      {/* Ripple effects container */}
+      {ripples.map((ripple) => (
+        <div
+          key={ripple.id}
+          className={styles.ripple}
+          data-theme={ripple.theme}
+          style={{
+            left: `${ripple.x}px`,
+            top: `${ripple.y}px`,
+            width: `${ripple.radius * 2}px`,
+            height: `${ripple.radius * 2}px`,
+          }}
+        />
+      ))}
+    </>
   );
 };
 
