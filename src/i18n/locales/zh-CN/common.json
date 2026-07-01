@@ -49,7 +49,6 @@
   "theme": {
     "light": "亮色模式",
     "dark": "深色模式",
-    "contrast": "高对比度模式",
     "selectLabel": "主题选择"
   },
   "landing": {
@@ -72,7 +71,10 @@
     "search": "搜索",
     "stories": "故事征集",
     "archive": "人物归档（开发中）",
-    "community": "社群互助（开发中）"
+    "community": "社群互助（开发中）",
+    "settings": "偏好设置",
+    "theme": "主题",
+    "language": "语言"
   },
   "password": {
     "strengthLabel": "密码强度",
