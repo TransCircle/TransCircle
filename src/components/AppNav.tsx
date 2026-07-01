@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useSession } from "../context/SessionContext";
 import { useAdmin } from "../context/AdminContext";
 import ThemeToggle from "./ThemeToggle";
-import { LanguageToggle } from "./ui";
+// import { LanguageToggle } from "./ui";
 import { Avatar } from "./Avatar";
 import { cx } from "./admin/cx";
 import styles from "./AppNav.module.css";
@@ -48,7 +48,7 @@ export function AppNav() {
   // 导航站主导航：首页 + 生态各业务分区（沿用原导航站，故事征集/人物归档/社群互助）。
   const primaryLinks: NavLinkDef[] = [
     { label: t("nav.home"), to: "/" },
-    { label: t("nav.stories"), href: "https://story.transcircle.org/" },
+    { label: t("nav.stories"), href: "/#stories" },
     { label: t("nav.archive"), href: "/#archive" },
     { label: t("nav.community"), href: "/#community" },
   ];
@@ -159,7 +159,9 @@ export function AppNav() {
               aria-controls="app-drawer"
               onClick={() => setDrawerOpen((o) => !o)}
             >
-              <span className={styles.bar} /><span className={styles.bar} /><span className={styles.bar} />
+              <span className={cx(styles.bar, drawerOpen && styles.barTop)} />
+              <span className={cx(styles.bar, drawerOpen && styles.barMid)} />
+              <span className={cx(styles.bar, drawerOpen && styles.barBot)} />
             </button>
             <Link to="/" className={styles.brand}>TransCircle</Link>
           </div>
@@ -197,13 +199,30 @@ export function AppNav() {
           </div>
 
           <div className={styles.right}>
-            {adminAuthed && (
-              <Link to="/admin" className={cx(styles.link, styles.adminLink)}>{t("nav.admin")}</Link>
-            )}
-            <div className={styles.toggles}>
-              <LanguageToggle variant="plain" />
-              <ThemeToggle />
+            <ThemeToggle />
+            {/*
+            <div ref={langRef} className={styles.dropdown}>
+              <button
+                type="button"
+                className={styles.navBtn}
+                aria-haspopup="menu"
+                aria-expanded={langOpen}
+                aria-label={t("nav.language")}
+                onClick={() => { setLangOpen((o) => !o); setThemeOpen(false); }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+              </button>
+              {langOpen && (
+                <div className={styles.dropdownMenu}>
+                  <LanguageToggle variant="dropdown" />
+                </div>
+              )}
             </div>
+            */}
             {user ? (
               <div ref={acctRef} className={styles.dropdown}>
                 <button
@@ -261,16 +280,8 @@ export function AppNav() {
               <button type="button" className={styles.drawerLink} onClick={() => void doLogout()}>{t("nav.logout")}</button>
             </>
           ) : (
-            <>
-              <Link to="/login" className={styles.drawerLink}>{t("nav.login")}</Link>
-              {adminAuthed && <Link to="/admin" className={styles.drawerLink}>{t("nav.admin")}</Link>}
-            </>
+            <Link to="/login" className={styles.drawerLink}>{t("nav.login")}</Link>
           )}
-          <div className={styles.drawerDivider} />
-          <div className={styles.drawerToggles}>
-            <LanguageToggle variant="plain" />
-            <ThemeToggle />
-          </div>
         </div>
       </div>
       <button

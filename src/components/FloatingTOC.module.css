@@ -3,33 +3,24 @@
   display: none;
 }
 
-/* ── Visible at 1100px+ ───────────────────────── */
+/* ── Visible at 1100px+ ─────────────────────────
+ * 目錄佔左側至多 25% 寬度，無背景無邊框無陰影，
+ * 與正文之間以 border-right 分隔。
+ */
 
 @media (min-width: 1100px) {
   .toc {
     display: block;
     position: fixed;
-    right: 2.5rem;
     top: 7rem;
-    background: var(--nav-bg);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--divider-color);
-    border-radius: 16px;
-    padding: 1.4rem 1.1rem;
-    box-shadow:
-      0 0 10px var(--shadow-color),
-      0 2px 8px rgba(0, 0, 0, 0.06);
+    width: min(16vw, 14rem);
     z-index: 100;
-  }
-}
-
-/* fallback for browsers without backdrop-filter */
-@supports not (backdrop-filter: blur(1px)) {
-  @media (min-width: 1100px) {
-    .toc {
-      background: var(--bg-color);
-    }
+    /* 與 nav .inner 左緣同步再加 1.5rem，大屏不貼邊 */
+    left: max(1.5rem, calc((100vw - 1280px) / 2 + 3rem));
+    /* 右側分隔線 & 內邊距讓 hover 不貼邊 */
+    height: calc(100vh - 7rem - 4rem);
+    border-right: 1px solid var(--divider-color);
+    padding-right: 1rem;
   }
 }
 
@@ -70,13 +61,8 @@
 
 .link:hover {
   background-color: var(--hover-bg);
+  background-color: var(--hover-bg-mix, var(--hover-bg));
   color: var(--primary-pink);
-}
-
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .link:hover {
-    background-color: var(--hover-bg-mix);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

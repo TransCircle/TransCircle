@@ -137,10 +137,6 @@
   white-space: nowrap;
 }
 
-[data-theme='contrast'] .chip {
-  border: 1px solid var(--divider-color);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .box,
   .remove {

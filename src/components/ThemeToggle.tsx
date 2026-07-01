@@ -1,6 +1,40 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTheme, type Theme } from "../context/ThemeContext";
 import styles from "./ThemeToggle.module.css";
+
+interface RippleEffect {
+  id: number;
+  x: number;
+  y: number;
+  radius: number;
+  theme: Theme;
+}
+
+/**
+ * Circle-reveal theme switch using custom CSS animations.
+ * Allows multiple simultaneous ripple effects when clicked rapidly.
+ */
+const animateThemeSwitch = (
+  nextTheme: Theme,
+  button: HTMLButtonElement,
+  setTheme: (t: Theme) => void,
+  addRipple: (x: number, y: number, radius: number, theme: Theme) => void,
+): void => {
+  const rect = button.getBoundingClientRect();
+  const originX = rect.left + rect.width / 2;
+  const originY = rect.top + rect.height / 2;
+
+  // Calculate the exact pixel radius needed to cover the viewport
+  const dx = Math.max(originX, innerWidth - originX);
+  const dy = Math.max(originY, innerHeight - originY);
+  const finalR = Math.ceil(Math.sqrt(dx * dx + dy * dy)) + 60;
+
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    addRipple(originX, originY, finalR, nextTheme);
+  }
+
+  setTheme(nextTheme);
+};
 
 const SunIcon = () => (
   <svg
@@ -46,104 +80,79 @@ const MoonIcon = () => (
   </svg>
 );
 
-const ContrastIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-    focusable="false"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 18a6 6 0 0 0 0-12v12z" />
-  </svg>
-);
-
-const themes: { id: Theme; label: string; icon: React.FC }[] = [
-  { id: "light", label: "亮色模式", icon: SunIcon },
-  { id: "dark", label: "深色模式", icon: MoonIcon },
-  { id: "contrast", label: "高对比度模式", icon: ContrastIcon },
-];
-
 interface ThemeToggleProps {
   className?: string;
 }
 
 const ThemeToggle = ({ className = "" }: ThemeToggleProps) => {
   const { theme, setTheme } = useTheme();
-  const radioRefs = useRef<HTMLButtonElement[]>([]);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [ripples, setRipples] = useState<RippleEffect[]>([]);
+  const rippleIdRef = useRef(0);
 
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
-      const { key } = event;
-      let nextIndex: number | null = null;
+  const addRipple = useCallback((x: number, y: number, radius: number, theme: Theme) => {
+    const id = rippleIdRef.current++;
 
-      switch (key) {
-        case "ArrowLeft":
-        case "ArrowUp":
-          event.preventDefault();
-          nextIndex = index > 0 ? index - 1 : themes.length - 1;
-          break;
-        case "ArrowRight":
-        case "ArrowDown":
-          event.preventDefault();
-          nextIndex = index < themes.length - 1 ? index + 1 : 0;
-          break;
-        case "Home":
-          event.preventDefault();
-          nextIndex = 0;
-          break;
-        case "End":
-          event.preventDefault();
-          nextIndex = themes.length - 1;
-          break;
-        default:
-          return;
-      }
+    // Limit to max 3 concurrent ripples to prevent queue buildup
+    setRipples((prev) => {
+      const limited = prev.slice(-2); // Keep only the last 2
+      return [...limited, { id, x, y, radius, theme }];
+    });
 
-      if (nextIndex !== null) {
-        const nextTheme = themes[nextIndex].id;
-        setTheme(nextTheme);
-        radioRefs.current[nextIndex]?.focus();
-      }
-    },
-    [setTheme]
-  );
+    // Remove ripple after animation completes
+    setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== id));
+    }, 500);
+
+    // Return true to indicate ripple was added
+    return true;
+  }, []);
+
+  const handleToggle = useCallback(() => {
+    // Check if we can add more ripples (limit to 3 concurrent)
+    if (ripples.length >= 3) {
+      // Don't toggle if queue is full - maintains parity
+      return;
+    }
+
+    const nextTheme: Theme = theme === "light" ? "dark" : "light";
+    const btn = btnRef.current;
+    if (btn) {
+      animateThemeSwitch(nextTheme, btn, setTheme, addRipple);
+    } else {
+      setTheme(nextTheme);
+    }
+  }, [theme, setTheme, addRipple, ripples.length]);
+
+  const isDark = theme === "dark";
 
   return (
-    <div
-      className={`${styles.toggleGroup} ${className}`.trim()}
-      role="radiogroup"
-      aria-label="主题选择"
-    >
-      {themes.map(({ id, label, icon: Icon }, index) => {
-        const isActive = theme === id;
-        return (
-          <button
-            key={id}
-            ref={(el) => {
-              if (el) radioRefs.current[index] = el;
-            }}
-            type="button"
-            role="radio"
-            className={`${styles.toggleBtn} ${isActive ? styles.active : ""}`}
-            onClick={() => setTheme(id)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
-            aria-label={label}
-            aria-checked={isActive}
-            tabIndex={isActive ? 0 : -1}
-          >
-            <Icon />
-          </button>
-        );
-      })}
-    </div>
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`${styles.toggleBtn} ${className}`.trim()}
+        onClick={handleToggle}
+        aria-label={isDark ? "切換至亮色模式" : "切換至深色模式"}
+      >
+        {isDark ? <SunIcon /> : <MoonIcon />}
+      </button>
+
+      {/* Ripple effects container */}
+      {ripples.map((ripple) => (
+        <div
+          key={ripple.id}
+          className={styles.ripple}
+          data-theme={ripple.theme}
+          style={{
+            left: `${ripple.x}px`,
+            top: `${ripple.y}px`,
+            width: `${ripple.radius * 2}px`,
+            height: `${ripple.radius * 2}px`,
+          }}
+        />
+      ))}
+    </>
   );
 };
 

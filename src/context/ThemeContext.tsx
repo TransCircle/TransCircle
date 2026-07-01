@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-export type Theme = "light" | "dark" | "contrast";
+export type Theme = "light" | "dark";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -8,7 +8,7 @@ interface ThemeContextValue {
 }
 
 const STORAGE_KEY = "transcircle-theme";
-const VALID_THEMES: readonly Theme[] = ["light", "dark", "contrast"];
+const VALID_THEMES: readonly Theme[] = ["light", "dark"];
 const DEFAULT_THEME: Theme = "light";
 
 /**

@@ -1,5 +1,5 @@
 /// <reference types="vitest/globals" />
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
 
 // Mock matchMedia for theme-related tests
 Object.defineProperty(window, "matchMedia", {

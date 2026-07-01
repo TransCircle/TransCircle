@@ -4,13 +4,13 @@ import { cx } from '../admin/cx'
 import styles from './LanguageToggle.module.css'
 
 const LANGS = [
-  { id: 'zh-CN', label: '简体', i18nKey: 'language.zhCN' },
-  { id: 'zh-TW', label: '繁體', i18nKey: 'language.zhTW' },
+  { id: 'zh-CN', label: '简体', fullLabel: '简体中文', i18nKey: 'language.zhCN' },
+  { id: 'zh-TW', label: '繁體', fullLabel: '繁體中文', i18nKey: 'language.zhTW' },
 ] as const
 
 export interface LanguageToggleProps {
   /** 'plain' drops the card backdrop/border so it sits flush in any surface. */
-  variant?: 'card' | 'plain'
+  variant?: 'card' | 'plain' | 'dropdown'
   className?: string
 }
 
@@ -64,7 +64,11 @@ export const LanguageToggle = ({ variant = 'card', className = '' }: LanguageTog
 
   return (
     <div
-      className={cx(styles.group, variant === 'plain' && styles.plain, className)}
+      className={cx(
+        variant === 'dropdown' ? styles.dropdownGroup : styles.group,
+        variant === 'plain' && styles.plain,
+        className,
+      )}
       role="radiogroup"
       aria-label={t('language.selectLabel')}
     >
@@ -78,14 +82,17 @@ export const LanguageToggle = ({ variant = 'card', className = '' }: LanguageTog
             }}
             type="button"
             role="radio"
-            className={cx(styles.btn, isActive && styles.active)}
+            className={cx(
+              variant === 'dropdown' ? styles.dropdownBtn : styles.btn,
+              isActive && styles.active,
+            )}
             aria-checked={isActive}
             aria-label={t(lang.i18nKey)}
             tabIndex={isActive ? 0 : -1}
             onClick={() => select(lang.id)}
             onKeyDown={(e) => handleKeyDown(e, index)}
           >
-            {lang.label}
+            {variant === 'dropdown' ? lang.fullLabel : lang.label}
           </button>
         )
       })}
