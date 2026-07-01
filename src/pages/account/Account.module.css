@@ -64,14 +64,9 @@
   border-left: 3px solid var(--error-color);
 }
 [data-theme="dark"] .dangerCard {
-  border-color: rgba(244, 67, 54, 0.3);
-  border-left-color: #ef5350;
+  border-color: rgba(255, 180, 171, 0.2);
+  border-left-color: var(--error-color);
 }
-[data-theme="contrast"] .dangerCard {
-  border-color: #ff6666;
-  border-left-color: #ff6666;
-}
-
 .rowMain {
   display: flex;
   align-items: center;

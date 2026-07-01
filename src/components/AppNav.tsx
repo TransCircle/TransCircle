@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSession } from "../context/SessionContext";
-import { useAdmin } from "../context/AdminContext";
+
 import ThemeToggle from "./ThemeToggle";
-import { LanguageToggle } from "./ui";
+// import { LanguageToggle } from "./ui";
 import { Avatar } from "./Avatar";
 import { cx } from "./admin/cx";
 import styles from "./AppNav.module.css";
@@ -20,6 +20,7 @@ const ChevronIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
 );
 
+
 interface NavLinkDef {
   label: string;
   to?: string;
@@ -33,7 +34,7 @@ interface NavLinkDef {
 export function AppNav() {
   const { t } = useTranslation();
   const { user, logout } = useSession();
-  const { authed: adminAuthed } = useAdmin();
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -159,7 +160,9 @@ export function AppNav() {
               aria-controls="app-drawer"
               onClick={() => setDrawerOpen((o) => !o)}
             >
-              <span className={styles.bar} /><span className={styles.bar} /><span className={styles.bar} />
+              <span className={cx(styles.bar, drawerOpen && styles.barTop)} />
+              <span className={cx(styles.bar, drawerOpen && styles.barMid)} />
+              <span className={cx(styles.bar, drawerOpen && styles.barBot)} />
             </button>
             <Link to="/" className={styles.brand}>TransCircle</Link>
           </div>
@@ -197,13 +200,30 @@ export function AppNav() {
           </div>
 
           <div className={styles.right}>
-            {adminAuthed && (
-              <Link to="/admin" className={cx(styles.link, styles.adminLink)}>{t("nav.admin")}</Link>
-            )}
-            <div className={styles.toggles}>
-              <LanguageToggle variant="plain" />
-              <ThemeToggle />
+            <ThemeToggle />
+            {/* 
+            <div ref={langRef} className={styles.dropdown}>
+              <button
+                type="button"
+                className={styles.navBtn}
+                aria-haspopup="menu"
+                aria-expanded={langOpen}
+                aria-label={t("nav.language")}
+                onClick={() => { setLangOpen((o) => !o); setThemeOpen(false); }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+              </button>
+              {langOpen && (
+                <div className={styles.dropdownMenu}>
+                  <LanguageToggle variant="dropdown" />
+                </div>
+              )}
             </div>
+            */}
             {user ? (
               <div ref={acctRef} className={styles.dropdown}>
                 <button
@@ -221,9 +241,6 @@ export function AppNav() {
                 {acctOpen && (
                   <ul className={cx(styles.menu, styles.menuRight)} role="menu">
                     <li role="none"><Link role="menuitem" to="/account" className={styles.menuItem}>{t("nav.account")}</Link></li>
-                    {adminAuthed && (
-                      <li role="none"><Link role="menuitem" to="/admin" className={styles.menuItem}>{t("nav.admin")}</Link></li>
-                    )}
                     <li role="none"><button role="menuitem" type="button" className={styles.menuItem} onClick={() => void doLogout()}>{t("nav.logout")}</button></li>
                   </ul>
                 )}
@@ -257,20 +274,11 @@ export function AppNav() {
           {user ? (
             <>
               <Link to="/account" className={styles.drawerLink}>{t("nav.account")}</Link>
-              {adminAuthed && <Link to="/admin" className={styles.drawerLink}>{t("nav.admin")}</Link>}
               <button type="button" className={styles.drawerLink} onClick={() => void doLogout()}>{t("nav.logout")}</button>
             </>
           ) : (
-            <>
-              <Link to="/login" className={styles.drawerLink}>{t("nav.login")}</Link>
-              {adminAuthed && <Link to="/admin" className={styles.drawerLink}>{t("nav.admin")}</Link>}
-            </>
+            <Link to="/login" className={styles.drawerLink}>{t("nav.login")}</Link>
           )}
-          <div className={styles.drawerDivider} />
-          <div className={styles.drawerToggles}>
-            <LanguageToggle variant="plain" />
-            <ThemeToggle />
-          </div>
         </div>
       </div>
       <button

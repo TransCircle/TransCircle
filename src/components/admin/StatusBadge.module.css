@@ -40,8 +40,8 @@
   background-color: #e7f6ec;
 }
 .tone_red {
-  color: #c62828;
-  background-color: #fbe9e7;
+  color: var(--error-color);
+  background-color: #FFF0EE;
 }
 .tone_accent {
   color: var(--accent-pink);
@@ -71,34 +71,8 @@
   background-color: rgba(46, 160, 75, 0.14);
 }
 [data-theme='dark'] .tone_red {
-  color: #ef5350;
-  background-color: rgba(244, 67, 54, 0.12);
-}
-
-/* ── Contrast: black bg + bright text/border + colored dot ── */
-
-[data-theme='contrast'] .badge {
-  background-color: #000000;
-  border-color: currentColor;
-}
-[data-theme='contrast'] .tone_amber {
-  color: #ffaa00;
-}
-[data-theme='contrast'] .tone_blue {
-  color: #66ccff;
-}
-[data-theme='contrast'] .tone_green {
-  color: #66ff66;
-}
-[data-theme='contrast'] .tone_red {
-  color: #ff6666;
-}
-[data-theme='contrast'] .tone_accent {
-  color: #ffaa00;
-}
-[data-theme='contrast'] .tone_muted,
-[data-theme='contrast'] .tone_neutral {
-  color: #ffffff;
+  color: var(--error-color);
+  background-color: rgba(255, 180, 171, 0.1);
 }
 
 /* ── Pill (neutral marker) ───────────────────────────────── */
@@ -122,6 +96,3 @@
   color: var(--accent-pink);
 }
 
-[data-theme='contrast'] .pill {
-  border: 1px solid var(--divider-color);
-}

@@ -1,7 +1,7 @@
 .nav {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 80;
   background-color: var(--nav-bg);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   backdrop-filter: blur(12px) saturate(180%);
@@ -21,6 +21,7 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  flex: 1;
 }
 
 .brand {
@@ -38,7 +39,6 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  margin-left: 0.5rem;
 }
 
 .link {
@@ -59,9 +59,7 @@
 .link:hover {
   color: var(--text-main);
   background-color: var(--hover-bg);
-}
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .link:hover { background-color: var(--hover-bg-mix); }
+  background-color: var(--hover-bg-mix, var(--hover-bg));
 }
 
 .extIcon { margin-left: 0.15rem; opacity: 0.7; }
@@ -69,8 +67,9 @@
 .right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.6rem;
-  margin-left: auto;
+  flex: 1;
 }
 
 .adminLink {
@@ -78,10 +77,48 @@
   font-weight: 500;
 }
 
-.toggles {
-  display: flex;
+/* ── Nav buttons (theme + language) ────────────────────── */
+.navBtn {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.navBtn:hover {
+  color: var(--text-main);
+  background-color: var(--hover-bg);
+  background-color: var(--hover-bg-mix, var(--hover-bg));
+}
+.navBtn:active {
+  animation: navBtnBounce 0.25s ease;
+}
+
+@keyframes navBtnBounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(0.85); }
+  60%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  padding: 0.5rem;
+  background-color: var(--surface-card);
+  border: 1px solid var(--divider-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  z-index: 60;
+  animation: menuIn 0.15s ease;
 }
 
 /* ── Dropdown menus ────────────────────────────────────── */
@@ -124,10 +161,8 @@
 }
 .menuItem:hover {
   background-color: var(--hover-bg);
+  background-color: var(--hover-bg-mix, var(--hover-bg));
   color: var(--text-main);
-}
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .menuItem:hover { background-color: var(--hover-bg-mix); }
 }
 
 /* ── Account button ────────────────────────────────────── */
@@ -156,42 +191,60 @@
 .loginCta {
   display: inline-flex;
   align-items: center;
-  padding: 0.45rem 1.1rem;
-  border-radius: var(--radius-pill);
-  background-color: var(--accent-pink);
-  color: var(--on-accent);
+  padding: 0.5rem 1.2rem;
+  border-radius: 50px;
+  background-color: var(--cta-bg);
+  color: var(--cta-color);
   font-size: 0.875rem;
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
   box-shadow: 0 2px 8px var(--shadow-color);
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
-.loginCta:hover { background-color: var(--cta-hover); transform: translateY(-1px); }
-@supports (background-color: color-mix(in srgb, red 85%, black)) {
-  .loginCta:hover { background-color: var(--cta-hover-mix); }
+
+.loginCta:hover {
+  background-color: var(--cta-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--shadow-color-hover);
 }
 
 /* ── Hamburger + drawer (mobile) ───────────────────────── */
 .hamburger {
   display: none;
+  position: relative;
   flex-direction: column;
   gap: 4px;
   width: 38px;
   height: 38px;
   padding: 9px 8px;
+  margin-top: 5px;
   border: none;
   background: none;
   cursor: pointer;
   border-radius: var(--radius-sm);
+  z-index: 75;
 }
 .hamburger:hover { background-color: var(--hover-bg); }
+
 .bar {
   display: block;
   height: 2px;
   width: 100%;
   background-color: var(--text-main);
   border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+.barTop {
+  transform: translateY(6px) rotate(45deg);
+}
+.barMid {
+  opacity: 0;
+}
+.barBot {
+  transform: translateY(-6px) rotate(-45deg);
 }
 
 .drawer {
@@ -215,7 +268,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  padding: 1.25rem 1rem;
+  padding: 4.5rem 1rem 1.25rem;
 }
 .drawerLink {
   display: flex;
@@ -239,12 +292,6 @@
   background-color: var(--divider-color);
   margin: 0.5rem 0;
 }
-.drawerToggles {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.8rem;
-}
 
 .overlay {
   position: fixed;
@@ -265,14 +312,15 @@
 @media (max-width: 1100px) {
   .hamburger { display: flex; }
   .links { display: none; }
-  .toggles { display: none; }
   .acctName { display: none; }
   .adminLink { display: none; }
+  .loginCta { display: none; }
   .inner { padding: 0.6rem 1rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .link, .menuItem, .acctBtn, .loginCta, .drawer, .overlay, .hamburger { transition: none; }
+  .link, .menuItem, .acctBtn, .loginCta, .drawer, .overlay, .hamburger, .navBtn { transition: none; }
   .menu { animation: none; }
   .loginCta:hover { transform: none; }
+  .navBtn:active { animation: none; }
 }

@@ -115,17 +115,6 @@
   color: var(--text-muted);
 }
 
-[data-theme='contrast'] .option.checked {
-  border-color: #ffaa00;
-  background-color: #332200;
-}
-
-[data-theme='contrast'] .option.checked .dot,
-[data-theme='contrast'] .option.checked .dot::after {
-  border-color: #ffaa00;
-  background-color: #ffaa00;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .option,
   .dot {

@@ -151,16 +151,6 @@
   color: var(--error-color);
 }
 
-[data-theme='contrast'] .option.active {
-  background-color: #332200;
-  color: #ffaa00;
-}
-
-[data-theme='contrast'] .option.selected,
-[data-theme='contrast'] .check {
-  color: #ffaa00;
-}
-
 @media (pointer: coarse) {
   .trigger {
     min-height: 44px;

@@ -1,4 +1,3 @@
-import FloatingTOC, { type TOCItem } from './components/FloatingTOC';
 import styles from './App.module.css';
 
 const GitHubIcon = () => (
@@ -19,16 +18,8 @@ const BlueskyIcon = () => (
   </svg>
 );
 
-const TOC_ITEMS: TOCItem[] = [
-  { href: '#about', label: '关于项目' },
-  { href: '#join',  label: '加入项目' },
-  { href: '#follow', label: '关注我们' },
-];
-
 const App = () => (
   <>
-    <FloatingTOC items={TOC_ITEMS} />
-
     <div className={styles.mainContent}>
       <header className={styles.contentHeader}>
         <h1 className={styles.mainTitle}>TransCircle Project</h1>
