@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSession } from "../context/SessionContext";
-
+import { useAdmin } from "../context/AdminContext";
 import ThemeToggle from "./ThemeToggle";
 // import { LanguageToggle } from "./ui";
 import { Avatar } from "./Avatar";
@@ -20,7 +20,6 @@ const ChevronIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
 );
 
-
 interface NavLinkDef {
   label: string;
   to?: string;
@@ -34,7 +33,7 @@ interface NavLinkDef {
 export function AppNav() {
   const { t } = useTranslation();
   const { user, logout } = useSession();
-
+  const { authed: adminAuthed } = useAdmin();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -49,7 +48,7 @@ export function AppNav() {
   // 导航站主导航：首页 + 生态各业务分区（沿用原导航站，故事征集/人物归档/社群互助）。
   const primaryLinks: NavLinkDef[] = [
     { label: t("nav.home"), to: "/" },
-    { label: t("nav.stories"), href: "https://story.transcircle.org/" },
+    { label: t("nav.stories"), href: "/#stories" },
     { label: t("nav.archive"), href: "/#archive" },
     { label: t("nav.community"), href: "/#community" },
   ];
@@ -201,7 +200,7 @@ export function AppNav() {
 
           <div className={styles.right}>
             <ThemeToggle />
-            {/* 
+            {/*
             <div ref={langRef} className={styles.dropdown}>
               <button
                 type="button"
@@ -241,6 +240,9 @@ export function AppNav() {
                 {acctOpen && (
                   <ul className={cx(styles.menu, styles.menuRight)} role="menu">
                     <li role="none"><Link role="menuitem" to="/account" className={styles.menuItem}>{t("nav.account")}</Link></li>
+                    {adminAuthed && (
+                      <li role="none"><Link role="menuitem" to="/admin" className={styles.menuItem}>{t("nav.admin")}</Link></li>
+                    )}
                     <li role="none"><button role="menuitem" type="button" className={styles.menuItem} onClick={() => void doLogout()}>{t("nav.logout")}</button></li>
                   </ul>
                 )}
@@ -274,6 +276,7 @@ export function AppNav() {
           {user ? (
             <>
               <Link to="/account" className={styles.drawerLink}>{t("nav.account")}</Link>
+              {adminAuthed && <Link to="/admin" className={styles.drawerLink}>{t("nav.admin")}</Link>}
               <button type="button" className={styles.drawerLink} onClick={() => void doLogout()}>{t("nav.logout")}</button>
             </>
           ) : (
