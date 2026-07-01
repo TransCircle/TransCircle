@@ -49,7 +49,7 @@ export function AppNav() {
   // 导航站主导航：首页 + 生态各业务分区（沿用原导航站，故事征集/人物归档/社群互助）。
   const primaryLinks: NavLinkDef[] = [
     { label: t("nav.home"), to: "/" },
-    { label: t("nav.stories"), href: "/#stories" },
+    { label: t("nav.stories"), href: "https://story.transcircle.org/" },
     { label: t("nav.archive"), href: "/#archive" },
     { label: t("nav.community"), href: "/#community" },
   ];
