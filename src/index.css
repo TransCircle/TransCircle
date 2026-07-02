@@ -58,6 +58,32 @@
   --radius-lg: 14px;
   --radius-pill: 999px;
 
+  /* ── Control rhythm (theme-invariant) ─────────────────────
+     全站交互控件统一高度:桌面 34px,粗指针触屏放大到 44px 命中区。 */
+  --control-h: 34px;        /* toggle / hamburger / avatar / login CTA / page CTA */
+  --control-h-cell: 48px;   /* 账户中心移动端分段工具栏单元格 */
+  --tap-min: 44px;          /* 粗指针触控目标下限 */
+
+  /* 语义化圆角别名(映射到原始 radius 刻度),让"控件/浮层/卡片"各成一档。
+     pill 仅保留给:登录/页面 CTA(现已压扁)与圆形头像(50%)。 */
+  --radius-control: var(--radius-sm);  /* 10px — 按钮 / 链接 / 单元格 / 开关 */
+  --radius-pop: var(--radius-md);      /* 12px — 下拉菜单 / 抽屉 / 分段工具栏外壳 */
+
+  /* ── Motion language ───────────────────────────────────── */
+  --ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);  /* 揭示/入场:主题涟漪、图标交叉淡入 */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);      /* 悬停/变色/按压 */
+  --dur-fast: 130ms;    /* 悬停、变色、按压 */
+  --dur-base: 200ms;    /* CTA 悬停抬升 */
+  --dur-reveal: 640ms;  /* 主题切换涟漪 */
+
+  /* ── Fluid type scale(移动端字号收敛,桌面像素不变) ──────
+     clamp 下限 ≥ 0.9rem(14.4px),满足"移动端不小于 ~14px"。 */
+  --fs-title: clamp(1.5rem, 1.15rem + 1.55vw, 2rem);       /* 24 → 32px */
+  --fs-subtitle: clamp(0.9rem, 0.85rem + 0.25vw, 1rem);    /* ~14.4 → 16px */
+  --fs-body: clamp(0.9rem, 0.88rem + 0.1vw, 0.95rem);      /* 14.4 → 15.2px */
+  --fs-sm: clamp(0.82rem, 0.8rem + 0.1vw, 0.875rem);
+  --lh-body: 1.65;
+
   /* Elevation — resolved lazily against the active theme's --shadow-color. */
   --shadow-card: 0 1px 2px var(--shadow-color);
   --shadow-card-hover: 0 4px 14px var(--shadow-color-hover);

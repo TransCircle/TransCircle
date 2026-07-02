@@ -26,7 +26,7 @@
 }
 
 .mainTitle {
-  font-size: 2rem;
+  font-size: var(--fs-title);
   font-weight: 700;
   color: var(--text-main);
   margin: 0 0 0.2rem 0;
@@ -34,7 +34,7 @@
 }
 
 .subTitle {
-  font-size: 1rem;
+  font-size: var(--fs-subtitle);
   color: var(--text-muted);
   margin: 0;
   font-weight: 400;
@@ -47,16 +47,16 @@
 }
 
 .greeting {
-  font-size: 0.95rem;
+  font-size: var(--fs-body);
   margin: 0 0 0.9rem 0;
   color: var(--text-body);
-  line-height: 1.6;
+  line-height: var(--lh-body);
 }
 
 .readmeContent {
   color: var(--text-secondary);
-  line-height: 1.75;
-  font-size: 0.92rem;
+  line-height: 1.7;
+  font-size: var(--fs-body);
 }
 
 .readmeContent p {
@@ -73,8 +73,8 @@
   border-left: 3px solid var(--primary-pink);
   padding-left: 1rem;
   margin: 1.4rem 0 0 0;
-  font-size: 0.92rem;
-  line-height: 1.65;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
 }
 
 /* ── Shared section chrome ────────────────────── */
@@ -110,7 +110,8 @@
   justify-content: center;
   background-color: var(--cta-bg);
   color: var(--cta-color);
-  padding: 0.5rem 1.2rem;
+  height: var(--control-h);
+  padding: 0 1.15rem;
   border-radius: var(--radius-pill);
   text-decoration: none;
   font-size: 0.875rem;
@@ -131,7 +132,8 @@
   justify-content: center;
   border: 1.5px solid var(--primary-pink);
   color: var(--accent-pink);
-  padding: 0.5rem 1.2rem;
+  height: var(--control-h);
+  padding: 0 1.15rem;
   border-radius: var(--radius-pill);
   text-decoration: none;
   font-size: 0.875rem;

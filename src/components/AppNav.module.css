@@ -77,56 +77,13 @@
   font-weight: 500;
 }
 
-/* ── Nav buttons (theme + language) ────────────────────── */
-.navBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  background: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-.navBtn:hover {
-  color: var(--text-main);
-  background-color: var(--hover-bg);
-  background-color: var(--hover-bg-mix, var(--hover-bg));
-}
-.navBtn:active {
-  animation: navBtnBounce 0.25s ease;
-}
-
-@keyframes navBtnBounce {
-  0%   { transform: scale(1); }
-  30%  { transform: scale(0.85); }
-  60%  { transform: scale(1.08); }
-  100% { transform: scale(1); }
-}
-
-.dropdownMenu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  padding: 0.5rem;
-  background-color: var(--surface-card);
-  border: 1px solid var(--divider-color);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-pop);
-  z-index: 60;
-  animation: menuIn 0.15s ease;
-}
-
 /* ── Dropdown menus ────────────────────────────────────── */
 .dropdown { position: relative; }
 
 .menu {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  /* 顶部间隙收窄到 6px:桌面悬停打开时,指针从头像跨到菜单几乎无空档,配合 140ms 延时关闭不闪。 */
+  top: calc(100% + 6px);
   left: 0;
   min-width: 11rem;
   margin: 0;
@@ -165,42 +122,47 @@
   color: var(--text-main);
 }
 
-/* ── Account button ────────────────────────────────────── */
+/* ── Account trigger（裸圆形头像:去名字、去外环、去 chevron） ── */
 .acctBtn {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.25rem 0.5rem 0.25rem 0.3rem;
-  border: 1px solid var(--divider-color);
-  background-color: var(--surface-card);
-  border-radius: var(--radius-pill);
+  justify-content: center;
+  position: relative;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: var(--radius-pill); /* 圆形 */
   cursor: pointer;
   color: var(--text-main);
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: box-shadow var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
 }
-.acctBtn:hover { border-color: var(--primary-pink); background-color: var(--hover-bg); }
-.acctName {
-  font-size: 0.88rem;
-  font-weight: 500;
-  max-width: 9rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.acctBtn:hover { box-shadow: 0 0 0 2px var(--soft-pink); }
+.acctBtn[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--primary-pink); }
+.acctBtn:active { transform: scale(0.96); }
+.acctBtn:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 2px; }
+/* 头像本身不吃指针事件:点击/hover 判定始终落到按钮,保证 hover 打开与点击一致。 */
+.acctBtn > * { pointer-events: none; }
 
 .loginCta {
   display: inline-flex;
   align-items: center;
-  padding: 0.5rem 1.2rem;
+  height: var(--control-h);
+  padding: 0 1.1rem;
   border-radius: var(--radius-pill);
   background-color: var(--cta-bg);
   color: var(--cta-color);
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
+  line-height: 1;
   text-decoration: none;
   white-space: nowrap;
   box-shadow: var(--shadow-card);
-  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color var(--dur-base) var(--ease-standard),
+    transform var(--dur-base) var(--ease-standard),
+    box-shadow var(--dur-base) var(--ease-standard);
 }
 
 .loginCta:hover {
@@ -208,23 +170,23 @@
   transform: translateY(-1px);
   box-shadow: var(--shadow-card-hover);
 }
+.loginCta:active { transform: translateY(0) scale(0.98); }
 
 /* ── Hamburger + drawer (mobile) ───────────────────────── */
 .hamburger {
   display: none;
   position: relative;
   flex-direction: column;
-  /* 垂直居中三条横线:按钮尺寸在触屏下会放大到 44px,居中可免于逐档调 padding。 */
+  /* 垂直居中三条横线:触屏命中区改由 ::after 覆盖层撑到 44px,按钮本体保持 34px 不撑高顶栏。 */
   justify-content: center;
   gap: 4px;
-  width: 38px;
-  height: 38px;
-  padding: 9px 8px;
-  margin-top: 5px;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 8px;
   border: none;
   background: none;
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-control);
   z-index: 75;
 }
 .hamburger:hover { background-color: var(--hover-bg); }
@@ -289,11 +251,6 @@
   transition: background-color 0.15s ease;
 }
 .drawerLink:hover { background-color: var(--hover-bg); }
-.drawerDivider {
-  height: 1px;
-  background-color: var(--divider-color);
-  margin: 0.5rem 0;
-}
 
 .overlay {
   position: fixed;
@@ -325,17 +282,29 @@
 
 /* 触屏(含触屏笔记本,故用 any-pointer 而非 pointer)保证 ≥44px 触控目标。 */
 @media (any-pointer: coarse) {
+  /* 大面积行/链接类:直接给足 44px 物理高度。 */
   .link,
   .menuItem,
-  .acctBtn,
-  .loginCta,
-  .drawerLink {
-    min-height: 44px;
+  .drawerLink,
+  .loginCta {
+    min-height: var(--tap-min);
   }
-  .navBtn,
-  .hamburger {
-    width: 44px;
-    height: 44px;
+  /* 顶栏图标控件(汉堡/头像):视觉仍是 34px,用居中透明 ::after 把命中区扩到 44px,
+     既满足触控目标又不撑高顶栏(解决移动端顶栏臃肿)。::after 是按钮子级,
+     点击仍落到按钮本身,不阻断交互。 */
+  .hamburger,
+  .acctBtn {
+    position: relative;
+  }
+  .hamburger::after,
+  .acctBtn::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--tap-min);
+    height: var(--tap-min);
+    transform: translate(-50%, -50%);
   }
 }
 
@@ -343,19 +312,19 @@
 @media (max-width: 1100px) {
   .hamburger { display: flex; }
   .links { display: none; }
-  .acctName { display: none; }
   .adminLink { display: none; }
-  /* 未登录移动用户在顶栏保留可见登录入口(压缩版药丸),不再整体隐藏。 */
+  /* 未登录移动用户在顶栏保留可见登录入口(压扁版药丸,高度仍 34px),不再整体隐藏。 */
   .loginCta {
-    padding: 0.4rem 0.9rem;
+    padding: 0 0.9rem;
     font-size: 0.82rem;
   }
-  .inner { padding: 0.6rem 1rem; }
+  /* 收紧纵向内边距 + 略降品牌字号 = 顶栏更矮、占比更小(视觉更平衡)。 */
+  .inner { padding: 0.4rem 0.85rem; }
+  .brand { font-size: 1.05rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .link, .menuItem, .acctBtn, .loginCta, .drawer, .overlay, .hamburger, .navBtn { transition: none; }
+  .link, .menuItem, .acctBtn, .loginCta, .drawer, .overlay, .hamburger { transition: none; }
   .menu { animation: none; }
-  .loginCta:hover { transform: none; }
-  .navBtn:active { animation: none; }
+  .loginCta:hover, .loginCta:active, .acctBtn:active { transform: none; }
 }

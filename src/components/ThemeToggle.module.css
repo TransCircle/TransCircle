@@ -2,14 +2,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  position: relative;
+  width: var(--control-h); /* 34px（原 32），与其余顶栏控件同高 */
+  height: var(--control-h);
   border: none;
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-control); /* 10px（原 radius-xs 6px） */
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
   padding: 0;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
 }
 
 .toggleBtn:hover {
@@ -17,41 +21,90 @@
   color: var(--primary-pink);
 }
 
+.toggleBtn:active {
+  transform: scale(0.9);
+}
+
 .toggleBtn:focus-visible {
   outline: 2px solid var(--primary-pink);
   outline-offset: 2px;
 }
 
-/* 触屏(含触屏笔记本,故用 any-pointer)下保证 ≥44px 触控目标。 */
+/* ── 图标交叉淡入 + 旋转缩放（moon ⇄ sun，两枚常驻叠放） ── */
+.iconWrap {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--dur-base) var(--ease-standard),
+    transform 340ms var(--ease-emphasized);
+}
+
+.moon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+.sun {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.6);
+}
+
+.iconWrap[data-dark] .moon {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.6);
+}
+
+.iconWrap[data-dark] .sun {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+/* 触屏(含触屏笔记本,故用 any-pointer):视觉保持 34px,居中透明 ::after 把命中区扩到 44px,
+   不撑高顶栏。 */
 @media (any-pointer: coarse) {
-  .toggleBtn {
-    width: 44px;
-    height: 44px;
+  .toggleBtn::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--tap-min);
+    height: var(--tap-min);
+    transform: translate(-50%, -50%);
   }
 }
 
 /* Ripple effect for theme switching
-   背景色由 JS 在创建涟漪时从 --bg-color 快照(内联 style),
-   避免此处硬编码亮/暗两份主题色。 */
+   背景色由 JS 在创建涟漪时从 --bg-color 快照(内联 style),避免此处硬编码亮/暗两份主题色。
+   放慢到 --dur-reveal(640ms) + emphasized 缓动,读起来是一次从容的圆形擦除而非闪烁。 */
 .ripple {
   position: fixed;
   border-radius: 50%;
   pointer-events: none;
   z-index: 100;
   transform: translate(-50%, -50%) scale(0);
-  animation: ripple-expand 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-  mix-blend-mode: normal;
+  animation: ripple-expand var(--dur-reveal) var(--ease-emphasized) forwards;
 }
 
 @keyframes ripple-expand {
-  from {
+  0% {
     transform: translate(-50%, -50%) scale(0);
     opacity: 0;
   }
-  10% {
-    opacity: 0.7;
+  8% {
+    opacity: 0.85;
   }
-  to {
+  70% {
+    opacity: 0.6;
+  }
+  100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 0;
   }
@@ -61,5 +114,11 @@
   .ripple {
     animation: none;
     opacity: 0;
+  }
+  .icon {
+    transition: none;
+  }
+  .toggleBtn:active {
+    transform: none;
   }
 }

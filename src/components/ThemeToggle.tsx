@@ -1,7 +1,11 @@
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme, type Theme } from "../context/ThemeContext";
+import { cx } from "./admin/cx";
 import styles from "./ThemeToggle.module.css";
+
+/** 涟漪节点清理延时,须 ≥ --dur-reveal(640ms);留 80ms 余量避免动画被提前截断。 */
+const RIPPLE_MS = 720;
 
 interface RippleEffect {
   id: number;
@@ -107,10 +111,10 @@ const ThemeToggle = ({ className = "" }: ThemeToggleProps) => {
       return [...limited, { id, x, y, radius, color }];
     });
 
-    // Remove ripple after animation completes
+    // Remove ripple after animation completes（须与 --dur-reveal 同步,见 RIPPLE_MS）
     setTimeout(() => {
       setRipples((prev) => prev.filter((r) => r.id !== id));
-    }, 500);
+    }, RIPPLE_MS);
 
     // Return true to indicate ripple was added
     return true;
@@ -140,7 +144,15 @@ const ThemeToggle = ({ className = "" }: ThemeToggleProps) => {
         onClick={handleToggle}
         aria-label={isDark ? t("theme.switchToLight") : t("theme.switchToDark")}
       >
-        {isDark ? <SunIcon /> : <MoonIcon />}
+        {/* 两个图标常驻 DOM,靠 data-dark 切换透明度+旋转缩放交叉淡入(不重排、可动画)。 */}
+        <span className={styles.iconWrap} data-dark={isDark || undefined} aria-hidden="true">
+          <span className={cx(styles.icon, styles.moon)}>
+            <MoonIcon />
+          </span>
+          <span className={cx(styles.icon, styles.sun)}>
+            <SunIcon />
+          </span>
+        </span>
       </button>
 
       {/* Ripple effects container */}
