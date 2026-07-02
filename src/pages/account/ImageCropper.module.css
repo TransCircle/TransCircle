@@ -1,0 +1,120 @@
+.cropper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* 方形裁剪视口:图片在其下可拖动/缩放/旋转;圆形遮罩提示最终圆形呈现。 */
+.stageWrap {
+  position: relative;
+  width: min(320px, 100%);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--hover-bg);
+  /* 触屏纵向拖拽用于平移,不让浏览器判定为滚动。 */
+  touch-action: none;
+}
+.stage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+.stage:active {
+  cursor: grabbing;
+}
+/* 键盘聚焦轮廓:画布自身的 outline 会被 stageWrap 的 overflow:hidden 裁掉,
+   故把轮廓落在 stageWrap 上(仅键盘聚焦时)。 */
+.stage:focus-visible {
+  outline: none;
+}
+.stageWrap:has(:focus-visible) {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+/* 圆形遮罩:方块四角以遮罩色压暗,圆内清晰,提示裁剪后按圆形展示。 */
+.circleGuide {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px var(--overlay-bg);
+}
+
+.hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* 旋转按钮 + 缩放滑块。 */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--control-h);
+  height: var(--control-h);
+  border: 1px solid var(--divider-color);
+  border-radius: var(--radius-control);
+  background-color: var(--surface-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color 150ms var(--ease-standard),
+    border-color 150ms var(--ease-standard),
+    background-color 150ms var(--ease-standard);
+}
+.iconBtn:hover {
+  color: var(--accent-pink);
+  border-color: var(--primary-pink);
+  background-color: var(--hover-bg);
+}
+.iconBtn:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+.slider {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent-pink);
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+@media (any-pointer: coarse) {
+  .iconBtn {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 560px) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+  .actions > * {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iconBtn {
+    transition: none;
+  }
+}

@@ -3,17 +3,15 @@ import { useTranslation } from "react-i18next";
 import { api } from "../../api/client";
 import type { SessionDevice } from "../../api/types";
 import { useFormatTs } from "../../utils/datetime";
-import { usePageTitle } from "../../utils/usePageTitle";
 import {
   Card,
-  PageHeader,
   AdminButton as Button,
   Alert,
   Spinner,
   EmptyState,
   StatusBadge,
-  ConfirmDialog,
 } from "../../components/ui";
+import { ConfirmDialog } from "../../components/ui/Dialog";
 import page from "../Page.module.css";
 import s from "./Account.module.css";
 
@@ -33,8 +31,8 @@ const LOGIN_METHOD_KEYS: Record<string, string> = {
   x: "account.sessions.method.x",
 };
 
-/** 登录设备与会话（契约修正：device/ipPrefix/lastUsedAt + 注销确认）。 */
-const SessionsPage = () => {
+/** 登录设备与会话分区(契约修正:device/ipPrefix/lastUsedAt + 注销确认)。 */
+export function SessionsSection() {
   const { t } = useTranslation();
   const fmt = useFormatTs();
   const [sessions, setSessions] = useState<SessionDevice[]>([]);
@@ -46,8 +44,6 @@ const SessionsPage = () => {
   const [cursor, setCursor] = useState<string | null>(null);
   const [revokeId, setRevokeId] = useState<string | null>(null);
   const [revokeOthersOpen, setRevokeOthersOpen] = useState(false);
-
-  usePageTitle(t("account.nav.sessions"));
 
   const load = async (nextCursor?: string) => {
     if (nextCursor) setLoadingMore(true);
@@ -97,74 +93,71 @@ const SessionsPage = () => {
     setRevokeOthersOpen(false);
   };
 
-  if (loading) {
-    return (
-      <div className={`${page.page} ${page.pageNarrow}`}>
-        <PageHeader title={t("account.sessions.title")} description={t("account.sessions.subtitle")} />
-        <Spinner size="lg" label={t("common.loading")} />
-      </div>
-    );
-  }
-
   return (
-    <div className={`${page.page} ${page.pageNarrow}`}>
-      <PageHeader
-        title={t("account.sessions.title")}
-        description={t("account.sessions.subtitle")}
-        actions={
-          sessions.length > 1 ? (
-            <Button variant="secondary" size="sm" onClick={() => setRevokeOthersOpen(true)}>
-              {t("account.sessions.revokeOthers")}
-            </Button>
-          ) : undefined
-        }
-      />
-      {error && <Alert tone="error">{error}</Alert>}
-      {notice && <Alert tone="success">{notice}</Alert>}
-
-      <section className={`${s.sectionFirst} ${s.stackSm}`}>
-        {sessions.length === 0 ? (
-          <EmptyState icon={<DeviceIcon />} title={t("account.sessions.empty")} />
-        ) : (
-          <Card padding="none">
-            <ul className={s.list}>
-              {sessions.map((sess) => (
-                <li key={sess.id} className={s.listRow}>
-                  <div className={s.rowMain}>
-                    <span className={s.providerIcon} aria-hidden="true"><DeviceIcon /></span>
-                    <div className={s.rowText}>
-                      <span className={s.rowTitle}>
-                        {`${sess.device.browser ?? "—"} · ${sess.device.os ?? "—"}`}
-                        {sess.current && <StatusBadge size="sm" tone="green" label={t("account.sessions.current")} />}
-                      </span>
-                      <span className={s.rowMeta}>
-                        {sess.ipPrefix && <span>{sess.ipPrefix}</span>}
-                        {sess.loginMethod && <span>{methodLabel(sess.loginMethod)}</span>}
-                        <span>{`${t("account.sessions.lastSeen")}: ${fmt(sess.lastUsedAt) || "—"}`}</span>
-                      </span>
-                    </div>
-                  </div>
-                  {!sess.current && (
-                    <div className={s.rowActions}>
-                      <Button variant="danger" size="sm" disabled={busy} onClick={() => setRevokeId(sess.id)}>
-                        {t("account.sessions.revoke")}
-                      </Button>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </Card>
+    <section className={s.group}>
+      <div className={s.sectionHead}>
+        <h2 className={`${s.groupTitle} ${s.sectionHeadLabel}`}>{t("account.nav.sessions")}</h2>
+        {!loading && sessions.length > 1 && (
+          <Button variant="secondary" size="sm" onClick={() => setRevokeOthersOpen(true)}>
+            {t("account.sessions.revokeOthers")}
+          </Button>
         )}
+      </div>
 
-        {cursor && (
-          <div className={page.loadMoreWrap}>
-            <Button variant="secondary" loading={loadingMore} onClick={() => void load(cursor)}>
-              {t("common.loadMore")}
-            </Button>
-          </div>
-        )}
-      </section>
+      {(error || notice) && (
+        <div className={s.groupFeedback}>
+          {error && <Alert tone="error">{error}</Alert>}
+          {notice && <Alert tone="success">{notice}</Alert>}
+        </div>
+      )}
+
+      {loading ? (
+        <Spinner size="lg" label={t("common.loading")} />
+      ) : (
+        <div className={s.stackSm}>
+          {sessions.length === 0 ? (
+            <EmptyState icon={<DeviceIcon />} title={t("account.sessions.empty")} />
+          ) : (
+            <Card padding="none">
+              <ul className={s.list}>
+                {sessions.map((sess) => (
+                  <li key={sess.id} className={s.listRow}>
+                    <div className={s.rowMain}>
+                      <span className={s.providerIcon} aria-hidden="true"><DeviceIcon /></span>
+                      <div className={s.rowText}>
+                        <span className={s.rowTitle}>
+                          {`${sess.device.browser ?? "—"} · ${sess.device.os ?? "—"}`}
+                          {sess.current && <StatusBadge size="sm" tone="green" label={t("account.sessions.current")} />}
+                        </span>
+                        <span className={s.rowMeta}>
+                          {sess.ipPrefix && <span>{sess.ipPrefix}</span>}
+                          {sess.loginMethod && <span>{methodLabel(sess.loginMethod)}</span>}
+                          <span>{`${t("account.sessions.lastSeen")}: ${fmt(sess.lastUsedAt) || "—"}`}</span>
+                        </span>
+                      </div>
+                    </div>
+                    {!sess.current && (
+                      <div className={s.rowActions}>
+                        <Button variant="danger" size="sm" disabled={busy} onClick={() => setRevokeId(sess.id)}>
+                          {t("account.sessions.revoke")}
+                        </Button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
+          {cursor && (
+            <div className={page.loadMoreWrap}>
+              <Button variant="secondary" loading={loadingMore} onClick={() => void load(cursor)}>
+                {t("common.loadMore")}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       <ConfirmDialog
         open={!!revokeId}
@@ -172,8 +165,8 @@ const SessionsPage = () => {
         message={t("account.sessions.revokeMessage")}
         confirmText={t("account.sessions.revoke")}
         cancelText={t("common.cancel")}
-        variant="danger"
-        confirmLoading={busy}
+        tone="danger"
+        loading={busy}
         onConfirm={() => revokeId && void doRevoke(revokeId)}
         onCancel={() => setRevokeId(null)}
       />
@@ -183,13 +176,11 @@ const SessionsPage = () => {
         message={t("account.sessions.revokeOthersMessage")}
         confirmText={t("account.sessions.revokeOthers")}
         cancelText={t("common.cancel")}
-        variant="danger"
-        confirmLoading={busy}
+        tone="danger"
+        loading={busy}
         onConfirm={() => void doRevokeOthers()}
         onCancel={() => setRevokeOthersOpen(false)}
       />
-    </div>
+    </section>
   );
-};
-
-export default SessionsPage;
+}

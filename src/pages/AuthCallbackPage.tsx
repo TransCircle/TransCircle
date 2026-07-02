@@ -25,7 +25,7 @@ const AuthCallbackPage = () => {
   // loginCode 经 URL 片段（#）传递，不进访问日志/Referer。
   const loginCode = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("loginCode");
   // 来自 URL 的重定向目标必须净化，防开放重定向。
-  const redirectAfter = sanitizeRedirect(params.get("redirectAfter"), "/account/profile");
+  const redirectAfter = sanitizeRedirect(params.get("redirectAfter"), "/account");
 
   usePageTitle(error ? t("callback.failed") : t("callback.title"));
 

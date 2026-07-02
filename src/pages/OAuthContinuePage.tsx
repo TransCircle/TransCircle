@@ -29,7 +29,7 @@ const OAuthContinuePage = () => {
   const [params] = useSearchParams();
   const provider = params.get("provider") ?? "";
   // 来自 URL 的重定向目标必须净化，防开放重定向。
-  const redirectAfter = sanitizeRedirect(params.get("redirectAfter"), "/account/profile");
+  const redirectAfter = sanitizeRedirect(params.get("redirectAfter"), "/account");
 
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");

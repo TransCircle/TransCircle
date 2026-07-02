@@ -24,7 +24,7 @@ export function Avatar({ name, src, size = 40, label, className }: AvatarProps) 
   const showImage = !!src && src !== failedSrc;
   return (
     <span
-      className={cx(styles.avatar, className)}
+      className={cx(styles.avatar, showImage && styles.hasImage, className)}
       style={style}
       role={label ? "img" : undefined}
       aria-label={label}
