@@ -1,0 +1,73 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-body);
+}
+
+.boxes {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.box {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 3rem;
+  height: 3rem;
+  padding: 0;
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-main);
+  background-color: var(--surface-card);
+  border: 1.5px solid var(--divider-color);
+  border-radius: var(--radius-sm);
+  caret-color: var(--accent-pink);
+  transition:
+    border-color 130ms var(--ease-standard),
+    box-shadow 130ms var(--ease-standard);
+}
+
+/* 窄屏:收紧格子间距与高度,6 格从容容纳、不与页脚拥挤。 */
+@media (max-width: 420px) {
+  .boxes {
+    gap: 0.4rem;
+  }
+  .box {
+    height: 2.75rem;
+    font-size: 1.15rem;
+    border-radius: var(--radius-xs);
+  }
+}
+
+.box:focus {
+  outline: none;
+  border-color: var(--primary-pink);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.box:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.invalid {
+  border-color: var(--error-color);
+}
+.invalid:focus {
+  box-shadow: 0 0 0 3px var(--focus-ring-error);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box {
+    transition: none;
+  }
+}
