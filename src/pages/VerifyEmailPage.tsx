@@ -102,7 +102,7 @@ const VerifyEmailPage = () => {
         description={t("verify.successDesc")}
         actions={
           user
-            ? [{ label: t("verify.toAccount"), to: "/account/profile" }]
+            ? [{ label: t("verify.toAccount"), to: "/account" }]
             : [{ label: t("nav.login"), to: "/login" }]
         }
       />

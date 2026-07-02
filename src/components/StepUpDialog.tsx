@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { StepUpStart } from "../api/types";
 import { performAssertion } from "../utils/webauthn";
-import { Modal, RadioGroup, TextField, AdminButton as Button, Alert, Spinner } from "./ui";
+import { RadioGroup, TextField, AdminButton as Button, Alert, Spinner } from "./ui";
+import { Dialog } from "./ui/Dialog";
 import styles from "./StepUpDialog.module.css";
 
 type Method = "password" | "totp" | "recovery_code" | "passkey";
@@ -106,14 +107,15 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
   };
 
   return (
-    <Modal
+    <Dialog
       open={open}
       onClose={onClose}
+      busy={busy}
       title={t("stepUp.title")}
       description={t("stepUp.subtitle")}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" disabled={busy} onClick={onClose}>
             {t("common.cancel")}
           </Button>
           {method === "passkey" ? (
@@ -172,6 +174,6 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
           {method === "passkey" && <p className={styles.hint}>{t("stepUp.passkeyPrompt")}</p>}
         </div>
       )}
-    </Modal>
+    </Dialog>
   );
 }
