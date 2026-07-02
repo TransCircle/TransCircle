@@ -122,12 +122,14 @@ export function AppNav() {
     { label: t("nav.search"), href: "https://search.transcircle.org/" },
   ];
 
-  // 关闭抽屉/下拉：路由变化时
+  // 关闭抽屉/下拉：路由变化时。含 hash——移动端已在 / 时点抽屉里的
+  // 「人物归档」(/#about)/「社群互助」(/#join)只改 hash 不改 pathname,
+  // 若仅依赖 pathname 则抽屉不关、背景滚动保持锁定、main 保持 inert 遮住刚滚到的分区。
   useEffect(() => {
     setDrawerOpen(false);
     setLinksOpen(false);
     setAcctOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
   // --app-nav-height 动态写入文档根:导航实际高度随断点/字号/换行变化,
   // 供 Page.module.css 等处的 sticky 偏移消费;index.css 保留 57px 静态兜底。
