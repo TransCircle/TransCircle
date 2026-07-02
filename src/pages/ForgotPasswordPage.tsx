@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
+import { usePageTitle } from "../utils/usePageTitle";
 import {
   CenteredCard,
   PageHeader,
@@ -19,6 +20,8 @@ const ForgotPasswordPage = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+
+  usePageTitle(t("forgot.title"));
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -56,6 +59,7 @@ const ForgotPasswordPage = () => {
           label={t("login.email")}
           type="email"
           autoComplete="email"
+          autoFocus
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required

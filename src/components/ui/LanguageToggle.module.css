@@ -1,19 +1,19 @@
+/* 底色用通用卡面 --surface-card(--nav-bg 是导航栏专用的半透明面,
+   离开导航语境会露出错误的毛玻璃底)。 */
 .group {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 3px;
-  background-color: var(--nav-bg);
+  background-color: var(--surface-card);
   border: 1px solid var(--divider-color);
-  border-radius: 8px;
-  backdrop-filter: blur(10px);
+  border-radius: var(--radius-sm);
 }
 
 .group.plain {
   background: none;
   border: none;
   padding: 0;
-  backdrop-filter: none;
 }
 
 .btn {
@@ -24,7 +24,7 @@
   height: 32px;
   padding: 0 0.6rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--text-muted);
   font-family: inherit;
@@ -55,9 +55,15 @@
   color: var(--cta-color);
 }
 
-@media (pointer: coarse) {
+/* any-pointer 而非 pointer:触屏笔记本主指针是鼠标,但触摸仍需 44px 目标。 */
+@media (any-pointer: coarse) {
   .btn {
-    height: 40px;
+    height: 44px;
+    min-width: 44px;
+  }
+
+  .dropdownBtn {
+    min-height: 44px;
   }
 }
 

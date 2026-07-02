@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useId, useRef, type KeyboardEvent } from 'react'
 import { cx } from './cx'
 import styles from './Tabs.module.css'
 
@@ -28,6 +28,8 @@ export function Tabs<K extends string = string>({
   panelId,
 }: TabsProps<K>) {
   const refs = useRef<HTMLButtonElement[]>([])
+  // useId 前缀：同页多个 Tabs 实例（或相同 key）不会撞出重复 DOM id。
+  const baseId = useId()
 
   const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
     let next: number
@@ -70,11 +72,12 @@ export function Tabs<K extends string = string>({
             ref={(el) => {
               if (el) refs.current[i] = el
             }}
-            id={`tab-${item.key}`}
+            id={`${baseId}-tab-${item.key}`}
             role="tab"
             type="button"
             aria-selected={active}
-            aria-controls={panelId ?? `tabpanel-${item.key}`}
+            /* 未传 panelId 时不输出 aria-controls，避免指向不存在的元素。 */
+            aria-controls={panelId}
             tabIndex={active ? 0 : -1}
             className={cx(styles.tab, active && styles.active)}
             onClick={() => onChange(item.key)}

@@ -4,7 +4,9 @@
   align-items: center;
   justify-content: center;
   width: 100%;
+  /* dvh 随移动端浏览器工具栏伸缩取真实可视高度;vh 作旧浏览器兜底。 */
   min-height: 60vh;
+  min-height: 60dvh;
   padding: 1.5rem 1.25rem 2.5rem;
 }
 
@@ -24,9 +26,12 @@
 }
 
 @media (max-width: 640px) {
+  /* 卡片在窄屏退化为无边框平铺,水平/垂直留白统一收敛到 shell:
+     保底水平内边距防止内容贴边,顶部留出适度空隙,
+     状态页不至于顶到屏顶失去落地感。 */
   .shell {
     min-height: 0;
-    padding: 0.5rem 0 1.5rem;
+    padding: 2rem 1rem 2.5rem;
   }
 
   .card {
@@ -34,5 +39,6 @@
     border-radius: 0;
     background: transparent;
     box-shadow: none;
+    padding: 0;
   }
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../api/client";
 import { useSession } from "../../context/SessionContext";
+import { usePageTitle } from "../../utils/usePageTitle";
 import { StepUpDialog } from "../../components/StepUpDialog";
 import {
   Card,
@@ -15,6 +16,8 @@ import {
 import page from "../Page.module.css";
 import s from "./Account.module.css";
 
+/** 后端契约要求的固定确认串(始终原样发送);
+    用户在界面上输入的确认短语为本地化文案,仅客户端校验。 */
 const CONFIRM_PHRASE = "DELETE-MY-ACCOUNT";
 
 /** 账户安全：账户注销（确认短语 + 密码 + step-up）。 */
@@ -23,7 +26,7 @@ const DangerZonePage = () => {
   const { user } = useSession();
   const hasPassword = user?.passwordSet ?? false;
 
-  const [notice, setNotice] = useState<string | null>(null);
+  const [requested, setRequested] = useState(false);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [phrase, setPhrase] = useState("");
@@ -31,6 +34,11 @@ const DangerZonePage = () => {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [stepUpOpen, setStepUpOpen] = useState(false);
+
+  usePageTitle(t("account.nav.danger"));
+
+  /** 界面上要求用户输入的本地化确认短语(仅客户端校验,见 CONFIRM_PHRASE)。 */
+  const localizedPhrase = t("account.danger.confirmPhrase");
 
   const submitDelete = async () => {
     setDeleteError(null);
@@ -40,7 +48,7 @@ const DangerZonePage = () => {
       if (hasPassword) body.password = password;
       const res = await api.post("/v1/me/delete", body, { idempotent: true });
       if (res.ok) {
-        setNotice(t("account.danger.deleteRequested"));
+        setRequested(true);
         setDeleteOpen(false);
         return;
       }
@@ -54,33 +62,41 @@ const DangerZonePage = () => {
     }
   };
 
-  const phraseOk = phrase.trim() === CONFIRM_PHRASE;
+  const phraseOk = phrase.trim() === localizedPhrase;
   const canSubmit = phraseOk && (!hasPassword || password.length > 0);
 
   return (
     <div className={`${page.page} ${page.pageNarrow}`}>
       <PageHeader title={t("account.danger.title")} description={t("account.danger.subtitle")} />
-      {notice && <Alert tone="success">{notice}</Alert>}
+      {requested && (
+        <Alert tone="success">
+          <strong>{t("account.danger.deleteRequestedTitle")}</strong>
+          <div>{t("account.danger.deleteRequestedDesc")}</div>
+        </Alert>
+      )}
 
-      <div className={s.cardStack}>
+      <section className={s.sectionFirst}>
         <Card className={s.dangerCard}>
           <SectionLabel>{t("account.danger.deleteTitle")}</SectionLabel>
-          <p className={s.muted}>{t("account.danger.deleteDesc")}</p>
-          <div className={s.actions}>
-            <Button
-              variant="danger"
-              onClick={() => {
-                setPhrase("");
-                setPassword("");
-                setDeleteError(null);
-                setDeleteOpen(true);
-              }}
-            >
-              {t("account.danger.delete")}
-            </Button>
+          <div className={s.stackSm}>
+            <p className={s.muted}>{t("account.danger.deleteDesc")}</p>
+            <div className={s.actions}>
+              <Button
+                variant="danger"
+                disabled={requested}
+                onClick={() => {
+                  setPhrase("");
+                  setPassword("");
+                  setDeleteError(null);
+                  setDeleteOpen(true);
+                }}
+              >
+                {t("account.danger.delete")}
+              </Button>
+            </div>
           </div>
         </Card>
-      </div>
+      </section>
 
       <Modal
         open={deleteOpen}
@@ -101,7 +117,7 @@ const DangerZonePage = () => {
         <div className={s.form}>
           {deleteError && <Alert tone="error">{deleteError}</Alert>}
           <TextField
-            label={t("account.danger.confirmTypeLabel", { phrase: CONFIRM_PHRASE })}
+            label={t("account.danger.confirmTypeLabel", { phrase: localizedPhrase })}
             value={phrase}
             onChange={(e) => setPhrase(e.target.value)}
             autoComplete="off"

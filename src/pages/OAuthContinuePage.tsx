@@ -1,8 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api, setUserToken, clearCsrfToken } from "../api/client";
 import { useSession } from "../context/SessionContext";
+import { sanitizeRedirect } from "../utils/url";
+import { usePageTitle } from "../utils/usePageTitle";
 import type { OAuthExchangeResult } from "../api/types";
 import {
   CenteredCard,
@@ -26,7 +28,8 @@ const OAuthContinuePage = () => {
   const { refresh } = useSession();
   const [params] = useSearchParams();
   const provider = params.get("provider") ?? "";
-  const redirectAfter = params.get("redirectAfter") || "/account/profile";
+  // 来自 URL 的重定向目标必须净化，防开放重定向。
+  const redirectAfter = sanitizeRedirect(params.get("redirectAfter"), "/account/profile");
 
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
@@ -35,16 +38,26 @@ const OAuthContinuePage = () => {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   const mismatch = confirm.length > 0 && confirm !== password;
+  const validProvider = provider === "github" || provider === "x";
   const providerLabel = provider === "x" ? "X" : provider === "github" ? "GitHub" : provider;
 
-  if (provider !== "github" && provider !== "x") {
+  usePageTitle(validProvider ? t("continue.title") : t("continue.invalidTitle"));
+
+  // 提交失败：把焦点移到错误提示（Alert 自带 role=alert），读屏与键盘用户都能立刻定位。
+  useEffect(() => {
+    if (error) errorRef.current?.focus();
+  }, [error]);
+
+  if (!validProvider) {
+    // provider 参数非法：这不是「重试就能好」的瞬时故障，而是链接本身无效/过期。
     return (
       <StatusScreen
         kind="error"
-        title={t("authError.title")}
-        description={t("authError.OAUTH_ERROR")}
+        title={t("continue.invalidTitle")}
+        description={t("continue.invalidDesc")}
         actions={[{ label: t("nav.login"), to: "/login" }]}
       />
     );
@@ -102,19 +115,28 @@ const OAuthContinuePage = () => {
     <CenteredCard>
       <PageHeader
         align="center"
+        size="card"
         eyebrow={t("continue.eyebrow", { provider: providerLabel })}
         title={t("continue.title")}
         description={t("continue.subtitle")}
       />
-      {error && <Alert tone="error">{error}</Alert>}
+      {error && (
+        <div ref={errorRef} tabIndex={-1}>
+          <Alert tone="error">{error}</Alert>
+        </div>
+      )}
       <form className={authStyles.form} onSubmit={submit}>
         <TextField label={t("account.profile.displayName")} value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
         <TextField label={t("account.profile.username")} hint={t("register.usernameHint")} value={username} onChange={(e) => setUsername(e.target.value)} required />
         <TextField label={t("login.email")} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <TextField label={t("account.password.new")} type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <TextField label={t("account.password.new")} type="password" autoComplete="new-password" hint={t("register.passwordHint")} value={password} onChange={(e) => setPassword(e.target.value)} required />
         <TextField label={t("account.password.confirm")} type="password" autoComplete="new-password" invalid={mismatch} hint={mismatch ? t("account.password.mismatch") : undefined} value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
         <Button type="submit" variant="primary" fullWidth loading={busy}>
           {t("continue.submit")}
+        </Button>
+        {/* 放弃补注册：回登录页换一种方式登录（pending Cookie 会自然过期）。 */}
+        <Button variant="ghost" fullWidth to="/login" disabled={busy}>
+          {t("continue.cancel")}
         </Button>
       </form>
     </CenteredCard>

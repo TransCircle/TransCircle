@@ -1,10 +1,12 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api, setUserToken } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import type { LoginResult } from "../api/types";
 import { performAssertion, isWebAuthnSupported } from "../utils/webauthn";
+import { sanitizeRedirect } from "../utils/url";
+import { usePageTitle } from "../utils/usePageTitle";
 import {
   CenteredCard,
   PageHeader,
@@ -38,6 +40,9 @@ const FingerIcon = () => (
  * - OAuth：GET /v1/auth/oauth/:provider/start 返回 { authorizationUrl }（需前端跳转，非 302）。
  * - OIDC 交互（?oidc=uid）：登录后 POST /oauth2/interaction/:uid/login → redirectTo。
  */
+/** 在途动作标识：任一在途时其余入口全部禁用，且各自按钮能显示自己的 loading。 */
+type PendingAction = "login" | "mfa" | "github" | "x" | "passkey" | "admin";
+
 const LoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -45,17 +50,28 @@ const LoginPage = () => {
   const [params] = useSearchParams();
 
   const oidcUid = params.get("oidc");
-  const redirectTo = params.get("redirect") ?? "/account/profile";
+  // 来自 URL 的重定向目标必须净化，防开放重定向。
+  const redirectTo = sanitizeRedirect(params.get("redirect"), "/account/profile");
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [mfaToken, setMfaToken] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<PendingAction | null>(null);
+  const busy = pending !== null;
 
-  /** 登录态建立后的后续：OIDC 交互续跑或普通跳转。 */
+  usePageTitle(oidcUid ? t("login.oidcTitle") : t("login.title"));
+
+  /**
+   * 登录态建立后的后续：OIDC 交互续跑或普通跳转。
+   * onTokens 里的 refresh() 会让 useEffect([user, oidcUid]) 再次触发 finish，
+   * 用 ref 保证一次性交互 POST 只执行一次，避免双发竞态。
+   */
+  const finished = useRef(false);
   const finish = async () => {
+    if (finished.current) return;
+    finished.current = true;
     if (oidcUid) {
       const res = await api.post<{ redirectTo?: string }>(
         `/oauth2/interaction/${encodeURIComponent(oidcUid)}/login`,
@@ -70,9 +86,14 @@ const LoginPage = () => {
     navigate(redirectTo, { replace: true });
   };
 
-  /** 已登录且带 oidc：直接续跑交互。 */
+  /** 已登录：带 oidc 直接续跑交互；普通访问不再展示登录表单，直接跳转目的地。 */
   useEffect(() => {
-    if (user && oidcUid) void finish();
+    if (!user) return;
+    if (oidcUid) {
+      void finish();
+      return;
+    }
+    navigate(redirectTo, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, oidcUid]);
 
@@ -91,8 +112,9 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setError(null);
-    setBusy(true);
+    setPending("login");
     try {
       const res = await api.post<LoginResult>("/v1/auth/login", { identifier, password }, { noAuth: true });
       if (!res.ok) {
@@ -104,19 +126,25 @@ const LoginPage = () => {
         return;
       }
       if (res.data.mfaRequired) {
-        setMfaToken(res.data.mfaChallengeToken ?? null);
+        if (!res.data.mfaChallengeToken) {
+          // 服务端声明需要 MFA 却未下发挑战令牌：显式报错，而非静默停留。
+          setError(t("login.mfaChallengeMissing"));
+          return;
+        }
+        setMfaToken(res.data.mfaChallengeToken);
         return;
       }
       await onTokens(res.data);
     } finally {
-      setBusy(false);
+      setPending(null);
     }
   };
 
   const handleMfa = async (e: FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setError(null);
-    setBusy(true);
+    setPending("mfa");
     try {
       const res = await api.post<LoginResult>(
         "/v1/auth/mfa/totp/verify",
@@ -133,32 +161,58 @@ const LoginPage = () => {
       }
       await onTokens(res.data);
     } finally {
-      setBusy(false);
+      setPending(null);
     }
   };
 
   const startOAuth = async (provider: "github" | "x") => {
+    if (busy) return;
     setError(null);
+    setPending(provider);
     const next = oidcUid ? `/login?oidc=${encodeURIComponent(oidcUid)}` : redirectTo;
-    const res = await api.get<{ authorizationUrl: string }>(
-      `/v1/auth/oauth/${provider}/start?redirectAfter=${encodeURIComponent(next)}`,
-      { noAuth: true },
-    );
-    if (res.ok && res.data.authorizationUrl) window.location.href = res.data.authorizationUrl;
-    else setError(res.ok ? t("error.generic") : res.error.message);
+    // try/catch:api.get 若因异常(如 2xx 空/非法响应体解析失败)reject,必须复位 pending,
+    // 否则 busy 恒为 true、所有登录入口被永久禁用且无反馈,只能刷新页面。
+    try {
+      const res = await api.get<{ authorizationUrl: string }>(
+        `/v1/auth/oauth/${provider}/start?redirectAfter=${encodeURIComponent(next)}`,
+        { noAuth: true },
+      );
+      if (res.ok && res.data.authorizationUrl) {
+        // 保持 pending 直到整页跳转，避免离开前按钮短暂恢复可点。
+        window.location.href = res.data.authorizationUrl;
+        return;
+      }
+      setError(res.ok ? t("error.generic") : res.error.message);
+      setPending(null);
+    } catch {
+      setError(t("error.generic"));
+      setPending(null);
+    }
   };
 
   // 管理员登录（IAM tc_main）统一收纳于登录页底部，不再有独立 /admin/login 入口。
   const startAdminLogin = async () => {
+    if (busy) return;
     setError(null);
-    const res = await api.get<{ authorizationUrl: string }>("/v1/admin/oauth/iam/start", { noAuth: true });
-    if (res.ok && res.data.authorizationUrl) window.location.href = res.data.authorizationUrl;
-    else setError(res.ok ? t("error.generic") : res.error.message);
+    setPending("admin");
+    try {
+      const res = await api.get<{ authorizationUrl: string }>("/v1/admin/oauth/iam/start", { noAuth: true });
+      if (res.ok && res.data.authorizationUrl) {
+        window.location.href = res.data.authorizationUrl;
+        return;
+      }
+      setError(res.ok ? t("error.generic") : res.error.message);
+      setPending(null);
+    } catch {
+      setError(t("error.generic"));
+      setPending(null);
+    }
   };
 
   const loginWithPasskey = async () => {
+    if (busy) return;
     setError(null);
-    setBusy(true);
+    setPending("passkey");
     try {
       const start = await api.post<{ challengeId: string; publicKey: Parameters<typeof performAssertion>[0] }>(
         "/v1/auth/passkey/login/start",
@@ -187,9 +241,12 @@ const LoginPage = () => {
     } catch (err) {
       if ((err as DOMException)?.name !== "NotAllowedError") setError(t("login.passkeyFailed"));
     } finally {
-      setBusy(false);
+      setPending(null);
     }
   };
+
+  // 已登录且非 OIDC 交互：上方 effect 即将跳转，不再闪现登录表单。
+  if (user && !oidcUid) return null;
 
   return (
     <CenteredCard>
@@ -226,7 +283,7 @@ const LoginPage = () => {
                 </Link>
               </div>
             </div>
-            <Button type="submit" variant="primary" fullWidth loading={busy}>
+            <Button type="submit" variant="primary" fullWidth loading={pending === "login"} disabled={busy}>
               {t("login.submit")}
             </Button>
           </form>
@@ -234,14 +291,35 @@ const LoginPage = () => {
           <div className={authStyles.divider}>{t("login.orContinueWith")}</div>
 
           <div className={authStyles.oauthRow}>
-            <Button variant="secondary" fullWidth iconLeft={<GithubIcon />} onClick={() => void startOAuth("github")}>
+            <Button
+              variant="secondary"
+              fullWidth
+              iconLeft={<GithubIcon />}
+              loading={pending === "github"}
+              disabled={busy}
+              onClick={() => void startOAuth("github")}
+            >
               {t("login.github")}
             </Button>
-            <Button variant="secondary" fullWidth iconLeft={<XIcon />} onClick={() => void startOAuth("x")}>
+            <Button
+              variant="secondary"
+              fullWidth
+              iconLeft={<XIcon />}
+              loading={pending === "x"}
+              disabled={busy}
+              onClick={() => void startOAuth("x")}
+            >
               {t("login.x")}
             </Button>
             {isWebAuthnSupported() && (
-              <Button variant="secondary" fullWidth iconLeft={<FingerIcon />} onClick={() => void loginWithPasskey()} disabled={busy}>
+              <Button
+                variant="secondary"
+                fullWidth
+                iconLeft={<FingerIcon />}
+                loading={pending === "passkey"}
+                disabled={busy}
+                onClick={() => void loginWithPasskey()}
+              >
                 {t("login.passkey")}
               </Button>
             )}
@@ -256,8 +334,14 @@ const LoginPage = () => {
 
           {!oidcUid && (
             <div className={authStyles.adminEntry}>
-              <button type="button" className={authStyles.adminLink} onClick={() => void startAdminLogin()}>
-                {t("login.adminEntry")}
+              <button
+                type="button"
+                className={authStyles.adminLink}
+                disabled={busy}
+                aria-busy={pending === "admin" || undefined}
+                onClick={() => void startAdminLogin()}
+              >
+                {pending === "admin" ? t("common.processing") : t("login.adminEntry")}
               </button>
             </div>
           )}
@@ -270,15 +354,23 @@ const LoginPage = () => {
             inputMode="text"
             autoComplete="one-time-code"
             autoFocus
-            className={authStyles.mfaCode}
+            className={
+              // 恢复码等长串：降级字距/字号防窄屏溢出；短 TOTP 码保留大字距。
+              mfaCode.length > 8 ? `${authStyles.mfaCode} ${authStyles.mfaCodeLong}` : authStyles.mfaCode
+            }
             value={mfaCode}
             onChange={(e) => setMfaCode(e.target.value)}
             required
           />
-          <Button type="submit" variant="primary" fullWidth loading={busy}>
+          <Button type="submit" variant="primary" fullWidth loading={pending === "mfa"} disabled={busy}>
             {t("login.mfaSubmit")}
           </Button>
-          <Button variant="ghost" fullWidth onClick={() => { setMfaToken(null); setMfaCode(""); setError(null); }}>
+          <Button
+            variant="ghost"
+            fullWidth
+            disabled={busy}
+            onClick={() => { setMfaToken(null); setMfaCode(""); setError(null); }}
+          >
             {t("common.back")}
           </Button>
         </form>

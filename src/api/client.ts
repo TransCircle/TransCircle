@@ -11,6 +11,10 @@
 // - 自动注入 Authorization / Content-Type / X-CSRF-Token / Idempotency-Key / X-Request-Id。
 // ============================================================================
 
+// 非 React 环境的兜底文案:直接用 i18n 单例(config 不反向依赖本模块,无循环);
+// 统一在错误发生时调用 i18n.t 惰性取值,跟随用户当前语言。
+import i18n from "../i18n/config";
+
 /** Pass 后端基址：默认相对路径（同源，经 Vite 代理到 :1146），可用 VITE_PASS_API_BASE 覆盖。 */
 export const API_BASE: string = import.meta.env.VITE_PASS_API_BASE ?? "";
 
@@ -211,6 +215,9 @@ async function handle401(
     if (!skipRefresh && _userToken) {
       const newToken = await doRefresh();
       if (newToken) {
+        // ReadableStream 请求体只能消费一次,已被首次请求耗尽,无法透明重放;
+        // 会话已续期,把 401 交回调用方自行决定是否重发(不误清登录态)。
+        if (init.body instanceof ReadableStream) return res;
         headers.set("Authorization", `Bearer ${newToken}`);
         return fetch(url, { ...init, headers });
       }
@@ -291,7 +298,7 @@ export async function apiRequest<T = unknown>(
       ok: false,
       error: {
         code: "network_error",
-        message: e instanceof Error ? e.message : "网络请求失败",
+        message: e instanceof Error ? e.message : i18n.t("errors.networkFailed"),
       },
       requestId: "",
       status: 0,
@@ -313,7 +320,19 @@ export async function apiRequest<T = unknown>(
   }
 
   if (contentType.includes("application/json")) {
-    const json = (await res.json()) as Record<string, unknown>;
+    // 声称 JSON 但响应体为空 / 被网关截断 / 非法 JSON 时,res.json() 会抛错。
+    // 收敛为统一的错误结果,避免异常穿透到调用方(否则调用方的 setPending 等收尾不执行)。
+    let json: Record<string, unknown>;
+    try {
+      json = (await res.json()) as Record<string, unknown>;
+    } catch {
+      return {
+        ok: false,
+        error: { code: "invalid_response", message: i18n.t("errors.unknown") },
+        requestId: res.headers.get("X-Request-Id") ?? "",
+        status,
+      };
+    }
     const requestId =
       (json.requestId as string) ?? res.headers.get("X-Request-Id") ?? "";
 
@@ -331,7 +350,7 @@ export async function apiRequest<T = unknown>(
     const error = json.error as ApiErrorBody | undefined;
     return {
       ok: false,
-      error: error ?? { code: "unknown", message: "未知错误" },
+      error: error ?? { code: "unknown", message: i18n.t("errors.unknown") },
       requestId,
       status,
     };
@@ -342,7 +361,7 @@ export async function apiRequest<T = unknown>(
   }
   return {
     ok: false,
-    error: { code: "http_error", message: `请求失败 (${status})` },
+    error: { code: "http_error", message: i18n.t("errors.requestFailed", { status }) },
     requestId: "",
     status,
   };

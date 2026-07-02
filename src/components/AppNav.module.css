@@ -192,21 +192,21 @@
   display: inline-flex;
   align-items: center;
   padding: 0.5rem 1.2rem;
-  border-radius: 50px;
+  border-radius: var(--radius-pill);
   background-color: var(--cta-bg);
   color: var(--cta-color);
   font-size: 0.875rem;
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: 0 2px 8px var(--shadow-color);
+  box-shadow: var(--shadow-card);
   transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .loginCta:hover {
   background-color: var(--cta-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--shadow-color-hover);
+  box-shadow: var(--shadow-card-hover);
 }
 
 /* ── Hamburger + drawer (mobile) ───────────────────────── */
@@ -214,6 +214,8 @@
   display: none;
   position: relative;
   flex-direction: column;
+  /* 垂直居中三条横线:按钮尺寸在触屏下会放大到 44px,居中可免于逐档调 padding。 */
+  justify-content: center;
   gap: 4px;
   width: 38px;
   height: 38px;
@@ -305,16 +307,49 @@
 }
 .overlayOn { opacity: 1; pointer-events: auto; }
 
+/* 退出登录失败的可见反馈:soft-error 语义软色,role=alert 由读屏播报。 */
+.logoutError {
+  margin: 0.25rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--soft-error-border);
+  background-color: var(--soft-error-bg);
+  color: var(--soft-error-text);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
 @keyframes menuIn {
   from { opacity: 0; transform: translateY(-4px); }
 }
 
+/* 触屏(含触屏笔记本,故用 any-pointer 而非 pointer)保证 ≥44px 触控目标。 */
+@media (any-pointer: coarse) {
+  .link,
+  .menuItem,
+  .acctBtn,
+  .loginCta,
+  .drawerLink {
+    min-height: 44px;
+  }
+  .navBtn,
+  .hamburger {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* 移动断点:与 AppNav.tsx 的 MOBILE_BREAKPOINT(1100)保持一致(双处互指)。 */
 @media (max-width: 1100px) {
   .hamburger { display: flex; }
   .links { display: none; }
   .acctName { display: none; }
   .adminLink { display: none; }
-  .loginCta { display: none; }
+  /* 未登录移动用户在顶栏保留可见登录入口(压缩版药丸),不再整体隐藏。 */
+  .loginCta {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.82rem;
+  }
   .inner { padding: 0.6rem 1rem; }
 }
 

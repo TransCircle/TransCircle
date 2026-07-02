@@ -3,9 +3,9 @@ import { useTranslation } from "react-i18next";
 import { api, setUserToken } from "../../api/client";
 import { useSession } from "../../context/SessionContext";
 import { checkPasswordStrength } from "../../utils/string";
+import { usePageTitle } from "../../utils/usePageTitle";
 import { StepUpDialog } from "../../components/StepUpDialog";
 import {
-  Card,
   PageHeader,
   TextField,
   AdminButton as Button,
@@ -18,6 +18,9 @@ interface ChangeResult {
   passwordChanged?: boolean;
   accessToken?: string;
 }
+
+/** 与注册页一致的客户端最短长度规则(api.md §1.1:至少 8 位)。 */
+const MIN_PASSWORD_LENGTH = 8;
 
 /** 修改/设置登录密码：POST /v1/me/password；成功后用轮换的 accessToken 续期会话。 */
 const PasswordPage = () => {
@@ -34,7 +37,10 @@ const PasswordPage = () => {
   const [stepUpOpen, setStepUpOpen] = useState(false);
   const pendingBody = useRef<Record<string, unknown> | null>(null);
 
+  usePageTitle(t("account.nav.password"));
+
   const mismatch = confirm.length > 0 && confirm !== next;
+  const tooShort = next.length > 0 && next.length < MIN_PASSWORD_LENGTH;
   const strength = next ? checkPasswordStrength(next) : 0;
   const strengthLabels = [
     t("password.strength.weak"),
@@ -74,6 +80,8 @@ const PasswordPage = () => {
     e.preventDefault();
     setError(null);
     setOk(false);
+    // 客户端先行校验:长度不足 / 两次不一致的错误已就近显示在输入框下。
+    if (next.length < MIN_PASSWORD_LENGTH) return;
     if (next !== confirm) {
       setError(t("account.password.mismatch"));
       return;
@@ -93,8 +101,8 @@ const PasswordPage = () => {
       {ok && <Alert tone="success">{t("account.password.saved")}</Alert>}
       {!hasPassword && <Alert tone="info">{t("account.password.noPassword")}</Alert>}
 
-      <Card>
-        <form className={s.form} onSubmit={submit}>
+      <section className={s.sectionFirst}>
+        <form className={`${s.form} ${s.formNarrow}`} onSubmit={submit}>
           {hasPassword && (
             <TextField
               label={t("account.password.current")}
@@ -109,7 +117,14 @@ const PasswordPage = () => {
             label={t("account.password.new")}
             type="password"
             autoComplete="new-password"
-            hint={next ? `${t("password.strengthLabel")}: ${strengthLabels[strength]}` : undefined}
+            invalid={tooShort}
+            hint={
+              next
+                ? tooShort
+                  ? t("account.password.tooShort")
+                  : `${t("password.strengthLabel")}: ${strengthLabels[strength]}`
+                : t("register.passwordHint")
+            }
             value={next}
             onChange={(e) => setNext(e.target.value)}
             required
@@ -130,7 +145,7 @@ const PasswordPage = () => {
             </Button>
           </div>
         </form>
-      </Card>
+      </section>
 
       <StepUpDialog
         open={stepUpOpen}

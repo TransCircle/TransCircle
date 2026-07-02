@@ -26,7 +26,7 @@ interface SessionContextValue {
   refresh: () => Promise<MeProfile | null>;
   /** 乐观更新本地用户。 */
   setUser: (user: MeProfile | null) => void;
-  /** 登出并清空状态。 */
+  /** 登出并清空状态；API 失败时抛错（不清空本地态，调用方可就近反馈并重试）。 */
   logout: () => Promise<void>;
 }
 
@@ -47,7 +47,10 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const logout = useCallback(async () => {
-    await api.post("/v1/auth/logout");
+    const res = await api.post("/v1/auth/logout");
+    // 不再静默吞掉失败：上抛给调用方（AppNav 已有 catch 反馈），避免服务端会话
+    // 仍存活的「假登出」。会话本已失效(401)时,客户端会经 session-expired 事件清态。
+    if (!res.ok) throw new Error(res.error.message);
     clearUserAuth();
     setUser(null);
   }, []);

@@ -32,9 +32,20 @@
   padding: 1.3rem 0 0.7rem;
 }
 
-/* Non-sticky page header group for customer (document-scroll) pages, where a
-   sticky header would pin underneath RootLayout's sticky navbar. Admin pages
-   keep .stickyHead because they scroll inside an internal container. */
+/* 小视口降级：窄屏（≤640px）或矮屏（≤500px 高）下头部不再吸附——
+   标题+工具栏在这类视口会钉住近半屏，列表可视区所剩无几，得不偿失。
+   改 static 后去掉负边距与自带的顶部留白，顶部留白回归 .page 的 padding-top。 */
+@media (max-width: 640px), (max-height: 500px) {
+  .stickyHead {
+    position: static;
+    margin-top: 0;
+    padding-top: 0;
+  }
+}
+
+/* Non-sticky page header group：不需要吸附头部的页面用它。
+   （注：全站均为文档滚动，.stickyHead 通过 top: var(--app-nav-height)
+   吸附在导航栏下方，并非在内部容器滚动。） */
 .head {
   display: flex;
   flex-direction: column;
@@ -87,7 +98,7 @@
   padding: 0.9rem 1.1rem;
   background-color: var(--surface-card);
   border: 1px solid var(--divider-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   color: inherit;
   font: inherit;
@@ -99,7 +110,8 @@
   border-color: var(--primary-pink);
   background-color: var(--hover-bg);
   background-color: var(--hover-bg-mix, var(--hover-bg));
-  box-shadow: 0 2px 10px var(--shadow-color);
+  /* 悬停投影用 hover 级 token：light 主题下 --shadow-color 是白色、看不见。 */
+  box-shadow: var(--shadow-card-hover);
 }
 
 /* 静态行（无下钻，如审计日志） */
@@ -110,7 +122,7 @@
   padding: 0.85rem 1.1rem;
   background-color: var(--surface-card);
   border: 1px solid var(--divider-color);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .rowMain {
@@ -163,13 +175,41 @@
   color: var(--text-secondary);
   background-color: var(--hover-bg);
   padding: 0.05rem 0.4rem;
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   /* 长 ID / 令牌（无空格长串）必须可断行，否则横向撑破页面、出现横向滚动条，
      而 sticky 侧栏只在垂直方向钉住，横向滚动时会被整行拖着移动。 */
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
   min-width: 0;
+}
+
+/* 行内可点击的 ID（如审计日志的操作者 → 用户详情）：沿用 .code 胶囊外观，
+   转主题色并在悬停/聚焦时亮出下划线提示可点。 */
+.codeLink {
+  display: inline-flex;
+  min-width: 0;
+  border-radius: var(--radius-xs);
+  text-decoration: none;
+}
+
+.codeLink .code {
+  color: var(--accent-pink);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 2px;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.codeLink:hover .code,
+.codeLink:focus-visible .code {
+  text-decoration-color: currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .codeLink .code {
+    transition: none;
+  }
 }
 
 .rowRight {
@@ -232,7 +272,7 @@
   padding: 1.1rem 1.25rem;
   background-color: var(--hover-bg);
   border: 1px solid var(--divider-color);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   line-height: 1.75;
   font-size: 0.92rem;
   color: var(--text-body);
@@ -281,9 +321,13 @@
   align-items: center;
 }
 
+/* 纵向布局：按钮上方可就近容纳「加载更多」的错误提示
+   （用户此刻停在列表底部，页面顶部的 Alert 看不见）。 */
 .loadMoreWrap {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
   margin-top: 0.25rem;
 }
 
@@ -357,5 +401,15 @@
   .rowBtn,
   .rowStatic {
     align-items: flex-start;
+  }
+  /* 静态行（审计日志等）：右侧时间戳不再与主列抢横向空间，
+     换行堆到 meta 下方，避免窄屏挤压出竖排文字。 */
+  .rowStatic {
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+  }
+  .rowStatic .rowRight {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
