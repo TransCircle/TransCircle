@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../../api/client";
 import type { OAuthBinding } from "../../api/types";
 import { useFormatTs } from "../../utils/datetime";
+import { usePageTitle } from "../../utils/usePageTitle";
 import { StepUpDialog } from "../../components/StepUpDialog";
 import {
   Card,
@@ -32,7 +33,11 @@ const PROVIDERS = [
   { id: "x", label: "X", icon: <XIcon /> },
 ] as const;
 
-/** 第三方账号绑定（实现占位页）：绑定 / 解绑（解绑需 step-up）。 */
+/** 从 PROVIDERS 查表取展示名，未知 provider 回退原始 id。 */
+const providerLabel = (id: string | null) =>
+  PROVIDERS.find((p) => p.id === id)?.label ?? id ?? "";
+
+/** 第三方账号绑定：绑定 / 解绑（解绑需 step-up）。 */
 const OAuthBindingsPage = () => {
   const { t } = useTranslation();
   const fmt = useFormatTs();
@@ -41,9 +46,13 @@ const OAuthBindingsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  /** 正在发起绑定跳转的 provider id（防重复点击 + 按钮 busy 态）。 */
+  const [bindingId, setBindingId] = useState<string | null>(null);
   const [unbindTarget, setUnbindTarget] = useState<string | null>(null);
   const [stepUpOpen, setStepUpOpen] = useState(false);
   const [pendingUnbind, setPendingUnbind] = useState<string | null>(null);
+
+  usePageTitle(t("account.nav.oauth"));
 
   const load = async () => {
     setLoading(true);
@@ -59,9 +68,15 @@ const OAuthBindingsPage = () => {
 
   const bind = async (provider: string) => {
     setError(null);
+    setBindingId(provider);
     const res = await api.get<{ authorizationUrl: string }>(`/v1/me/oauth/${provider}/bind/start`);
-    if (res.ok && res.data.authorizationUrl) window.location.href = res.data.authorizationUrl;
-    else setError(res.ok ? t("error.generic") : res.error.message);
+    if (res.ok && res.data.authorizationUrl) {
+      // 保持 busy 态直到浏览器完成跳转，避免等待期间重复点击。
+      window.location.href = res.data.authorizationUrl;
+      return;
+    }
+    setError(res.ok ? t("error.generic") : res.error.message);
+    setBindingId(null);
   };
 
   const doUnbind = async (provider: string) => {
@@ -88,49 +103,59 @@ const OAuthBindingsPage = () => {
       {error && <Alert tone="error">{error}</Alert>}
       {notice && <Alert tone="success">{notice}</Alert>}
 
-      {loading ? (
-        <Spinner size="lg" label={t("common.loading")} />
-      ) : (
-        <Card padding="none">
-          <ul className={s.list}>
-            {PROVIDERS.map((p) => {
-              const bound = bindings.find((b) => b.provider === p.id);
-              return (
-                <li key={p.id} className={s.listRow}>
-                  <div className={s.rowMain}>
-                    <span className={s.providerIcon} aria-hidden="true">{p.icon}</span>
-                    <div className={s.rowText}>
-                      <span className={s.rowTitle}>
-                        {p.label}
-                        <StatusBadge size="sm" tone={bound ? "green" : "neutral"} label={bound ? t("account.oauth.bound") : t("account.oauth.notBound")} />
-                      </span>
-                      {bound && (
-                        <span className={s.rowMeta}>
-                          {bound.providerUsername && <span>@{bound.providerUsername}</span>}
-                          <span>{`${t("account.oauth.boundAt")}: ${fmt(bound.boundAt) || "—"}`}</span>
+      <section className={s.sectionFirst}>
+        {loading ? (
+          <Spinner size="lg" label={t("common.loading")} />
+        ) : (
+          <Card padding="none">
+            <ul className={s.list}>
+              {PROVIDERS.map((p) => {
+                const bound = bindings.find((b) => b.provider === p.id);
+                return (
+                  <li key={p.id} className={s.listRow}>
+                    <div className={s.rowMain}>
+                      <span className={s.providerIcon} aria-hidden="true">{p.icon}</span>
+                      <div className={s.rowText}>
+                        <span className={s.rowTitle}>
+                          {p.label}
+                          <StatusBadge size="sm" tone={bound ? "green" : "neutral"} label={bound ? t("account.oauth.bound") : t("account.oauth.notBound")} />
                         </span>
+                        {bound && (
+                          <span className={s.rowMeta}>
+                            {bound.providerUsername && <span>@{bound.providerUsername}</span>}
+                            <span>{`${t("account.oauth.boundAt")}: ${fmt(bound.boundAt) || "—"}`}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className={s.rowActions}>
+                      {bound ? (
+                        <Button variant="danger" size="sm" disabled={busy || bindingId !== null} onClick={() => setUnbindTarget(p.id)}>
+                          {t("account.oauth.unbind")}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          loading={bindingId === p.id}
+                          disabled={bindingId !== null && bindingId !== p.id}
+                          onClick={() => void bind(p.id)}
+                        >
+                          {t("account.oauth.bind")}
+                        </Button>
                       )}
                     </div>
-                  </div>
-                  {bound ? (
-                    <Button variant="danger" size="sm" disabled={busy} onClick={() => setUnbindTarget(p.id)}>
-                      {t("account.oauth.unbind")}
-                    </Button>
-                  ) : (
-                    <Button variant="secondary" size="sm" onClick={() => void bind(p.id)}>
-                      {t("account.oauth.bind")}
-                    </Button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </Card>
-      )}
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        )}
+      </section>
 
       <ConfirmDialog
         open={!!unbindTarget}
-        title={t("account.oauth.unbindTitle", { provider: unbindTarget === "x" ? "X" : "GitHub" })}
+        title={t("account.oauth.unbindTitle", { provider: providerLabel(unbindTarget) })}
         message={t("account.oauth.unbindMessage")}
         confirmText={t("account.oauth.unbind")}
         cancelText={t("common.cancel")}

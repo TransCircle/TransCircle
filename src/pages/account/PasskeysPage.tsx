@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../../api/client";
 import type { Passkey } from "../../api/types";
 import { useFormatTs } from "../../utils/datetime";
+import { usePageTitle } from "../../utils/usePageTitle";
 import {
   performRegistration,
   isWebAuthnSupported,
@@ -11,6 +12,7 @@ import {
 import {
   Card,
   PageHeader,
+  SectionLabel,
   TextField,
   AdminButton as Button,
   Alert,
@@ -29,7 +31,7 @@ const FingerIcon = () => (
   </svg>
 );
 
-/** Passkey 管理（实现占位页）：注册 / 列表 / 重命名 / 删除。 */
+/** Passkey 管理：注册 / 列表 / 重命名 / 删除。 */
 const PasskeysPage = () => {
   const { t } = useTranslation();
   const fmt = useFormatTs();
@@ -43,8 +45,11 @@ const PasskeysPage = () => {
 
   const [renameTarget, setRenameTarget] = useState<Passkey | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [renameError, setRenameError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Passkey | null>(null);
   const [busy, setBusy] = useState(false);
+
+  usePageTitle(t("account.nav.passkeys"));
 
   const load = async () => {
     setLoading(true);
@@ -95,14 +100,17 @@ const PasskeysPage = () => {
   const doRename = async () => {
     if (!renameTarget) return;
     setBusy(true);
-    setError(null);
+    setRenameError(null);
     const res = await api.patch(`/v1/me/passkeys/${encodeURIComponent(renameTarget.id)}`, { name: renameValue });
+    setBusy(false);
     if (res.ok) {
       setNotice(t("account.passkeys.renamedOk"));
+      setRenameTarget(null);
       await load();
-    } else setError(res.error.message);
-    setBusy(false);
-    setRenameTarget(null);
+    } else {
+      // 失败不关对话框：错误就近显示在对话框内，用户可改名重试。
+      setRenameError(res.error.message);
+    }
   };
 
   const doDelete = async () => {
@@ -125,8 +133,8 @@ const PasskeysPage = () => {
       {error && <Alert tone="error">{error}</Alert>}
       {notice && <Alert tone="success">{notice}</Alert>}
 
-      <Card>
-        <form className={s.form} onSubmit={add}>
+      <section className={s.sectionFirst}>
+        <form className={`${s.form} ${s.formNarrow}`} onSubmit={add}>
           <TextField
             label={t("account.passkeys.addLabel")}
             placeholder={t("account.passkeys.namePlaceholder")}
@@ -141,47 +149,50 @@ const PasskeysPage = () => {
             </Button>
           </div>
         </form>
-      </Card>
+      </section>
 
-      {loading ? (
-        <Spinner size="lg" label={t("common.loading")} />
-      ) : items.length === 0 ? (
-        <Card><EmptyState icon={<FingerIcon />} title={t("account.passkeys.empty")} /></Card>
-      ) : (
-        <Card padding="none">
-          <ul className={s.list}>
-            {items.map((pk) => (
-              <li key={pk.id} className={s.listRow}>
-                <div className={s.rowMain}>
-                  <span className={s.providerIcon} aria-hidden="true"><FingerIcon /></span>
-                  <div className={s.rowText}>
-                    <span className={s.rowTitle}>
-                      {pk.name || t("account.passkeys.title")}
-                      <StatusBadge
-                        size="sm"
-                        tone={pk.status === "active" ? "green" : "amber"}
-                        label={pk.status === "active" ? t("account.passkeys.active") : t("account.passkeys.frozen")}
-                      />
-                    </span>
-                    <span className={s.rowMeta}>
-                      <span>{`${t("account.passkeys.createdAt")}: ${fmt(pk.createdAt) || "—"}`}</span>
-                      <span>{`${t("account.passkeys.lastUsed")}: ${fmt(pk.lastUsedAt) || t("common.never")}`}</span>
-                    </span>
+      <section className={s.section}>
+        <SectionLabel>{t("account.passkeys.listLabel")}</SectionLabel>
+        {loading ? (
+          <Spinner size="lg" label={t("common.loading")} />
+        ) : items.length === 0 ? (
+          <EmptyState icon={<FingerIcon />} title={t("account.passkeys.empty")} />
+        ) : (
+          <Card padding="none">
+            <ul className={s.list}>
+              {items.map((pk) => (
+                <li key={pk.id} className={s.listRow}>
+                  <div className={s.rowMain}>
+                    <span className={s.providerIcon} aria-hidden="true"><FingerIcon /></span>
+                    <div className={s.rowText}>
+                      <span className={s.rowTitle}>
+                        {pk.name || t("account.passkeys.title")}
+                        <StatusBadge
+                          size="sm"
+                          tone={pk.status === "active" ? "green" : "amber"}
+                          label={pk.status === "active" ? t("account.passkeys.active") : t("account.passkeys.frozen")}
+                        />
+                      </span>
+                      <span className={s.rowMeta}>
+                        <span>{`${t("account.passkeys.createdAt")}: ${fmt(pk.createdAt) || "—"}`}</span>
+                        <span>{`${t("account.passkeys.lastUsed")}: ${fmt(pk.lastUsedAt) || t("common.never")}`}</span>
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className={s.actions}>
-                  <Button variant="ghost" size="sm" onClick={() => { setRenameTarget(pk); setRenameValue(pk.name ?? ""); }}>
-                    {t("common.rename")}
-                  </Button>
-                  <Button variant="danger" size="sm" onClick={() => setDeleteTarget(pk)}>
-                    {t("common.delete")}
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+                  <div className={s.rowActions}>
+                    <Button variant="ghost" size="sm" onClick={() => { setRenameTarget(pk); setRenameValue(pk.name ?? ""); setRenameError(null); }}>
+                      {t("common.rename")}
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => setDeleteTarget(pk)}>
+                      {t("common.delete")}
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
+      </section>
 
       <Modal
         open={!!renameTarget}
@@ -194,6 +205,7 @@ const PasskeysPage = () => {
           </>
         }
       >
+        {renameError && <Alert tone="error">{renameError}</Alert>}
         <TextField label={t("account.passkeys.renameLabel")} value={renameValue} onChange={(e) => setRenameValue(e.target.value)} maxLength={50} />
       </Modal>
 

@@ -1,4 +1,12 @@
+/* .inner 仅承担 kind 着色上下文;布局在 .live 上,
+   这样空置的另一个 live region 不产生任何占位。 */
 .inner {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 两个常驻 live region 共用同一布局:同一时刻只有一个有内容。 */
+.live {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -15,16 +23,13 @@
   color: var(--soft-success-text);
 }
 
+/* --error-color 已随主题覆写(dark #ef5350),无需局部 dark 分支。 */
 .error .icon {
-  color: #c62828;
+  color: var(--error-color);
 }
 
 .info .icon {
   color: var(--accent-pink);
-}
-
-[data-theme='dark'] .error .icon {
-  color: #ef5350;
 }
 
 /* Cancel PageHeader's bottom margin inside the stacked screen. */
@@ -37,7 +42,8 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.78rem;
   color: var(--text-muted);
-  word-break: break-word;
+  /* 错误码/URI 等长串在窄卡片内可任意断行,避免溢出。 */
+  overflow-wrap: anywhere;
 }
 
 .actions {
@@ -48,59 +54,15 @@
   margin-top: 1.1rem;
 }
 
-/* Link-as-button for navigation actions — mirrors AdminButton geometry so the
-   anchor keeps its semantics (open-in-new-tab, etc.) while matching the kit. */
-.linkBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.55rem 1.25rem;
-  border-radius: var(--radius-pill);
-  border: 1.5px solid transparent;
-  font-size: 0.88rem;
-  font-weight: 500;
-  line-height: 1.2;
-  text-decoration: none;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-}
-
-.linkPrimary {
-  background-color: var(--cta-bg);
-  color: var(--cta-color);
-  box-shadow: 0 2px 8px var(--shadow-color);
-}
-
-.linkPrimary:hover {
-  background-color: var(--cta-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--shadow-color-hover);
-}
-
-.linkSecondary {
-  background-color: var(--surface-card);
-  color: var(--text-main);
-  border-color: var(--divider-color);
-}
-
-.linkSecondary:hover {
-  border-color: var(--primary-pink);
-  background-color: var(--hover-bg);
-}
-
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .linkSecondary:hover {
-    background-color: var(--hover-bg-mix);
+/* 窄屏动作竖排满宽,拇指可达且避免两键挤压换行。 */
+@media (max-width: 480px) {
+  .actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .linkBtn {
-    transition: none;
-  }
-  .linkPrimary:hover {
-    transform: none;
+  .actions > * {
+    width: 100%;
   }
 }

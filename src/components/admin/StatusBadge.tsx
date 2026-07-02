@@ -8,14 +8,19 @@ export interface StatusBadgeProps {
   tone: BadgeTone
   label: string
   size?: 'sm' | 'md'
+  /** 悬停提示；默认取 label——长文案被省略号截断时仍可读到完整值。 */
+  title?: string
 }
 
 /** 语义状态标签：圆点 + 文字（始终带文字，满足 WCAG 1.4.1 不依赖颜色）。 */
-export function StatusBadge({ tone, label, size = 'md' }: StatusBadgeProps) {
+export function StatusBadge({ tone, label, size = 'md', title }: StatusBadgeProps) {
   return (
-    <span className={cx(styles.badge, styles[`tone_${tone}`], size === 'sm' && styles.sm)}>
+    <span
+      className={cx(styles.badge, styles[`tone_${tone}`], size === 'sm' && styles.sm)}
+      title={title ?? label}
+    >
       <span className={styles.dot} aria-hidden="true" />
-      {label}
+      <span className={styles.badgeLabel}>{label}</span>
     </span>
   )
 }

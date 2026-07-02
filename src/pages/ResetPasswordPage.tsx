@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { checkPasswordStrength } from "../utils/string";
+import { usePageTitle } from "../utils/usePageTitle";
 import {
   CenteredCard,
   PageHeader,
@@ -28,6 +29,8 @@ const ResetPasswordPage = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+
+  usePageTitle(t("reset.title"));
 
   const mismatch = confirm.length > 0 && confirm !== password;
   const strength = password ? checkPasswordStrength(password) : 0;
@@ -90,6 +93,7 @@ const ResetPasswordPage = () => {
           label={t("account.password.new")}
           type="password"
           autoComplete="new-password"
+          autoFocus
           hint={password ? `${t("password.strengthLabel")}: ${strengthLabels[strength]}` : undefined}
           value={password}
           onChange={(e) => setPassword(e.target.value)}

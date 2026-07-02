@@ -21,7 +21,7 @@
   min-height: 40px;
   padding: 0.55rem 0.8rem;
   border: 1.5px solid var(--divider-color);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
   font-family: inherit;
   color: var(--text-main);
@@ -36,15 +36,10 @@
   color: var(--text-muted);
 }
 
+/* 聚焦环走主题 token，随主题取色，不再需要 color-mix 渐进增强兜底。 */
 .input:focus {
   border-color: var(--primary-pink);
-  box-shadow: 0 0 0 3px rgba(255, 133, 162, 0.18);
-}
-
-@supports (box-shadow: 0 0 0 3px color-mix(in srgb, red 18%, transparent)) {
-  .input:focus {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-pink) 22%, transparent);
-  }
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .input:disabled {
@@ -58,7 +53,7 @@
 
 .invalid:focus {
   border-color: var(--error-color);
-  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.16);
+  box-shadow: 0 0 0 3px var(--focus-ring-error);
 }
 
 .textarea {
@@ -74,6 +69,42 @@
 
 .hintError {
   color: var(--error-color);
+}
+
+/* ── 密码可见性开关 ───────────────────────────────────────── */
+
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* 给绝对定位的开关按钮腾出内边距，不改变字段外部宽度。 */
+.inputWithToggle {
+  padding-right: 2.6rem;
+}
+
+.toggleBtn {
+  position: absolute;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.toggleBtn:hover {
+  background-color: var(--hover-bg);
+  color: var(--text-main);
 }
 
 /* ── SearchField ─────────────────────────────────────────── */
@@ -130,20 +161,29 @@
   color: var(--text-main);
 }
 
-/* Comfortable touch targets on touch devices. */
-@media (pointer: coarse) {
+/* Comfortable touch targets on touch devices.
+   any-pointer（而非 pointer）：带触屏的笔记本主指针是鼠标，但手指也会点。 */
+@media (any-pointer: coarse) {
   .input {
     min-height: 44px;
   }
-  .clearBtn {
-    width: 40px;
-    height: 40px;
+  .clearBtn,
+  .toggleBtn {
+    width: 44px;
+    height: 44px;
+  }
+  /* 按钮加大后同步扩大输入内边距（0.5rem 偏移 + 44px 按钮 ≈ 52px），
+     避免文字压到按钮下方。 */
+  .searchInput,
+  .inputWithToggle {
+    padding-right: 3.4rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .input,
-  .clearBtn {
+  .clearBtn,
+  .toggleBtn {
     transition: none;
   }
 }

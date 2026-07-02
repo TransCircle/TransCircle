@@ -54,11 +54,17 @@
   text-decoration: underline;
 }
 
-/* Centered MFA code entry */
+/* Centered MFA code entry：短 TOTP 码用大字距;窄屏下轻微收敛字号防溢出 */
 .mfaCode {
   text-align: center;
-  font-size: 1.2rem;
+  font-size: clamp(1.05rem, 4vw, 1.2rem);
   letter-spacing: 0.4em;
+}
+
+/* 恢复码等长串：大字距会把内容挤出可视区，降级字距与字号（JS 按输入长度切换） */
+.mfaCodeLong {
+  font-size: 1rem;
+  letter-spacing: 0.08em;
 }
 
 /* OAuth / alternate-action button stack */
@@ -114,6 +120,31 @@
 .adminLink:hover {
   color: var(--accent-pink);
   text-decoration: underline;
+}
+
+.adminLink:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.adminLink:disabled:hover {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+/* 触控目标：coarse 指针下命中区 ≥44px。
+   用 padding 扩大命中、负 margin 抵销大部分布局增长，视觉字重/字号不变。 */
+@media (any-pointer: coarse) {
+  .forgotLink {
+    display: inline-block;
+    padding: 0.85rem 0.75rem;
+    margin: -0.5rem -0.75rem;
+  }
+
+  .adminLink {
+    padding: 0.85rem 0.9rem;
+    margin: -0.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

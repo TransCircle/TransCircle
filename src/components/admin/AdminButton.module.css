@@ -6,10 +6,12 @@
   font-family: inherit;
   font-weight: 500;
   cursor: pointer;
-  border-radius: 50px;
+  border-radius: var(--radius-pill);
   border: 1.5px solid transparent;
   white-space: nowrap;
   line-height: 1.2;
+  /* 链接形态（to/href）与按钮共用本类，需显式去掉下划线。 */
+  text-decoration: none;
   transition:
     background-color 0.18s ease,
     color 0.18s ease,
@@ -33,7 +35,9 @@
   width: 100%;
 }
 
-.btn:disabled {
+/* 链接形态无原生 disabled，用 aria-disabled 承担同一视觉降级。 */
+.btn:disabled,
+.btn[aria-disabled='true'] {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -49,27 +53,27 @@
 .primary {
   background-color: var(--cta-bg);
   color: var(--cta-color);
-  box-shadow: 0 2px 8px var(--shadow-color);
+  box-shadow: var(--shadow-card);
 }
 
-.primary:not(:disabled):hover {
+.primary:not(:disabled):not([aria-disabled='true']):hover {
   background-color: var(--cta-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--shadow-color-hover);
+  box-shadow: var(--shadow-card-hover);
 }
 
 /* ── Secondary ───────────────────────────────────────────── */
 
+/* 对齐主页 .ctaSecondary：粉描边 + 粉文字，hover 粉底加深描边。 */
 .secondary {
-  background-color: var(--surface-card);
-  color: var(--text-main);
-  border-color: var(--divider-color);
+  background-color: transparent;
+  color: var(--accent-pink);
+  border-color: var(--primary-pink);
 }
 
-.secondary:not(:disabled):hover {
-  border-color: var(--primary-pink);
+.secondary:not(:disabled):not([aria-disabled='true']):hover {
+  border-color: var(--accent-pink);
   background-color: var(--hover-bg);
-  background-color: var(--hover-bg-mix, var(--hover-bg));
 }
 
 /* ── Ghost ───────────────────────────────────────────────── */
@@ -79,35 +83,28 @@
   color: var(--accent-pink);
 }
 
-.ghost:not(:disabled):hover {
+.ghost:not(:disabled):not([aria-disabled='true']):hover {
   background-color: var(--hover-bg);
 }
 
 /* ── Danger ──────────────────────────────────────────────── */
 
+/* soft-error token 随主题取值（含系统暗色 :root:not([data-theme])），
+   不再手工写 dark 覆盖——顺带修复系统暗色下旧覆盖不生效的问题。 */
 .danger {
-  background-color: var(--surface-card);
-  color: var(--error-color);
-  border-color: var(--error-border);
-}
-
-.danger:not(:disabled):hover {
-  border-color: #D4A09E;
-  background-color: #FFF0EE;
-}
-
-[data-theme='dark'] .danger {
   background-color: transparent;
-  color: var(--error-color);
-  border-color: rgba(255, 180, 171, 0.25);
+  color: var(--soft-error-text);
+  border-color: var(--soft-error-border);
 }
 
-[data-theme='dark'] .danger:not(:disabled):hover {
-  background-color: rgba(255, 180, 171, 0.08);
+.danger:not(:disabled):not([aria-disabled='true']):hover {
+  border-color: var(--soft-error-border);
+  background-color: var(--soft-error-bg);
 }
 
-/* Comfortable touch targets on touch devices. */
-@media (pointer: coarse) {
+/* Comfortable touch targets on touch devices.
+   any-pointer（而非 pointer）：带触屏的笔记本主指针是鼠标，但手指也会点。 */
+@media (any-pointer: coarse) {
   .btn {
     min-height: 44px;
   }
@@ -117,7 +114,7 @@
   .btn {
     transition: none;
   }
-  .primary:not(:disabled):hover {
+  .primary:not(:disabled):not([aria-disabled='true']):hover {
     transform: none;
   }
 }

@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme, type Theme } from "../context/ThemeContext";
 import styles from "./ThemeToggle.module.css";
 
@@ -7,7 +8,8 @@ interface RippleEffect {
   x: number;
   y: number;
   radius: number;
-  theme: Theme;
+  /** 创建时刻快照的目标主题背景色(来自 --bg-color),快速连点时各涟漪保持各自颜色。 */
+  color: string;
 }
 
 /**
@@ -18,7 +20,7 @@ const animateThemeSwitch = (
   nextTheme: Theme,
   button: HTMLButtonElement,
   setTheme: (t: Theme) => void,
-  addRipple: (x: number, y: number, radius: number, theme: Theme) => void,
+  addRipple: (x: number, y: number, radius: number, color: string) => void,
 ): void => {
   const rect = button.getBoundingClientRect();
   const originX = rect.left + rect.width / 2;
@@ -29,11 +31,16 @@ const animateThemeSwitch = (
   const dy = Math.max(originY, innerHeight - originY);
   const finalR = Math.ceil(Math.sqrt(dx * dx + dy * dy)) + 60;
 
-  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    addRipple(originX, originY, finalR, nextTheme);
-  }
-
+  // 先切主题(data-theme 同步落到 <html>),再读取生效后的 --bg-color:
+  // 涟漪颜色始终跟随主题 token,避免在 CSS 里硬编码两份背景色。
   setTheme(nextTheme);
+
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const bg = getComputedStyle(document.documentElement)
+      .getPropertyValue("--bg-color")
+      .trim();
+    addRipple(originX, originY, finalR, bg);
+  }
 };
 
 const SunIcon = () => (
@@ -85,18 +92,19 @@ interface ThemeToggleProps {
 }
 
 const ThemeToggle = ({ className = "" }: ThemeToggleProps) => {
+  const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   const btnRef = useRef<HTMLButtonElement>(null);
   const [ripples, setRipples] = useState<RippleEffect[]>([]);
   const rippleIdRef = useRef(0);
 
-  const addRipple = useCallback((x: number, y: number, radius: number, theme: Theme) => {
+  const addRipple = useCallback((x: number, y: number, radius: number, color: string) => {
     const id = rippleIdRef.current++;
 
     // Limit to max 3 concurrent ripples to prevent queue buildup
     setRipples((prev) => {
       const limited = prev.slice(-2); // Keep only the last 2
-      return [...limited, { id, x, y, radius, theme }];
+      return [...limited, { id, x, y, radius, color }];
     });
 
     // Remove ripple after animation completes
@@ -109,12 +117,9 @@ const ThemeToggle = ({ className = "" }: ThemeToggleProps) => {
   }, []);
 
   const handleToggle = useCallback(() => {
-    // Check if we can add more ripples (limit to 3 concurrent)
-    if (ripples.length >= 3) {
-      // Don't toggle if queue is full - maintains parity
-      return;
-    }
-
+    // 每次点击都必须切换主题。并发涟漪的上限由 addRipple 内部 slice(-2) 自行收敛,
+    // 不能在此处因涟漪已满而 return——那会连同 setTheme 一起吞掉本次点击,
+    // 造成按钮失灵、最终主题与点击次数不符(可复现的输入丢失回退)。
     const nextTheme: Theme = theme === "light" ? "dark" : "light";
     const btn = btnRef.current;
     if (btn) {
@@ -122,7 +127,7 @@ const ThemeToggle = ({ className = "" }: ThemeToggleProps) => {
     } else {
       setTheme(nextTheme);
     }
-  }, [theme, setTheme, addRipple, ripples.length]);
+  }, [theme, setTheme, addRipple]);
 
   const isDark = theme === "dark";
 
@@ -133,7 +138,7 @@ const ThemeToggle = ({ className = "" }: ThemeToggleProps) => {
         type="button"
         className={`${styles.toggleBtn} ${className}`.trim()}
         onClick={handleToggle}
-        aria-label={isDark ? "切換至亮色模式" : "切換至深色模式"}
+        aria-label={isDark ? t("theme.switchToLight") : t("theme.switchToDark")}
       >
         {isDark ? <SunIcon /> : <MoonIcon />}
       </button>
@@ -143,12 +148,12 @@ const ThemeToggle = ({ className = "" }: ThemeToggleProps) => {
         <div
           key={ripple.id}
           className={styles.ripple}
-          data-theme={ripple.theme}
           style={{
             left: `${ripple.x}px`,
             top: `${ripple.y}px`,
             width: `${ripple.radius * 2}px`,
             height: `${ripple.radius * 2}px`,
+            backgroundColor: ripple.color,
           }}
         />
       ))}

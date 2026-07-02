@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useSession } from "../context/SessionContext";
+import { usePageTitle } from "../utils/usePageTitle";
 import {
   CenteredCard,
   PageHeader,
@@ -40,6 +41,21 @@ const VerifyEmailPage = () => {
   const [resendBusy, setResendBusy] = useState(false);
   const [resendError, setResendError] = useState<string | null>(null);
   const [resendDone, setResendDone] = useState(false);
+
+  const failed = phase === "failed";
+  usePageTitle(
+    phase === "verifying"
+      ? t("verify.verifying")
+      : phase === "success"
+        ? t("verify.successTitle")
+        : resendDone
+          ? t("verify.resendDoneTitle")
+          : failed
+            ? t("verify.failedTitle")
+            : blocked
+              ? t("verify.blockedTitle")
+              : t("verify.resendTitle"),
+  );
 
   useEffect(() => {
     if (!token || ran.current) return;
@@ -105,7 +121,6 @@ const VerifyEmailPage = () => {
   }
 
   // phase === "failed" | "resend"：均渲染重发表单，仅头部文案与错误提示不同。
-  const failed = phase === "failed";
   const headTitle = failed
     ? t("verify.failedTitle")
     : blocked
@@ -116,16 +131,18 @@ const VerifyEmailPage = () => {
     : blocked
       ? t("verify.blockedDesc")
       : t("verify.resendSubtitle");
+  // 验证失败详情与重发失败不同时堆叠：一旦发起过重发，以重发结果为准。
+  const alertMsg = resendError ?? (failed ? failMsg : null);
   return (
     <CenteredCard>
       <PageHeader align="center" title={headTitle} description={headDesc} />
-      {failed && failMsg && <Alert tone="error">{failMsg}</Alert>}
-      {resendError && <Alert tone="error">{resendError}</Alert>}
+      {alertMsg && <Alert tone="error">{alertMsg}</Alert>}
       <form className={authStyles.form} onSubmit={submitResend}>
         <TextField
           label={t("login.email")}
           type="email"
           autoComplete="email"
+          autoFocus
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required

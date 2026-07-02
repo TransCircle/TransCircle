@@ -5,7 +5,7 @@
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
@@ -22,7 +22,17 @@
   outline-offset: 2px;
 }
 
-/* Ripple effect for theme switching */
+/* 触屏(含触屏笔记本,故用 any-pointer)下保证 ≥44px 触控目标。 */
+@media (any-pointer: coarse) {
+  .toggleBtn {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Ripple effect for theme switching
+   背景色由 JS 在创建涟漪时从 --bg-color 快照(内联 style),
+   避免此处硬编码亮/暗两份主题色。 */
 .ripple {
   position: fixed;
   border-radius: 50%;
@@ -31,14 +41,6 @@
   transform: translate(-50%, -50%) scale(0);
   animation: ripple-expand 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
   mix-blend-mode: normal;
-}
-
-.ripple[data-theme="dark"] {
-  background-color: #12121a;
-}
-
-.ripple[data-theme="light"] {
-  background-color: #fff9fb;
 }
 
 @keyframes ripple-expand {
@@ -61,4 +63,3 @@
     opacity: 0;
   }
 }
-
