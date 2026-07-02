@@ -291,10 +291,12 @@ const TwoFactorPage = () => {
         </section>
       )}
 
-      {/* 恢复码展示：不可点遮罩误关，需显式确认已保存 */}
+      {/* 恢复码展示：一次性、服务端已生效且不可再取,必须显式确认已保存。
+          遮罩点击已禁;onClose 设为空(Escape 也不关),否则误按 Esc 会静默丢弃
+          未保存的恢复码。唯一关闭路径是页脚「我已保存」按钮(调用 dismissRecovery)。 */}
       <Modal
         open={!!recoveryCodes}
-        onClose={dismissRecovery}
+        onClose={() => {}}
         title={t("account.twoFactor.recoveryTitle")}
         description={t("account.twoFactor.recoveryHint")}
         closeOnOverlayClick={false}
