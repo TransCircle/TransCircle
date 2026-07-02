@@ -45,6 +45,13 @@ const ConsentPage = () => {
       setLoading(false);
       return;
     }
+    // uid 变化时(同一 SPA 会话内从一个授权请求切到另一个:pathname 同为
+    // /oauth/consent,RootLayout 按 pathname 重挂载→不重挂载,组件不卸载)必须
+    // 先清空上一交互的 info 并回到 loading,否则会用旧 client/scopes 渲染卡片却把
+    // 同意/拒绝提交到新 uid,造成「看到的与授权的不一致」。
+    setInfo(null);
+    setError(null);
+    setLoading(true);
     let cancelled = false;
     void (async () => {
       const res = await api.get<OidcInteractionInfo>(
