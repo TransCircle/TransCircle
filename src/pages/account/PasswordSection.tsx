@@ -1,17 +1,16 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api, setUserToken } from "../../api/client";
 import { useSession } from "../../context/SessionContext";
 import { checkPasswordStrength } from "../../utils/string";
-import { usePageTitle } from "../../utils/usePageTitle";
 import { StepUpDialog } from "../../components/StepUpDialog";
 import {
-  PageHeader,
+  Card,
   TextField,
   AdminButton as Button,
   Alert,
 } from "../../components/ui";
-import page from "../Page.module.css";
+import { Dialog } from "../../components/ui/Dialog";
 import s from "./Account.module.css";
 
 interface ChangeResult {
@@ -22,8 +21,8 @@ interface ChangeResult {
 /** 与注册页一致的客户端最短长度规则(api.md §1.1:至少 8 位)。 */
 const MIN_PASSWORD_LENGTH = 8;
 
-/** 修改/设置登录密码：POST /v1/me/password；成功后用轮换的 accessToken 续期会话。 */
-const PasswordPage = () => {
+/** 登录密码分区:一行状态 + 弹窗内修改/设置密码;成功后用轮换的 accessToken 续期会话。 */
+export function PasswordSection() {
   const { t } = useTranslation();
   const { user, refresh } = useSession();
   const hasPassword = user?.passwordSet ?? true;
@@ -33,11 +32,14 @@ const PasswordPage = () => {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ok, setOk] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const [stepUpOpen, setStepUpOpen] = useState(false);
   const pendingBody = useRef<Record<string, unknown> | null>(null);
-
-  usePageTitle(t("account.nav.password"));
+  const currentRef = useRef<HTMLInputElement>(null);
+  const newRef = useRef<HTMLInputElement>(null);
+  // 页脚提交按钮在 <form> 外,用 form 属性关联回表单,恢复原生 required 校验(空字段浏览器拦截并提示)。
+  const formId = useId();
 
   const mismatch = confirm.length > 0 && confirm !== next;
   const tooShort = next.length > 0 && next.length < MIN_PASSWORD_LENGTH;
@@ -49,6 +51,14 @@ const PasswordPage = () => {
     t("password.strength.good"),
     t("password.strength.strong"),
   ];
+
+  const openEdit = () => {
+    setCurrent("");
+    setNext("");
+    setConfirm("");
+    setError(null);
+    setEditOpen(true);
+  };
 
   const send = async (body: Record<string, unknown>) => {
     setBusy(true);
@@ -65,21 +75,21 @@ const PasswordPage = () => {
         return;
       }
       if (res.data?.accessToken) setUserToken(res.data.accessToken);
-      // 刷新会话资料：首次设密码后 passwordSet 变更，避免安全页仍走「无密码」分支。
+      // 刷新会话资料:首次设密码后 passwordSet 变更,避免安全页仍走「无密码」分支。
       await refresh();
-      setOk(true);
       setCurrent("");
       setNext("");
       setConfirm("");
+      setEditOpen(false);
+      setNotice(t("account.password.saved"));
     } finally {
       setBusy(false);
     }
   };
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  const doSubmit = async () => {
+    if (busy) return; // 防 Enter 连击重复提交
     setError(null);
-    setOk(false);
     // 客户端先行校验:长度不足 / 两次不一致的错误已就近显示在输入框下。
     if (next.length < MIN_PASSWORD_LENGTH) return;
     if (next !== confirm) {
@@ -91,20 +101,66 @@ const PasswordPage = () => {
     await send(body);
   };
 
+  const onFormSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    void doSubmit();
+  };
+
   return (
-    <div className={`${page.page} ${page.pageNarrow}`}>
-      <PageHeader
+    <section className={s.group}>
+      <h2 className={s.groupTitle}>{t("account.nav.password")}</h2>
+      {notice && (
+        <div className={s.groupFeedback}>
+          <Alert tone="success">{notice}</Alert>
+        </div>
+      )}
+      <Card padding="none">
+        <ul className={s.list}>
+          <li className={s.listRow}>
+            <div className={s.rowMain}>
+              <div className={s.rowText}>
+                <span className={s.rowTitle}>{t("account.nav.password")}</span>
+                <span className={s.rowMeta}>
+                  <span>
+                    {hasPassword
+                      ? t("account.password.subtitle")
+                      : t("account.password.noPassword")}
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div className={s.rowActions}>
+              <Button variant="secondary" size="sm" onClick={openEdit}>
+                {hasPassword ? t("common.change") : t("account.password.setTitle")}
+              </Button>
+            </div>
+          </li>
+        </ul>
+      </Card>
+
+      <Dialog
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        busy={busy}
         title={hasPassword ? t("account.password.title") : t("account.password.setTitle")}
         description={t("account.password.subtitle")}
-      />
-      {error && <Alert tone="error">{error}</Alert>}
-      {ok && <Alert tone="success">{t("account.password.saved")}</Alert>}
-      {!hasPassword && <Alert tone="info">{t("account.password.noPassword")}</Alert>}
-
-      <section className={s.sectionFirst}>
-        <form className={`${s.form} ${s.formNarrow}`} onSubmit={submit}>
+        initialFocusRef={hasPassword ? currentRef : newRef}
+        footer={
+          <>
+            <Button variant="secondary" disabled={busy} onClick={() => setEditOpen(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" form={formId} variant="primary" loading={busy}>
+              {t("account.password.submit")}
+            </Button>
+          </>
+        }
+      >
+        <form id={formId} className={s.form} onSubmit={onFormSubmit}>
+          {error && <Alert tone="error">{error}</Alert>}
           {hasPassword && (
             <TextField
+              ref={currentRef}
               label={t("account.password.current")}
               type="password"
               autoComplete="current-password"
@@ -114,6 +170,7 @@ const PasswordPage = () => {
             />
           )}
           <TextField
+            ref={newRef}
             label={t("account.password.new")}
             type="password"
             autoComplete="new-password"
@@ -139,13 +196,8 @@ const PasswordPage = () => {
             onChange={(e) => setConfirm(e.target.value)}
             required
           />
-          <div className={s.actions}>
-            <Button type="submit" variant="primary" loading={busy}>
-              {t("account.password.submit")}
-            </Button>
-          </div>
         </form>
-      </section>
+      </Dialog>
 
       <StepUpDialog
         open={stepUpOpen}
@@ -155,8 +207,6 @@ const PasswordPage = () => {
           if (pendingBody.current) void send(pendingBody.current);
         }}
       />
-    </div>
+    </section>
   );
-};
-
-export default PasswordPage;
+}

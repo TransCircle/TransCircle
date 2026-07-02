@@ -72,7 +72,7 @@ const OAuthBindConfirmPage = () => {
         kind="success"
         title={t("account.oauth.boundOk")}
         description={t("account.oauth.boundOkDesc")}
-        actions={[{ label: t("account.oauth.title"), to: "/account/oauth" }]}
+        actions={[{ label: t("account.oauth.title"), to: "/account" }]}
       />
     );
   }
@@ -82,7 +82,7 @@ const OAuthBindConfirmPage = () => {
         kind="error"
         title={t("account.oauth.bindConfirmTitle")}
         description={error}
-        actions={[{ label: t("account.oauth.title"), to: "/account/oauth" }]}
+        actions={[{ label: t("account.oauth.title"), to: "/account" }]}
       />
     );
   }
@@ -109,7 +109,7 @@ const OAuthBindConfirmPage = () => {
         onClose={() => {
           setStepUpOpen(false);
           // 仅在用户「取消」（未验证）时离开；验证通过由 complete() 决定结果（成功/错误）。
-          if (!verifiedRef.current) navigate("/account/oauth", { replace: true });
+          if (!verifiedRef.current) navigate("/account", { replace: true });
         }}
         onVerified={() => {
           verifiedRef.current = true;

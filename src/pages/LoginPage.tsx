@@ -51,7 +51,7 @@ const LoginPage = () => {
 
   const oidcUid = params.get("oidc");
   // 来自 URL 的重定向目标必须净化，防开放重定向。
-  const redirectTo = sanitizeRedirect(params.get("redirect"), "/account/profile");
+  const redirectTo = sanitizeRedirect(params.get("redirect"), "/account");
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");

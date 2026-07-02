@@ -1,34 +1,106 @@
-/* 两步验证 setup 流程的专有样式;其余一律用 components/ui + Account.module.css。
-   (旧的 .subHeading/.note/.permGroup/.chips/.inlineRow/.secret/.codeNarrow
-   等死样式已随节式重绘清理。) */
+/* 两步验证 setup 流程的专有样式;其余一律用 components/ui + Account.module.css。 */
 
-/* 二维码:与表单同为左对齐文档流;限宽防窄屏横向溢出。 */
+/* 二维码容器:居中呈现。 */
+.qrWrap {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 0;
+}
 .qr {
   display: block;
   width: 200px;
   max-width: 100%;
   height: auto;
-  margin: 0;
   border-radius: var(--radius-sm);
   border: 1px solid var(--divider-color);
 }
 
-.secretLine {
-  margin: 0;
+/* 「无法扫描」折叠触发:低调的文字按钮,居中。 */
+.cantScan {
+  align-self: center;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  background: none;
+  color: var(--accent-pink);
+  font: inherit;
   font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+.cantScan:hover {
+  text-decoration-style: solid;
+}
+.cantScan:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* 展开后的密钥行:标签 + 可选中密钥 + 复制按钮。 */
+.secretReveal {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.75rem;
+  background-color: var(--hover-bg);
+  border: 1px solid var(--divider-color);
+  border-radius: var(--radius-sm);
+}
+.secretRevealLabel {
+  font-size: 0.78rem;
   color: var(--text-muted);
-  overflow-wrap: anywhere;
+  flex-shrink: 0;
 }
-
-/* 6 位验证码输入:等宽字距、限宽,与整个 setup 流一致左对齐。 */
-.codeField {
-  max-width: 16rem;
-}
-
-.codeInput {
-  font-size: 1.1rem;
-  letter-spacing: 0.25em;
+.secretBox {
+  flex: 1;
+  min-width: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  color: var(--text-main);
+  /* 单行完整展示,字号由 JS 动态收敛以适配宽度(不省略字符)。 */
+  white-space: nowrap;
+  overflow: hidden;
+  /* 密钥需要被复制,允许整体选中。 */
+  user-select: all;
+}
+
+/* 正方形圆角图标复制按钮;复制成功短暂变绿色对钩。 */
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--divider-color);
+  border-radius: var(--radius-control);
+  background-color: var(--surface-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color 130ms var(--ease-standard),
+    border-color 130ms var(--ease-standard),
+    background-color 130ms var(--ease-standard);
+}
+.copyBtn:hover {
+  color: var(--accent-pink);
+  border-color: var(--primary-pink);
+  background-color: var(--hover-bg);
+}
+.copyBtn:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+.copyBtnDone,
+.copyBtnDone:hover {
+  color: var(--success-color);
+  border-color: var(--success-color);
+  background-color: var(--surface-card);
 }
 
 /* 恢复码(模态内)。 */
