@@ -1,0 +1,303 @@
+/* ── Overlay(遮罩) ─────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: var(--overlay-bg);
+  opacity: 0;
+  transition: opacity 200ms var(--ease-standard);
+}
+.overlay[data-state="open"] {
+  opacity: 1;
+}
+/* 退场(淡出)期间不再拦截页面点击:此时弹窗逻辑上已关闭,背景应可立即操作。 */
+.overlay[data-state="closed"] {
+  pointer-events: none;
+}
+
+/* ── Panel(面板):单一滚动区(sticky 头部 + 正文 + 页脚)+ 固定 X + 自定义滚动条 ────
+   高度不足时整块滚动(不把正文夹在固定头脚之间挤压重叠);头部 sticky 保证 X/标题常驻。 */
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 26rem;
+  /* 100% 相对遮罩:遮罩已由 JS 对齐到 visualViewport(键盘之上的可见区),故面板永不超出可见区;
+     桌面遮罩含 1.5rem 内边距 → 等价旧的 100dvh-3rem。超出时内部滚动。 */
+  max-height: 100%;
+  /* 圆角裁剪 + 收纳内部滚动;.scroll 自身滚动,面板本体不滚。 */
+  overflow: hidden;
+  background-color: var(--surface-card);
+  border: 1px solid var(--divider-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  opacity: 0;
+  transform: translateY(12px) scale(0.97);
+  transition:
+    opacity 220ms var(--ease-emphasized),
+    transform 220ms var(--ease-emphasized);
+}
+.panel[data-state="open"] {
+  opacity: 1;
+  transform: none;
+}
+
+.sm {
+  max-width: 26rem;
+}
+.md {
+  max-width: 34rem;
+}
+.lg {
+  max-width: 42rem;
+}
+
+/* 误关拦截时的脉冲:软色描边环闪一下,不动用 transform(避免与进出场/下拉位移打架)。 */
+.panel[data-pulse] {
+  animation: dialogPulse 260ms var(--ease-standard);
+}
+@keyframes dialogPulse {
+  0%,
+  100% {
+    box-shadow: var(--shadow-pop);
+  }
+  40% {
+    box-shadow: var(--shadow-pop), 0 0 0 3px var(--focus-ring);
+  }
+}
+
+/* ── 头部:在滚动区内 sticky 吸顶,始终可见;含移动端抓握条与下拉手势区。 ─────────── */
+.dragZone {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  /* 不透明底,滚动时盖住下方内容;顶部圆角由面板 overflow:hidden 裁切。 */
+  background-color: var(--surface-card);
+}
+.grabber {
+  display: none; /* 桌面无抓握条 */
+}
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  /* 右侧留出关闭按钮的空间,标题文字不被 X 压住。 */
+  padding: 1.4rem 3rem 0.25rem 1.5rem;
+}
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background-color: var(--hover-bg);
+  color: var(--accent-pink);
+}
+.iconDanger {
+  background-color: var(--soft-error-bg);
+  color: var(--soft-error-text);
+}
+.heading {
+  flex: 1;
+  min-width: 0;
+}
+.title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.desc {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* 关闭 X:绝对定位于面板右上角,固定不随正文滚动。 */
+.closeBtn {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: var(--radius-control, 10px);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color 130ms var(--ease-standard),
+    color 130ms var(--ease-standard);
+}
+.closeBtn:hover {
+  background-color: var(--hover-bg);
+  color: var(--text-main);
+}
+.closeBtn:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+
+/* ── 单一滚动区 + 自定义滚动条 ─────────────────────────────── */
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  /* 隐藏原生滚动条,交由自定义滚动条呈现(始终落在圆角内)。 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scroll::-webkit-scrollbar {
+  display: none;
+}
+/* 内容包裹层:供 ResizeObserver 观测内容尺寸,并作为 sticky 头部的定位上下文(相对 .scroll 吸顶)。 */
+.content {
+  min-width: 0;
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0.75rem 1.5rem;
+}
+
+.scrollbar {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  right: 5px;
+  width: 6px;
+  /* 高于 sticky 头部(2)与关闭 X(3):否则 thumb 顶端会被不透明的吸顶头部盖住/挡住点击。
+     与 X 无横向重叠(scrollbar 在最右 5-11px,X 在 14-46px),不会相互干扰。 */
+  z-index: 4;
+  border-radius: var(--radius-pill);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms var(--ease-standard);
+}
+.scrollbar[data-visible] {
+  opacity: 1;
+  pointer-events: auto;
+}
+.thumb {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  min-height: 28px;
+  border-radius: var(--radius-pill);
+  background-color: var(--soft-pink);
+  cursor: grab;
+  touch-action: none;
+  transition: background-color 130ms var(--ease-standard);
+}
+.thumb:hover {
+  background-color: var(--primary-pink);
+}
+.thumb:active {
+  background-color: var(--primary-pink);
+  cursor: grabbing;
+}
+
+/* ── 页脚(在滚动流内,随内容;短内容时自然落在底部,长内容/矮屏时滚动可达) ─────── */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 1.5rem 1.4rem;
+}
+
+/* ── 移动端:底部抽屉 + 下拉关闭 ──────────────────────────── */
+@media (max-width: 560px) {
+  .overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .panel,
+  .sm,
+  .md,
+  .lg {
+    max-width: none;
+    width: 100%;
+    /* 100% 指遮罩高度:JS 已把遮罩对齐到 visualViewport(键盘之上),抽屉不会超出可见区。 */
+    max-height: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    /* 底部抽屉:仅上滑,不淡入。 */
+    opacity: 1;
+    transform: translateY(100%);
+    transition: transform 260ms var(--ease-emphasized);
+  }
+  .panel[data-state="open"] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  /* 下拉手势区:touch-action:none 让纵向拖拽不被浏览器判定为滚动(修复"下拉失效")。 */
+  .dragZone {
+    touch-action: none;
+    cursor: grab;
+  }
+  .dragZone:active {
+    cursor: grabbing;
+  }
+  /* 抓握条:靠近面板最顶端。 */
+  .grabber {
+    display: block;
+    width: 2.5rem;
+    height: 5px;
+    margin: 0.4rem auto 0;
+    border-radius: var(--radius-pill);
+    background-color: var(--soft-pink);
+  }
+  .header {
+    padding-top: 0.6rem;
+  }
+  .footer {
+    padding-bottom: calc(1.4rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* 触屏:关闭按钮命中区撑到 44px(视觉仍 32px)。 */
+@media (any-pointer: coarse) {
+  .closeBtn::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .panel,
+  .sm,
+  .md,
+  .lg {
+    transition: none;
+  }
+  .panel[data-pulse] {
+    animation: none;
+  }
+}
