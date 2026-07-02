@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { useSession } from "../context/SessionContext";
 import { useAdmin } from "../context/AdminContext";
 import ThemeToggle from "./ThemeToggle";
-// import { LanguageToggle } from "./ui";
 import { Avatar } from "./Avatar";
 import { cx } from "./admin/cx";
 import styles from "./AppNav.module.css";
@@ -39,13 +38,16 @@ function useMenuKeyboard(
   close: () => void,
   menuRef: RefObject<HTMLElement | null>,
   triggerRef: RefObject<HTMLElement | null>,
+  autoFocusRef?: RefObject<boolean>,
 ): void {
   useEffect(() => {
     if (!open) return;
     const menu = menuRef.current;
     if (!menu) return;
     const items = () => Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
-    items()[0]?.focus();
+    // 桌面悬停打开时不抢占鼠标用户的当前焦点;仅显式(点击/方向键)打开才聚焦首项。
+    // 传 ref(标识稳定)而非原始布尔:菜单打开期间的重渲染不会重跑"聚焦首项"、打断方向键导航。
+    if (autoFocusRef?.current !== false) items()[0]?.focus();
     const onKey = (e: KeyboardEvent) => {
       const nodes = items();
       if (nodes.length === 0) return;
@@ -78,7 +80,7 @@ function useMenuKeyboard(
     };
     menu.addEventListener("keydown", onKey);
     return () => menu.removeEventListener("keydown", onKey);
-  }, [open, close, menuRef, triggerRef]);
+  }, [open, close, menuRef, triggerRef, autoFocusRef]);
 }
 
 /**
@@ -106,6 +108,12 @@ export function AppNav() {
   const acctBtnRef = useRef<HTMLButtonElement>(null);
   const acctMenuRef = useRef<HTMLUListElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
+  // 账户菜单交互:桌面鼠标悬停打开、移出延时关闭;触屏/触控笔/键盘走点击切换。
+  // acctAutoFocus 仅在"悬停打开"时置 false,避免抢占鼠标用户焦点。
+  // acctPointerType 记录最近一次触发按钮的指针类型,供 onClick 区分鼠标(仅保证打开)与触屏(切换)。
+  const acctCloseTimer = useRef<number | null>(null);
+  const acctAutoFocus = useRef(true);
+  const acctPointerType = useRef<string>("");
 
   // 导航站主导航:首页 + 生态各业务分区。
   // - 故事征集:已上线的子域站点(commit 33b4643 的产品意图,曾在合并中回退,此处恢复)。
@@ -129,7 +137,19 @@ export function AppNav() {
     setDrawerOpen(false);
     setLinksOpen(false);
     setAcctOpen(false);
+    if (acctCloseTimer.current !== null) {
+      clearTimeout(acctCloseTimer.current);
+      acctCloseTimer.current = null;
+    }
   }, [location.pathname, location.hash]);
+
+  // 卸载时清理悬停关闭定时器,避免在已卸载组件上 setState。
+  useEffect(
+    () => () => {
+      if (acctCloseTimer.current !== null) clearTimeout(acctCloseTimer.current);
+    },
+    [],
+  );
 
   // --app-nav-height 动态写入文档根:导航实际高度随断点/字号/换行变化,
   // 供 Page.module.css 等处的 sticky 偏移消费;index.css 保留 57px 静态兜底。
@@ -229,7 +249,31 @@ export function AppNav() {
   const closeLinks = useCallback(() => setLinksOpen(false), []);
   const closeAcct = useCallback(() => setAcctOpen(false), []);
   useMenuKeyboard(linksOpen, closeLinks, linksMenuRef, linksBtnRef);
-  useMenuKeyboard(acctOpen, closeAcct, acctMenuRef, acctBtnRef);
+  useMenuKeyboard(acctOpen, closeAcct, acctMenuRef, acctBtnRef, acctAutoFocus);
+
+  // 用事件的 pointerType(而非 matchMedia)判定是否为真实鼠标悬停:触屏笔记本的主指针也报告为
+  // 可 hover 的 fine 指针,若按媒体查询判定,手指点击会先触发兼容鼠标事件(pointerenter 开 → click 关)
+  // 造成菜单"点开即关、触屏点不开"。改看 pointerType 后,触屏 tap 不再误触发 hover 打开。
+  const openAcctHover = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
+    if (acctCloseTimer.current !== null) {
+      clearTimeout(acctCloseTimer.current);
+      acctCloseTimer.current = null;
+    }
+    acctAutoFocus.current = false; // 悬停打开不抢焦点
+    setAcctOpen(true);
+  };
+  const closeAcctHover = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
+    // 延时关闭:留出指针从触发器跨越到菜单的时间(配合 .menu 顶部间隙收窄到 6px)。
+    // 关闭前若焦点仍在菜单内(键盘打开后鼠标扫过又移出),先把焦点还给触发器,避免被丢到 <body>。
+    acctCloseTimer.current = window.setTimeout(() => {
+      if (acctMenuRef.current?.contains(document.activeElement)) {
+        acctBtnRef.current?.focus();
+      }
+      setAcctOpen(false);
+    }, 140);
+  };
 
   const doLogout = async () => {
     if (loggingOut) return; // busy 防重复提交
@@ -321,44 +365,50 @@ export function AppNav() {
 
           <div className={styles.right}>
             <ThemeToggle />
-            {/*
-            <div ref={langRef} className={styles.dropdown}>
-              <button
-                type="button"
-                className={styles.navBtn}
-                aria-haspopup="menu"
-                aria-expanded={langOpen}
-                aria-label={t("nav.language")}
-                onClick={() => { setLangOpen((o) => !o); setThemeOpen(false); }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="2" y1="12" x2="22" y2="12" />
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                </svg>
-              </button>
-              {langOpen && (
-                <div className={styles.dropdownMenu}>
-                  <LanguageToggle variant="dropdown" />
-                </div>
-              )}
-            </div>
-            */}
             {user ? (
-              <div ref={acctRef} className={styles.dropdown}>
+              <div
+                ref={acctRef}
+                className={styles.dropdown}
+                onPointerEnter={openAcctHover}
+                onPointerLeave={closeAcctHover}
+              >
                 <button
                   ref={acctBtnRef}
                   type="button"
                   className={styles.acctBtn}
                   aria-haspopup="menu"
                   aria-expanded={acctOpen}
-                  aria-label={t("nav.account")}
-                  onClick={() => setAcctOpen((o) => !o)}
-                  onKeyDown={triggerArrowOpen(acctOpen, setAcctOpen)}
+                  aria-label={`${displayName} · ${t("nav.account")}`}
+                  onPointerDown={(e) => {
+                    acctPointerType.current = e.pointerType;
+                  }}
+                  onClick={() => {
+                    acctAutoFocus.current = true;
+                    // 桌面鼠标:hover 已负责开合,点击只保证"打开",避免与 hover 打架造成点开即关。
+                    // 触屏/触控笔/键盘(pointerType 非 mouse 或为空):点击切换开合。
+                    if (acctPointerType.current === "mouse") {
+                      setAcctOpen(true);
+                    } else {
+                      setAcctOpen((o) => !o);
+                    }
+                    acctPointerType.current = "";
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+                    e.preventDefault();
+                    if (!acctOpen) {
+                      acctAutoFocus.current = true;
+                      setAcctOpen(true);
+                    } else {
+                      // 已(悬停)打开且焦点在触发器上时,方向键把焦点送入菜单,后续由 useMenuKeyboard 接管。
+                      const items = acctMenuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]');
+                      if (items && items.length > 0) {
+                        (e.key === "ArrowDown" ? items[0] : items[items.length - 1])?.focus();
+                      }
+                    }
+                  }}
                 >
-                  <Avatar name={displayName} src={user.avatarUrl} size={32} />
-                  <span className={styles.acctName}>{displayName}</span>
-                  <ChevronIcon />
+                  <Avatar name={displayName} src={user.avatarUrl} size={34} />
                 </button>
                 {acctOpen && (
                   <ul ref={acctMenuRef} className={cx(styles.menu, styles.menuRight)} role="menu">
@@ -412,19 +462,8 @@ export function AppNav() {
           {externalLinks.map((l) => (
             <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className={styles.drawerLink}>{l.label}<ExternalIcon /></a>
           ))}
-          <div className={styles.drawerDivider} />
-          {user ? (
-            <>
-              <Link to="/account" className={styles.drawerLink}>{t("nav.account")}</Link>
-              {adminAuthed && <Link to="/admin" className={styles.drawerLink}>{t("nav.admin")}</Link>}
-              <button type="button" className={styles.drawerLink} aria-busy={loggingOut} onClick={() => void doLogout()}>
-                {logoutLabel}
-              </button>
-              {logoutFailed && <p className={styles.logoutError} role="alert">{t("nav.logoutFailed")}</p>}
-            </>
-          ) : (
-            <Link to="/login" className={styles.drawerLink}>{t("nav.login")}</Link>
-          )}
+          {/* 账户操作(账户中心/管理后台/退出/登录)统一收纳于顶栏:登录后走头像下拉菜单,
+              未登录走顶栏登录按钮。此处不再重复,避免抽屉冗余。 */}
         </div>
       </div>
       <button

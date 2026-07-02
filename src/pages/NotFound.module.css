@@ -27,7 +27,7 @@
 
 .title {
   margin: 0 0 0.4rem 0;
-  font-size: 2rem;
+  font-size: var(--fs-title);
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -36,7 +36,7 @@
 
 .desc {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--fs-subtitle);
   line-height: 1.55;
   color: var(--text-muted);
 }
@@ -62,8 +62,5 @@
   .wrap {
     padding: 2rem 1.25rem;
   }
-
-  .title {
-    font-size: 1.5rem;
-  }
+  /* 标题字号交给 --fs-title(clamp)在小视口自动收敛到 ~1.5rem,无需断点硬切。 */
 }
