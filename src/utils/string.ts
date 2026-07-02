@@ -50,16 +50,22 @@ export const DIGIT_RE = /\d/
 export const SYMBOL_RE = /[!-/:-@[-`{-~]|[\p{P}\p{S}]/u
 
 /**
- * Password strength: counts character-class categories met (max 4).
- * api.md §1.1: requires at least 3 of 4 categories.
+ * Password strength (0-4): character-class categories weighted by length.
+ * api.md §1.1: requires at least 8 chars and 3 of 4 categories.
+ * - empty → 0
+ * - length < 8 → always 1 (weak), so 'aB1!' can never read "strong"
+ * - length 8-11 → capped at 3 (good)
+ * - length ≥ 12 → up to 4 (strong) when all four categories present
  */
 export function checkPasswordStrength(password: string): number {
-  let score = 0
-  if (UPPER_RE.test(password)) score++
-  if (LOWER_RE.test(password)) score++
-  if (DIGIT_RE.test(password)) score++
-  if (SYMBOL_RE.test(password)) score++
-  return score
+  if (password.length === 0) return 0
+  let categories = 0
+  if (UPPER_RE.test(password)) categories++
+  if (LOWER_RE.test(password)) categories++
+  if (DIGIT_RE.test(password)) categories++
+  if (SYMBOL_RE.test(password)) categories++
+  if (password.length < 8) return 1
+  return Math.min(categories, password.length < 12 ? 3 : 4)
 }
 
 /**

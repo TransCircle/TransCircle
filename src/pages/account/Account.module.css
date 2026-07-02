@@ -1,21 +1,44 @@
-/* 账户中心各页共享的轻量布局类（行级控件来自 components/ui 原语）。 */
+/* 账户中心共享布局:把主页的「安静文档风」带进设置页 ——
+   节式分区(细分隔线) + 平铺表单 + 至多一两张安静列表卡。
+   行级控件统一来自 components/ui 原语。 */
 
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+/* ── 节式分区(对齐主页 .actionSection 的分隔线节奏) ──
+   .page 弹性列自带 1.25rem gap,叠加 0.75rem 外边距 ≈ 2rem 节间呼吸。 */
+.section {
+  margin-top: 0.75rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--divider-color);
 }
 
-.cardStack {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.sectionFirst {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
+/* 节标题与状态徽章同行(SectionLabel 自带的下边距移到行容器上)。 */
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0 0 0.9rem;
+}
+
+.sectionHeadLabel {
+  margin: 0;
+}
+
+/* ── 表单:输入控件自带边框足以成形,不再包卡;
+       60rem 阅读轨内限宽约 30rem,不拉满。 ── */
 .form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.formNarrow {
+  max-width: 30rem;
 }
 
 .actions {
@@ -25,8 +48,22 @@
   align-items: center;
 }
 
-/* 设置式列表：单张卡片内以分隔线分行，取代「每行一个重边框卡片」的重复 chrome。
-   行内复用 .rowMain / .rowText / .rowTitle / .rowMeta / .providerIcon / .actions。 */
+/* 节内小纵向堆叠(说明文字 + 操作行等)。 */
+.stackSm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.muted {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* ── 设置式列表:一页至多一张安静卡片,卡内以分隔线分行。
+   行内复用 .rowMain / .rowText / .rowTitle / .rowMeta / .providerIcon / .rowActions。 ── */
 .list {
   list-style: none;
   margin: 0;
@@ -34,39 +71,20 @@
   display: flex;
   flex-direction: column;
 }
+
 .listRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem 1rem;
   flex-wrap: wrap;
   padding: 0.9rem 1.1rem;
 }
+
 .listRow + .listRow {
   border-top: 1px solid var(--divider-color);
 }
 
-/* 卡片头部：区块标签 + 状态徽章同一行居中对齐（修复 SectionLabel 默认下边距造成的错位）。 */
-.cardHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-.cardHeadLabel {
-  margin: 0;
-}
-
-/* 危险区：以红色（语义色 token）表达危险，而非品牌粉，避免「不像危险操作」。 */
-.dangerCard {
-  border-color: var(--error-border);
-  border-left: 3px solid var(--error-color);
-}
-[data-theme="dark"] .dangerCard {
-  border-color: rgba(255, 180, 171, 0.2);
-  border-left-color: var(--error-color);
-}
 .rowMain {
   display: flex;
   align-items: center;
@@ -89,6 +107,7 @@
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  overflow-wrap: anywhere;
 }
 
 .rowMeta {
@@ -96,6 +115,15 @@
   color: var(--text-muted);
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 行内操作按钮区。 */
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   flex-wrap: wrap;
 }
 
@@ -111,11 +139,28 @@
   flex-shrink: 0;
 }
 
-.muted {
-  color: var(--text-muted);
-  font-size: 0.85rem;
+/* 窄屏:行内容与操作区折行后,操作区满宽、按钮拉满对齐
+   (参照 Modal footer 移动端满宽堆叠的习惯)。 */
+@media (max-width: 640px) {
+  .listRow {
+    align-items: flex-start;
+  }
+  .rowActions {
+    width: 100%;
+  }
+  .rowActions > * {
+    flex: 1 1 auto;
+  }
 }
 
+/* ── 危险区:红色语义走 --error 系 token(dark 取值由 token 自身覆写,
+   不再手写 rgba)。 ── */
+.dangerCard {
+  border-color: var(--error-border);
+  border-left: 3px solid var(--error-color);
+}
+
+/* ── 恢复码栅格(模态内) ── */
 .codeList {
   list-style: none;
   margin: 0;
@@ -130,6 +175,7 @@
   font-size: 0.9rem;
   letter-spacing: 0.04em;
   color: var(--text-body);
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 480px) {
@@ -138,13 +184,14 @@
   }
 }
 
-/* 头像区 */
+/* ── 头像区(平铺在节里,不包卡) ── */
 .avatarRow {
   display: flex;
   align-items: center;
   gap: 1.25rem;
   flex-wrap: wrap;
 }
+
 .avatarActions {
   display: flex;
   flex-direction: column;

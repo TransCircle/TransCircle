@@ -1,13 +1,13 @@
 /* ── Card ────────────────────────────────────────────────── */
 
 .card {
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--divider-color);
 }
 
 .surface {
   background-color: var(--surface-card);
-  box-shadow: 0 1px 2px var(--shadow-color);
+  box-shadow: var(--shadow-card);
 }
 
 .subtle {
@@ -29,13 +29,15 @@
 
 /* ── SectionLabel ────────────────────────────────────────── */
 
+/* 与主页 .sectionHeading 完全同规格（0.68rem/600/uppercase/0.1em/muted），
+   保持全站小节标签一个声音。 */
 .sectionLabel {
   font-size: 0.68rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-muted);
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.9rem 0;
 }
 
 /* ── Toolbar ─────────────────────────────────────────────── */
@@ -78,6 +80,11 @@
   min-width: 0;
 }
 
+/* 列表收尾不画分隔线，避免与卡片边框叠出双线。 */
+.dlRow:last-child {
+  border-bottom: none;
+}
+
 .dt {
   font-size: 0.74rem;
   font-weight: 600;
@@ -111,21 +118,22 @@
   position: relative;
   display: flex;
   height: 10px;
-  border-radius: 50px;
+  border-radius: var(--radius-pill);
   background-color: var(--hover-bg);
   overflow: hidden;
   border: 1px solid var(--divider-color);
 }
 
+/* 赞成/反对色走语义 token（随主题取值），不再手工写 dark 覆盖。 */
 .voteApprove {
   height: 100%;
-  background-color: #2e9e4b;
+  background-color: var(--success-color);
   transition: width 0.3s ease;
 }
 
 .voteReject {
   height: 100%;
-  background-color: #e5534b;
+  background-color: var(--error-color);
   transition: width 0.3s ease;
 }
 
@@ -138,12 +146,6 @@
   opacity: 0.55;
 }
 
-[data-theme='dark'] .voteApprove {
-  background-color: #4CAF50;
-}
-[data-theme='dark'] .voteReject {
-  background-color: var(--error-color);
-}
 .voteLegend {
   display: flex;
   align-items: center;
@@ -166,11 +168,11 @@
 }
 
 .voteDotApprove {
-  background-color: #2e9e4b;
+  background-color: var(--success-color);
 }
 
 .voteDotReject {
-  background-color: #e5534b;
+  background-color: var(--error-color);
 }
 
 

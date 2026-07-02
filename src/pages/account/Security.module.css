@@ -1,108 +1,41 @@
-/* Bespoke bits for the security settings page that have no shared primitive.
-   Everything else uses @/components/ui + Page.module.css. */
+/* 两步验证 setup 流程的专有样式;其余一律用 components/ui + Account.module.css。
+   (旧的 .subHeading/.note/.permGroup/.chips/.inlineRow/.secret/.codeNarrow
+   等死样式已随节式重绘清理。) */
 
-.section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--divider-color);
-}
-
-.subHeading {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem;
-  color: var(--text-main);
-}
-
-.note {
-  margin: 0 0 0.75rem;
-  font-size: 0.85rem;
-  line-height: 1.6;
-  color: var(--text-secondary);
-}
-
-/* Permissions overview (我的权限) — role/permission chip groups */
-.permGroup {
-  margin-top: 1rem;
-}
-
-.permGroup:first-of-type {
-  margin-top: 0;
-}
-
-.permGroupLabel {
-  margin: 0 0 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-/* Inline register row (passkey name + button) */
-.inlineRow {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.inlineRow .grow {
-  flex: 1;
-  min-width: min(220px, 100%);
-}
-
-/* TOTP enrolment */
+/* 二维码:与表单同为左对齐文档流;限宽防窄屏横向溢出。 */
 .qr {
   display: block;
   width: 200px;
-  height: 200px;
-  margin: 1rem auto;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
   border-radius: var(--radius-sm);
+  border: 1px solid var(--divider-color);
 }
 
 .secretLine {
+  margin: 0;
   font-size: 0.85rem;
   color: var(--text-muted);
-  text-align: center;
-  margin: 0 0 1rem;
+  overflow-wrap: anywhere;
 }
 
-.secret {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
-  margin-left: 0.25rem;
-  word-break: break-all;
-}
-
-.codeNarrow {
-  max-width: 240px;
-  margin: 0 auto;
+/* 6 位验证码输入:等宽字距、限宽,与整个 setup 流一致左对齐。 */
+.codeField {
+  max-width: 16rem;
 }
 
 .codeInput {
-  text-align: center;
-  font-size: 1.2rem;
-  letter-spacing: 0.3em;
+  font-size: 1.1rem;
+  letter-spacing: 0.25em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-.centerActions {
-  display: flex;
-  justify-content: center;
-}
-
-/* Recovery codes (inside the Modal) */
+/* 恢复码(模态内)。 */
 .recoveryCodes {
   background-color: var(--hover-bg);
   padding: 1rem;
   border-radius: var(--radius-sm);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.9rem;
   line-height: 2;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }

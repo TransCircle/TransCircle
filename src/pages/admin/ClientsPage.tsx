@@ -4,11 +4,11 @@ import { adminApi } from "../../api/client";
 import type { ApiResult } from "../../api/client";
 import type { OAuthClient } from "../../api/types";
 import { useAdmin } from "../../context/AdminContext";
+import { usePageTitle } from "../../utils/usePageTitle";
 import AdminStepUpDialog from "../../components/AdminStepUpDialog";
 import {
   PageHeader,
   Card,
-  SectionLabel,
   StatusBadge,
   Pill,
   Alert,
@@ -30,22 +30,30 @@ const CopyIcon = () => (
   </svg>
 );
 
-/** 复制到剪贴板的小按钮（带短暂「已复制」反馈）。 */
+/** 复制到剪贴板的小按钮（成功/失败均有短暂可见反馈）。 */
 const CopyButton = ({ text }: { text: string }) => {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  const timerRef = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timerRef.current), []);
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
+      setState("copied");
     } catch {
-      /* ignore */
+      // 剪贴板可能被权限策略/非安全上下文拒绝：给出可见反馈而非静默失败，
+      // 否则管理员会以为已复制到一次性密钥。
+      setState("failed");
     }
+    window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => setState("idle"), 1500);
   };
   return (
     <Button variant="ghost" size="sm" iconLeft={<CopyIcon />} onClick={() => void copy()}>
-      {copied ? t("common.copied") : t("common.copy")}
+      {/* aria-live：结果文案变化时读屏器即时播报 */}
+      <span aria-live="polite">
+        {state === "copied" ? t("common.copied") : state === "failed" ? t("common.copyFailed") : t("common.copy")}
+      </span>
     </Button>
   );
 };
@@ -109,6 +117,7 @@ interface RotateResp {
 
 const ClientsPage = () => {
   const { t } = useTranslation();
+  usePageTitle(t("admin.clients.title"));
   const { hasPermission } = useAdmin();
   const canManage = hasPermission("pass.client:manage");
   const isSuper = hasPermission("*");
@@ -125,9 +134,14 @@ const ClientsPage = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // 轮换密钥确认 / 一次性密钥展示
+  // 轮换密钥确认 / 启停确认 / 一次性密钥展示
   const [rotateTarget, setRotateTarget] = useState<OAuthClient | null>(null);
+  const [toggleTarget, setToggleTarget] = useState<OAuthClient | null>(null);
+  // 启停确认框内的接口错误：就近显示、保持弹窗开启可重试（对齐 UserDetailPage 的确认框行为）。
+  const [toggleError, setToggleError] = useState<string | null>(null);
   const [secret, setSecret] = useState<{ clientId: string; secret: string } | null>(null);
+  // 一次性密钥仅显示一次：关闭前要求显式确认已保存（Esc / 关闭按钮都先走确认）。
+  const [secretCloseConfirm, setSecretCloseConfirm] = useState(false);
 
   // step-up
   const [stepUpOpen, setStepUpOpen] = useState(false);
@@ -158,6 +172,7 @@ const ClientsPage = () => {
       const toForm = p.kind === "create" || p.kind === "update";
       if (toForm) setFormError(null);
       else setError(null);
+      if (p.kind === "toggle") setToggleError(null);
 
       const res: ApiResult<unknown> =
         p.method === "POST" ? await adminApi.post(p.path, p.body) : await adminApi.patch(p.path, p.body);
@@ -171,6 +186,9 @@ const ClientsPage = () => {
       if (!res.ok) {
         if (toForm) {
           setFormError(res.error.message);
+        } else if (p.kind === "toggle") {
+          // 启停失败：错误经 ConfirmDialog 的 error 插槽就近显示在框内，保持开启可重试。
+          setToggleError(res.error.message);
         } else {
           // 关闭触发该操作的确认框，否则页面级错误会被覆盖全屏的 Modal 遮挡，造成无反馈的重试循环。
           if (p.kind === "rotate") setRotateTarget(null);
@@ -192,6 +210,7 @@ const ClientsPage = () => {
           setNotice(t("admin.clients.updatedOk"));
           break;
         case "toggle":
+          setToggleTarget(null);
           setNotice(t("admin.clients.updatedOk"));
           break;
         case "rotate": {
@@ -235,6 +254,14 @@ const ClientsPage = () => {
   const closeForm = () => {
     setCreating(false);
     setEditing(null);
+  };
+  const openToggle = (c: OAuthClient) => {
+    setToggleError(null);
+    setToggleTarget(c);
+  };
+  const closeToggle = () => {
+    setToggleTarget(null);
+    setToggleError(null);
   };
 
   // ── 提交 ──
@@ -285,13 +312,14 @@ const ClientsPage = () => {
     }
   };
 
-  const toggleStatus = (c: OAuthClient) => {
-    const next = c.status === "active" ? "disabled" : "active";
+  // 启停单击即影响整站登录：先经确认对话框，确认后才发请求。
+  const confirmToggle = () => {
+    if (!toggleTarget) return;
     void execute({
       kind: "toggle",
       method: "PATCH",
-      path: `/v1/admin/clients/${c.clientId}`,
-      body: { status: next },
+      path: `/v1/admin/clients/${toggleTarget.clientId}`,
+      body: { status: toggleTarget.status === "active" ? "disabled" : "active" },
     });
   };
 
@@ -308,17 +336,24 @@ const ClientsPage = () => {
 
   return (
     <div className={styles.page}>
-      <PageHeader
-        title={t("admin.clients.title")}
-        description={t("admin.clients.subtitle")}
-        actions={
-          canManage ? (
-            <Button variant="primary" size="sm" onClick={openCreate}>
-              {t("admin.clients.newClient")}
-            </Button>
-          ) : undefined
-        }
-      />
+      {/* 与兄弟列表页一致的吸附头部：标题与「新建」入口滚动时不随列表滑走。 */}
+      <div className={styles.stickyHead}>
+        <PageHeader
+          title={t("admin.clients.title")}
+          description={t("admin.clients.subtitle")}
+          actions={
+            canManage ? (
+              <Button variant="primary" size="sm" onClick={openCreate}>
+                {t("admin.clients.newClient")}
+              </Button>
+            ) : undefined
+          }
+        />
+        {/* 该接口一次性返回全量列表，可如实标注总数（非 SectionLabel 的语义误用）。 */}
+        {!loading && clients.length > 0 && (
+          <span className={styles.count}>{t("admin.clients.count", { count: clients.length })}</span>
+        )}
+      </div>
       {error && <Alert tone="error">{error}</Alert>}
       {notice && <Alert tone="success">{notice}</Alert>}
 
@@ -328,7 +363,6 @@ const ClientsPage = () => {
         <EmptyState title={t("admin.clients.empty")} />
       ) : (
         <div className={styles.stack}>
-          <SectionLabel>{String(clients.length)}</SectionLabel>
           {clients.map((c) => (
             <Card key={c.clientId}>
               <div className={admin.cardHead}>
@@ -350,9 +384,10 @@ const ClientsPage = () => {
 
               <div className={admin.kv}>
                 <span className={admin.kvLabel}>{t("admin.clients.redirectUris")}</span>
-                <span className={admin.chips}>
+                {/* 回调地址需要精确核对：逐行完整展示、可断行，不再用 Pill 截断。 */}
+                <span className={admin.uriList}>
                   {c.redirectUris.map((u) => (
-                    <Pill key={u}>{u}</Pill>
+                    <code key={u} className={styles.code}>{u}</code>
                   ))}
                 </span>
               </div>
@@ -381,7 +416,7 @@ const ClientsPage = () => {
                       {t("admin.clients.rotateSecret")}
                     </Button>
                   )}
-                  <Button variant="secondary" size="sm" onClick={() => toggleStatus(c)}>
+                  <Button variant="secondary" size="sm" onClick={() => openToggle(c)}>
                     {c.status === "active" ? t("admin.clients.disable") : t("admin.clients.enable")}
                   </Button>
                 </div>
@@ -505,14 +540,39 @@ const ClientsPage = () => {
         onConfirm={confirmRotate}
       />
 
-      {/* 一次性密钥展示（新建机密客户端 / 轮换后） */}
+      {/* 启用/停用确认（单击即影响整站登录；step-up 期间隐藏，取消后自动恢复）。
+          失败时错误经 error 插槽就近显示在框内，保持开启可重试。 */}
+      <ConfirmDialog
+        open={toggleTarget !== null && !stepUpOpen}
+        variant={toggleTarget?.status === "active" ? "danger" : "default"}
+        title={
+          toggleTarget?.status === "active"
+            ? t("admin.clients.disableTitle")
+            : t("admin.clients.enableTitle")
+        }
+        message={
+          toggleTarget?.status === "active"
+            ? t("admin.clients.disableMessage", { name: toggleTarget?.name ?? "" })
+            : t("admin.clients.enableMessage", { name: toggleTarget?.name ?? "" })
+        }
+        confirmText={toggleTarget?.status === "active" ? t("admin.clients.disable") : t("admin.clients.enable")}
+        cancelText={t("common.cancel")}
+        confirmLoading={submitting}
+        error={toggleError}
+        onCancel={closeToggle}
+        onConfirm={confirmToggle}
+      />
+
+      {/* 一次性密钥展示（新建机密客户端 / 轮换后）：
+          点遮罩不可关，Esc / 关闭按钮均先经「已保存」确认，防止误关后再也看不到密钥。 */}
       <Modal
         open={secret !== null}
-        onClose={() => setSecret(null)}
+        onClose={() => setSecretCloseConfirm(true)}
+        closeOnOverlayClick={false}
         size="md"
         title={t("admin.clients.secretTitle")}
         footer={
-          <Button variant="primary" onClick={() => setSecret(null)}>
+          <Button variant="primary" onClick={() => setSecretCloseConfirm(true)}>
             {t("common.close")}
           </Button>
         }
@@ -537,6 +597,21 @@ const ClientsPage = () => {
           </>
         )}
       </Modal>
+
+      {/* 关闭一次性密钥前的显式确认（叠加在密钥 Modal 之上，Esc 只关此层）。 */}
+      <ConfirmDialog
+        open={secretCloseConfirm}
+        variant="danger"
+        title={t("admin.clients.secretCloseTitle")}
+        message={t("admin.clients.secretCloseMessage")}
+        confirmText={t("admin.clients.secretCloseConfirm")}
+        cancelText={t("common.cancel")}
+        onCancel={() => setSecretCloseConfirm(false)}
+        onConfirm={() => {
+          setSecretCloseConfirm(false);
+          setSecret(null);
+        }}
+      />
 
       <AdminStepUpDialog open={stepUpOpen} onClose={closeStepUp} onVerified={onStepUpVerified} />
     </div>

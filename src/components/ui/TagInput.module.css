@@ -28,13 +28,7 @@
 
 .box:focus-within {
   border-color: var(--primary-pink);
-  box-shadow: 0 0 0 3px rgba(255, 133, 162, 0.18);
-}
-
-@supports (box-shadow: 0 0 0 3px color-mix(in srgb, red 18%, transparent)) {
-  .box:focus-within {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-pink) 22%, transparent);
-  }
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .box.invalid {
@@ -111,10 +105,6 @@
   color: var(--text-muted);
 }
 
-.input:disabled {
-  cursor: not-allowed;
-}
-
 .hint {
   font-size: 0.78rem;
   color: var(--text-muted);
@@ -135,6 +125,18 @@
   clip: rect(0 0 0 0);
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* any-pointer 而非 pointer:触屏笔记本主指针是鼠标,但触摸仍需 44px 目标。 */
+@media (any-pointer: coarse) {
+  .box {
+    min-height: 44px;
+  }
+
+  /* 20px 可视按钮 + 四周 12px 触控扩展 = 44px 命中区。 */
+  .remove::before {
+    inset: -12px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

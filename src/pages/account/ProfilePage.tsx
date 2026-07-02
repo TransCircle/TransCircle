@@ -4,9 +4,9 @@ import { api } from "../../api/client";
 import type { MeProfile } from "../../api/types";
 import { useSession } from "../../context/SessionContext";
 import { useFormatTs } from "../../utils/datetime";
+import { usePageTitle } from "../../utils/usePageTitle";
 import { Avatar } from "../../components/Avatar";
 import {
-  Card,
   PageHeader,
   SectionLabel,
   DescriptionList,
@@ -34,17 +34,20 @@ async function resizeToDataUrl(file: File, max = 256): Promise<string> {
   return canvas.toDataURL("image/jpeg", 0.9);
 }
 
-/** 个人资料：头像（上传/移除）+ 只读邮箱/用户名/ID + 可改昵称。 */
+/** 个人资料：节式布局 —— 头像 / 只读账户信息 / 可改昵称,均平铺不包卡。 */
 const ProfilePage = () => {
   const { t } = useTranslation();
   const fmt = useFormatTs();
   const { user, setUser, refresh } = useSession();
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
+  const [nameError, setNameError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  usePageTitle(t("account.nav.profile"));
 
   useEffect(() => {
     setDisplayName(user?.displayName ?? "");
@@ -56,9 +59,16 @@ const ProfilePage = () => {
     e.preventDefault();
     setError(null);
     setNotice(null);
+    // 纯空格昵称不可提交:trim 后为空视为无效,错误就近显示在输入框下。
+    const trimmed = displayName.trim();
+    if (!trimmed) {
+      setNameError(t("account.profile.displayNameRequired"));
+      return;
+    }
+    setNameError(null);
     setSaving(true);
     try {
-      const res = await api.patch<MeProfile>("/v1/me", { displayName });
+      const res = await api.patch<MeProfile>("/v1/me", { displayName: trimmed });
       if (!res.ok) {
         setError(res.error.message);
         return;
@@ -116,36 +126,36 @@ const ProfilePage = () => {
       {error && <Alert tone="error">{error}</Alert>}
       {notice && <Alert tone="success">{notice}</Alert>}
 
-      <div className={s.cardStack}>
-        <Card>
-          <SectionLabel>{t("account.profile.avatar")}</SectionLabel>
-          <div className={s.avatarRow}>
-            <Avatar name={user.displayName || user.username} src={user.avatarUrl} size={72} />
-            <div className={s.avatarActions}>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                hidden
-                onChange={(e) => void onFile(e)}
-              />
-              <div className={s.actions}>
-                <Button variant="secondary" loading={avatarBusy} onClick={() => fileRef.current?.click()}>
-                  {t("account.profile.changeAvatar")}
+      <section className={s.sectionFirst}>
+        <SectionLabel>{t("account.profile.avatar")}</SectionLabel>
+        <div className={s.avatarRow}>
+          <Avatar name={user.displayName || user.username} src={user.avatarUrl} size={72} />
+          <div className={s.avatarActions}>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              hidden
+              onChange={(e) => void onFile(e)}
+            />
+            <div className={s.actions}>
+              <Button variant="secondary" loading={avatarBusy} onClick={() => fileRef.current?.click()}>
+                {t("account.profile.changeAvatar")}
+              </Button>
+              {user.avatarUrl && (
+                <Button variant="ghost" disabled={avatarBusy} onClick={() => void removeAvatar()}>
+                  {t("account.profile.removeAvatar")}
                 </Button>
-                {user.avatarUrl && (
-                  <Button variant="ghost" disabled={avatarBusy} onClick={() => void removeAvatar()}>
-                    {t("account.profile.removeAvatar")}
-                  </Button>
-                )}
-              </div>
-              <p className={s.muted}>{t("account.profile.avatarHint")}</p>
+              )}
             </div>
+            <p className={s.muted}>{t("account.profile.avatarHint")}</p>
           </div>
-        </Card>
+        </div>
+      </section>
 
-        <Card>
-          <SectionLabel>{t("account.profile.title")}</SectionLabel>
+      <section className={s.section}>
+        <SectionLabel>{t("account.profile.info")}</SectionLabel>
+        <div className={s.stackSm}>
           <DescriptionList
             items={[
               {
@@ -168,26 +178,31 @@ const ProfilePage = () => {
             columns={1}
           />
           <p className={s.muted}>{t("account.profile.usernameImmutable")}</p>
-        </Card>
+        </div>
+      </section>
 
-        <Card>
-          <form className={s.form} onSubmit={save}>
-            <TextField
-              label={t("account.profile.displayName")}
-              hint={t("account.profile.displayNameHint")}
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              maxLength={50}
-              required
-            />
-            <div className={s.actions}>
-              <Button type="submit" variant="primary" loading={saving}>
-                {t("account.profile.save")}
-              </Button>
-            </div>
-          </form>
-        </Card>
-      </div>
+      <section className={s.section}>
+        <SectionLabel>{t("account.profile.displayNameSection")}</SectionLabel>
+        <form className={`${s.form} ${s.formNarrow}`} onSubmit={save}>
+          <TextField
+            label={t("account.profile.displayName")}
+            hint={nameError ?? t("account.profile.displayNameHint")}
+            invalid={!!nameError}
+            value={displayName}
+            onChange={(e) => {
+              setDisplayName(e.target.value);
+              if (nameError) setNameError(null);
+            }}
+            maxLength={50}
+            required
+          />
+          <div className={s.actions}>
+            <Button type="submit" variant="primary" loading={saving}>
+              {t("account.profile.save")}
+            </Button>
+          </div>
+        </form>
+      </section>
     </div>
   );
 };

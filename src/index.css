@@ -33,8 +33,26 @@
   --soft-success-border: #a9d8b6;
   --soft-success-text: #1e7d34;
 
+  /* Soft semantic surfaces (light) — Alert/StatusBadge/danger hover states.
+     与 --soft-success-* 同族:浅底、柔边、深文字,dark 主题整组覆写。 */
+  --soft-error-bg: #fff0ee;
+  --soft-error-border: #f0c2c2;
+  --soft-error-text: #c62828;
+  --soft-info-bg: #e9f1ff;
+  --soft-info-border: #b6cdff;
+  --soft-info-text: #1a56c4;
+  --soft-amber-bg: #fff3e0;
+  --soft-amber-border: #f0d9b0;
+  --soft-amber-text: #b26a00;
+
+  /* Focus ring halos — 输入类控件 box-shadow 聚焦环,随主题取值,
+     替代散落各组件的 rgba 字面量回退。 */
+  --focus-ring: rgba(236, 158, 176, 0.28);
+  --focus-ring-error: rgba(211, 47, 47, 0.16);
+
   /* ── Shared scales (theme-invariant) ─────────────────────── */
-  /* Radius scale: inputs/selects, rows/popovers, cards, full pill. */
+  /* Radius scale: inline chips, inputs/selects, rows/popovers, cards, full pill. */
+  --radius-xs: 6px;
   --radius-sm: 10px;
   --radius-md: 12px;
   --radius-lg: 14px;
@@ -89,6 +107,23 @@
     --soft-success-bg: rgba(46, 160, 75, 0.12);
     --soft-success-border: rgba(46, 160, 75, 0.3);
     --soft-success-text: #66bb6a;
+
+    --error-color: #ef5350;
+    --error-border: rgba(239, 83, 80, 0.35);
+    --success-color: #66bb6a;
+
+    --soft-error-bg: rgba(229, 83, 75, 0.12);
+    --soft-error-border: rgba(229, 83, 75, 0.32);
+    --soft-error-text: #f28b82;
+    --soft-info-bg: rgba(102, 140, 224, 0.14);
+    --soft-info-border: rgba(102, 140, 224, 0.35);
+    --soft-info-text: #8ab4f8;
+    --soft-amber-bg: rgba(240, 160, 50, 0.14);
+    --soft-amber-border: rgba(240, 160, 50, 0.32);
+    --soft-amber-text: #ffb74d;
+
+    --focus-ring: rgba(255, 133, 162, 0.28);
+    --focus-ring-error: rgba(239, 83, 80, 0.28);
   }
 }
 
@@ -121,6 +156,23 @@
   --soft-success-bg: rgba(46, 160, 75, 0.12);
   --soft-success-border: rgba(46, 160, 75, 0.3);
   --soft-success-text: #66bb6a;
+
+  --error-color: #ef5350;
+  --error-border: rgba(239, 83, 80, 0.35);
+  --success-color: #66bb6a;
+
+  --soft-error-bg: rgba(229, 83, 75, 0.12);
+  --soft-error-border: rgba(229, 83, 75, 0.32);
+  --soft-error-text: #f28b82;
+  --soft-info-bg: rgba(102, 140, 224, 0.14);
+  --soft-info-border: rgba(102, 140, 224, 0.35);
+  --soft-info-text: #8ab4f8;
+  --soft-amber-bg: rgba(240, 160, 50, 0.14);
+  --soft-amber-border: rgba(240, 160, 50, 0.32);
+  --soft-amber-text: #ffb74d;
+
+  --focus-ring: rgba(255, 133, 162, 0.28);
+  --focus-ring-error: rgba(239, 83, 80, 0.28);
 }
 
 *,

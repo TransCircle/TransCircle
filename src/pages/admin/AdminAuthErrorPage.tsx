@@ -1,10 +1,12 @@
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { usePageTitle } from "../../utils/usePageTitle";
 import { StatusScreen } from "../../components/ui";
 
 /** 管理台 IAM 登录错误落地页。后端 302 → /admin/auth/error?code=... */
 const AdminAuthErrorPage = () => {
   const { t } = useTranslation();
+  usePageTitle(t("admin.login.failed"));
   const [params] = useSearchParams();
   const code = params.get("code") ?? "OAUTH_ERROR";
 

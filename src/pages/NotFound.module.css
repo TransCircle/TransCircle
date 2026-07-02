@@ -1,0 +1,69 @@
+/* 404 页 — 与主页 mainContent 同构的安静文档式排版。 */
+
+.wrap {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2.5rem 4rem;
+  box-sizing: border-box;
+  /* 垂直居中落地,同时兜底移动端浏览器工具栏伸缩。 */
+  min-height: 50vh;
+  min-height: 50dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* 主页同款小节标签尺度的大页 eyebrow。 */
+.eyebrow {
+  margin: 0 0 0.6rem 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.title {
+  margin: 0 0 0.4rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--text-main);
+}
+
+.desc {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* 细分隔线分区后接动作,呼应主页的 section 划分。 */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--divider-color);
+  align-self: stretch;
+}
+
+@media (max-width: 1024px) {
+  .wrap {
+    padding: 2rem 2.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .wrap {
+    padding: 2rem 1.25rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+}
