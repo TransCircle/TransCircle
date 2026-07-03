@@ -1,9 +1,11 @@
 import {
   forwardRef,
   useId,
+  useState,
   type InputHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cx } from './cx'
 import styles from './Field.module.css'
 
@@ -21,6 +23,22 @@ const ClearIcon = () => (
   </svg>
 )
 
+const EyeIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+    <path d="M2.06 12.35a1 1 0 0 1 0-.7C3.42 8.1 7.35 5 12 5s8.58 3.1 9.94 6.65a1 1 0 0 1 0 .7C20.58 15.9 16.65 19 12 19s-8.58-3.1-9.94-6.65Z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+)
+
+const EyeOffIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+    <path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c4.65 0 8.58 3.1 9.94 6.65a1 1 0 0 1 0 .7 13.2 13.2 0 0 1-1.67 2.68" />
+    <path d="M6.61 6.61C4.62 7.9 3.06 9.72 2.06 11.65a1 1 0 0 0 0 .7C3.42 15.9 7.35 19 12 19c1.99 0 3.84-.57 5.39-1.53" />
+    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+    <path d="m2 2 20 20" />
+  </svg>
+)
+
 /* ── TextField ───────────────────────────────────────────── */
 
 export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -32,12 +50,28 @@ export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
-  { label, hint, invalid, required, id, className, fieldClassName, ...rest },
+  { label, hint, invalid, required, id, className, fieldClassName, type, ...rest },
   ref,
 ) {
+  const { t } = useTranslation()
   const autoId = useId()
+  // 密码可见性开关：仅切换 input 的 type，按钮绝对定位不占布局宽度。
+  const [revealed, setRevealed] = useState(false)
+  const isPassword = type === 'password'
   const inputId = id ?? autoId
   const hintId = hint ? `${inputId}-hint` : undefined
+  const input = (
+    <input
+      ref={ref}
+      id={inputId}
+      type={isPassword ? (revealed ? 'text' : 'password') : type}
+      className={cx(styles.input, isPassword && styles.inputWithToggle, invalid && styles.invalid, className)}
+      aria-invalid={invalid || undefined}
+      aria-describedby={hintId}
+      required={required}
+      {...rest}
+    />
+  )
   return (
     <div className={cx(styles.field, fieldClassName)}>
       {label && (
@@ -46,17 +80,26 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
           {required && <span className={styles.required} aria-hidden="true">*</span>}
         </label>
       )}
-      <input
-        ref={ref}
-        id={inputId}
-        className={cx(styles.input, invalid && styles.invalid, className)}
-        aria-invalid={invalid || undefined}
-        aria-describedby={hintId}
-        required={required}
-        {...rest}
-      />
+      {isPassword ? (
+        <div className={styles.inputWrap}>
+          {input}
+          <button
+            type="button"
+            className={styles.toggleBtn}
+            aria-label={revealed ? t('auth.password.hide') : t('auth.password.show')}
+            aria-pressed={revealed}
+            onClick={() => setRevealed((v) => !v)}
+          >
+            {revealed ? <EyeOffIcon /> : <EyeIcon />}
+          </button>
+        </div>
+      ) : (
+        input
+      )}
       {hint && (
-        <span id={hintId} className={cx(styles.hint, invalid && styles.hintError)}>
+        /* aria-live 仅在错误态启用:普通 hint(如 ReasonPromptDialog 的「N / 500」字数计数)
+           若恒为 live,读屏器会逐键播报计数,极度嘈杂;错误文案才需即时播报。 */
+        <span id={hintId} aria-live={invalid ? 'polite' : undefined} className={cx(styles.hint, invalid && styles.hintError)}>
           {hint}
         </span>
       )}
@@ -99,7 +142,8 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
         {...rest}
       />
       {hint && (
-        <span id={hintId} className={cx(styles.hint, invalid && styles.hintError)}>
+        /* 与 TextField 同理：仅错误态 live,避免字数计数等普通 hint 逐键播报。 */
+        <span id={hintId} aria-live={invalid ? 'polite' : undefined} className={cx(styles.hint, invalid && styles.hintError)}>
           {hint}
         </span>
       )}

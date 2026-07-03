@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cx } from './cx'
 import styles from './Feedback.module.css'
 
@@ -12,12 +13,18 @@ export interface SpinnerProps {
 }
 
 export function Spinner({ size = 'md', inline, label }: SpinnerProps) {
+  const { t } = useTranslation()
   const ring = <span className={cx(styles.ring, styles[`ring_${size}`])} aria-hidden="true" />
   if (inline) return ring
   return (
     <span className={styles.spinner} role="status" aria-live="polite">
       {ring}
-      {label && <span className={styles.spinnerLabel}>{label}</span>}
+      {label ? (
+        <span className={styles.spinnerLabel}>{label}</span>
+      ) : (
+        /* 不传 label 时给读屏器兜底文案：空的 status region 对读屏用户毫无信息。 */
+        <span className={styles.srOnly}>{t('common.loading')}</span>
+      )}
     </span>
   )
 }

@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
+// ThemeToggle 的 aria-label 走 i18n(theme.switchTo*),测试环境需初始化 i18n 单例。
+import "../i18n/config";
 
 const STORAGE_KEY = "transcircle-theme";
 
@@ -71,7 +73,7 @@ describe("Theme system accessibility regression", () => {
       });
 
       renderWithTheme(<ThemeToggle />);
-      const toggleBtn = screen.getByRole("button", { name: "切換至深色模式" });
+      const toggleBtn = screen.getByRole("button", { name: "切换至深色模式" });
 
       // Should not throw despite localStorage failure
       expect(() => fireEvent.click(toggleBtn)).not.toThrow();
@@ -85,14 +87,14 @@ describe("Theme system accessibility regression", () => {
     it("should render a single toggle button", () => {
       renderWithTheme(<ThemeToggle />);
 
-      const btn = screen.getByRole("button", { name: "切換至深色模式" });
+      const btn = screen.getByRole("button", { name: "切换至深色模式" });
       expect(btn).toBeInTheDocument();
     });
 
     it("should toggle theme on click (light → dark)", () => {
       renderWithTheme(<ThemeToggle />);
 
-      const btn = screen.getByRole("button", { name: "切換至深色模式" });
+      const btn = screen.getByRole("button", { name: "切换至深色模式" });
       fireEvent.click(btn);
       expect(getCurrentTheme()).toBe("dark");
     });
@@ -101,7 +103,7 @@ describe("Theme system accessibility regression", () => {
       localStorage.setItem(STORAGE_KEY, "dark");
       renderWithTheme(<ThemeToggle />);
 
-      const btn = screen.getByRole("button", { name: "切換至亮色模式" });
+      const btn = screen.getByRole("button", { name: "切换至亮色模式" });
       fireEvent.click(btn);
       expect(getCurrentTheme()).toBe("light");
     });
@@ -109,7 +111,7 @@ describe("Theme system accessibility regression", () => {
     it("should update data-theme attribute on the document element", () => {
       renderWithTheme(<ThemeToggle />);
 
-      const btn = screen.getByRole("button", { name: "切換至深色模式" });
+      const btn = screen.getByRole("button", { name: "切换至深色模式" });
       fireEvent.click(btn);
       expect(getCurrentTheme()).toBe("dark");
     });
@@ -117,7 +119,7 @@ describe("Theme system accessibility regression", () => {
     it("should persist theme selection to localStorage", () => {
       renderWithTheme(<ThemeToggle />);
 
-      const btn = screen.getByRole("button", { name: "切換至深色模式" });
+      const btn = screen.getByRole("button", { name: "切换至深色模式" });
       fireEvent.click(btn);
       expect(localStorage.getItem(STORAGE_KEY)).toBe("dark");
     });
@@ -125,12 +127,12 @@ describe("Theme system accessibility regression", () => {
     it("should toggle aria-label to reflect the target theme", () => {
       renderWithTheme(<ThemeToggle />);
 
-      // Default light → shows "切換至深色模式"
-      let btn = screen.getByRole("button", { name: "切換至深色模式" });
+      // Default light → shows "切换至深色模式"
+      let btn = screen.getByRole("button", { name: "切换至深色模式" });
       fireEvent.click(btn);
 
-      // Now dark → shows "切換至亮色模式"
-      btn = screen.getByRole("button", { name: "切換至亮色模式" });
+      // Now dark → shows "切换至亮色模式"
+      btn = screen.getByRole("button", { name: "切换至亮色模式" });
       expect(btn).toBeInTheDocument();
     });
   });

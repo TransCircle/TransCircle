@@ -1,108 +1,113 @@
-/* Bespoke bits for the security settings page that have no shared primitive.
-   Everything else uses @/components/ui + Page.module.css. */
+/* 两步验证 setup 流程的专有样式;其余一律用 components/ui + Account.module.css。 */
 
-.section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--divider-color);
-}
-
-.subHeading {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem;
-  color: var(--text-main);
-}
-
-.note {
-  margin: 0 0 0.75rem;
-  font-size: 0.85rem;
-  line-height: 1.6;
-  color: var(--text-secondary);
-}
-
-/* Permissions overview (我的权限) — role/permission chip groups */
-.permGroup {
-  margin-top: 1rem;
-}
-
-.permGroup:first-of-type {
-  margin-top: 0;
-}
-
-.permGroupLabel {
-  margin: 0 0 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.chips {
+/* 二维码容器:居中呈现。 */
+.qrWrap {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  justify-content: center;
+  padding: 0.25rem 0;
 }
-
-/* Inline register row (passkey name + button) */
-.inlineRow {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.inlineRow .grow {
-  flex: 1;
-  min-width: min(220px, 100%);
-}
-
-/* TOTP enrolment */
 .qr {
   display: block;
   width: 200px;
-  height: 200px;
-  margin: 1rem auto;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--divider-color);
+}
+
+/* 「无法扫描」折叠触发:低调的文字按钮,居中。 */
+.cantScan {
+  align-self: center;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  background: none;
+  color: var(--accent-pink);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+.cantScan:hover {
+  text-decoration-style: solid;
+}
+.cantScan:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* 展开后的密钥行:标签 + 可选中密钥 + 复制按钮。 */
+.secretReveal {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.75rem;
+  background-color: var(--hover-bg);
+  border: 1px solid var(--divider-color);
   border-radius: var(--radius-sm);
 }
-
-.secretLine {
-  font-size: 0.85rem;
+.secretRevealLabel {
+  font-size: 0.78rem;
   color: var(--text-muted);
-  text-align: center;
-  margin: 0 0 1rem;
+  flex-shrink: 0;
 }
-
-.secret {
+.secretBox {
+  flex: 1;
+  min-width: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.9rem;
-  letter-spacing: 0.1em;
-  margin-left: 0.25rem;
-  word-break: break-all;
+  letter-spacing: 0.06em;
+  color: var(--text-main);
+  /* 单行完整展示,字号由 JS 动态收敛以适配宽度(不省略字符)。 */
+  white-space: nowrap;
+  overflow: hidden;
+  /* 密钥需要被复制,允许整体选中。 */
+  user-select: all;
 }
 
-.codeNarrow {
-  max-width: 240px;
-  margin: 0 auto;
-}
-
-.codeInput {
-  text-align: center;
-  font-size: 1.2rem;
-  letter-spacing: 0.3em;
-}
-
-.centerActions {
-  display: flex;
+/* 正方形圆角图标复制按钮;复制成功短暂变绿色对钩。 */
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--divider-color);
+  border-radius: var(--radius-control);
+  background-color: var(--surface-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color 130ms var(--ease-standard),
+    border-color 130ms var(--ease-standard),
+    background-color 130ms var(--ease-standard);
+}
+.copyBtn:hover {
+  color: var(--accent-pink);
+  border-color: var(--primary-pink);
+  background-color: var(--hover-bg);
+}
+.copyBtn:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+.copyBtnDone,
+.copyBtnDone:hover {
+  color: var(--success-color);
+  border-color: var(--success-color);
+  background-color: var(--surface-card);
 }
 
-/* Recovery codes (inside the Modal) */
+/* 恢复码(模态内)。 */
 .recoveryCodes {
   background-color: var(--hover-bg);
   padding: 1rem;
   border-radius: var(--radius-sm);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.9rem;
   line-height: 2;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }

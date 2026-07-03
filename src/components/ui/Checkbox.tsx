@@ -21,7 +21,7 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
 /**
  * Custom-styled checkbox: a visually-hidden native `<input>` (so Space toggles and
  * screen readers work natively) paired with a drawn box + check SVG. The clickable
- * label row is the ≥40px touch target on coarse pointers.
+ * label row is the ≥44px touch target on coarse pointers.
  */
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
   { label, hint, invalid, indeterminate, id, className, fieldClassName, disabled, ...rest },

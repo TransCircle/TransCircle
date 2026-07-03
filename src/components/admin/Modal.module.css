@@ -13,12 +13,13 @@
 .panel {
   width: 100%;
   max-width: 420px;
-  max-height: calc(100vh - 3rem);
+  /* dvh：移动端浏览器工具栏收展时保持面板完整可见，vh 会被工具栏吃掉。 */
+  max-height: calc(100dvh - 3rem);
   overflow-y: auto;
   background-color: var(--surface-card);
   border: 1px solid var(--divider-color);
-  border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
   padding: 1.5rem;
   animation: adminPanelIn 0.2s ease;
 }
@@ -54,12 +55,6 @@
   color: var(--text-secondary);
 }
 
-.counter {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  text-align: right;
-}
-
 .footer {
   margin-top: 1.5rem;
   display: flex;
@@ -88,7 +83,8 @@
   }
 }
 
-@media (max-width: 540px) {
+/* 全站统一断点：≤480px 页脚按钮满宽堆叠（主操作在上）。 */
+@media (max-width: 480px) {
   .footer {
     flex-direction: column-reverse;
   }

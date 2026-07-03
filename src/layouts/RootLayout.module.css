@@ -1,12 +1,10 @@
 .app {
-  /* 固定页脚高度：页脚 position:fixed，故在此预留底部空间，避免遮挡内容；
-     侧栏 sticky 的 max-height 也据此扣除（CSS 变量经 DOM 继承到后代）。 */
-  --footer-h: 3rem;
+  /* 页脚已改为文档流静态:flex column + main flex:1 把页脚推到底,
+     无需再为 fixed 页脚预留 --footer-h 底部空间。 */
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
   background-color: var(--bg-color);
-  padding-bottom: var(--footer-h);
 }
 
 .main {
@@ -42,45 +40,16 @@
   transform: translateY(0);
 }
 
-/* ── 页面切换动画 ─────────────────────────────── */
-
+/* 页面容器:仅承载布局,不做进入动画(已移除页面切换效果)。 */
 .pageWrap {
   flex: 1;
   display: flex;
   flex-direction: column;
-  animation: pageEnter 0.25s ease-out;
-}
-
-@keyframes pageEnter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .skipLink {
     transition: none;
   }
-  .pageWrap {
-    animation: none;
-  }
 }
 
-@media (max-width: 768px) {
-  .app {
-    /* 窄屏页脚可能换行成两行，预留多一点 */
-    --footer-h: 4.25rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .app {
-    /* 极窄屏：本地化版权 + 许可信息可能换到三行，避免固定页脚遮挡正文末尾 */
-    --footer-h: 5.25rem;
-  }
-}

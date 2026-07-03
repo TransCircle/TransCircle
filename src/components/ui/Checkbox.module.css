@@ -42,13 +42,14 @@
   width: 18px;
   height: 18px;
   border: 1.5px solid var(--divider-color);
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   background-color: var(--surface-card);
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
+/* 选中态底色为 --accent-pink,前景统一用 --on-accent(dark/高对比随主题)。 */
 .check {
-  color: #ffffff;
+  color: var(--on-accent);
   opacity: 0;
   transform: scale(0.6);
   transition: opacity 0.15s ease, transform 0.15s ease;
@@ -58,8 +59,8 @@
   position: absolute;
   width: 10px;
   height: 2px;
-  border-radius: 2px;
-  background-color: #ffffff;
+  border-radius: var(--radius-pill);
+  background-color: var(--on-accent);
   opacity: 0;
 }
 
@@ -88,13 +89,7 @@
 
 .input:focus-visible + .box {
   border-color: var(--primary-pink);
-  box-shadow: 0 0 0 3px rgba(255, 133, 162, 0.18);
-}
-
-@supports (box-shadow: 0 0 0 3px color-mix(in srgb, red 18%, transparent)) {
-  .input:focus-visible + .box {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-pink) 22%, transparent);
-  }
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .invalid .box {
@@ -114,9 +109,10 @@
   color: var(--error-color);
 }
 
-@media (pointer: coarse) {
+/* any-pointer 而非 pointer:触屏笔记本主指针是鼠标,但触摸仍需 44px 目标。 */
+@media (any-pointer: coarse) {
   .row {
-    min-height: 40px;
+    min-height: 44px;
   }
 }
 

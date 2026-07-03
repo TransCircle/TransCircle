@@ -34,6 +34,15 @@ export interface MeProfile {
   lastLoginAt?: number | null;
 }
 
+/** WebAuthn 断言请求参数（登录 MFA / step-up 共用形状） */
+export interface WebAuthnRequestOptions {
+  challenge: string;
+  rpId: string;
+  timeout?: number;
+  userVerification: string;
+  allowCredentials: Array<{ type: string; id: string; transports: string[] | null }>;
+}
+
 /** POST /v1/auth/login —— 登录结果（普通或需 MFA） */
 export interface LoginResult {
   accessToken?: string;
@@ -43,6 +52,10 @@ export interface LoginResult {
   user?: MeProfile;
   mfaRequired?: boolean;
   mfaChallengeToken?: string;
+  /** 二次验证可用方式（任一 2FA 方式即触发挑战；恢复码为共享备份） */
+  availableMethods?: Array<"totp" | "passkey" | "recovery_code">;
+  /** 有 Passkey 时随挑战下发的 WebAuthn assertion 参数 */
+  passkey?: { publicKey: WebAuthnRequestOptions };
 }
 
 /** POST /v1/auth/oauth/exchange —— 兑换结果 */
@@ -77,6 +90,15 @@ export interface TotpStatus {
   enabledAt: number | null;
   lastUsedAt: number | null;
   remainingRecoveryCodes: number;
+}
+
+/** GET /v1/me/mfa/recovery-codes —— 恢复码状态（TOTP / Passkey 共享的账户级备份） */
+export interface RecoveryCodesStatus {
+  /** 是否已启用任一 2FA 方式——决定是否展示恢复码框 */
+  mfaEnabled: boolean;
+  totpEnabled: boolean;
+  passkeyCount: number;
+  remaining: number;
 }
 
 /** POST /v1/me/mfa/totp/setup —— 启用前的配置载荷 */

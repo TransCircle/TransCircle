@@ -26,7 +26,7 @@
 }
 
 .mainTitle {
-  font-size: 2rem;
+  font-size: var(--fs-title);
   font-weight: 700;
   color: var(--text-main);
   margin: 0 0 0.2rem 0;
@@ -34,7 +34,7 @@
 }
 
 .subTitle {
-  font-size: 1rem;
+  font-size: var(--fs-subtitle);
   color: var(--text-muted);
   margin: 0;
   font-weight: 400;
@@ -47,16 +47,16 @@
 }
 
 .greeting {
-  font-size: 0.95rem;
+  font-size: var(--fs-body);
   margin: 0 0 0.9rem 0;
   color: var(--text-body);
-  line-height: 1.6;
+  line-height: var(--lh-body);
 }
 
 .readmeContent {
   color: var(--text-secondary);
-  line-height: 1.75;
-  font-size: 0.92rem;
+  line-height: 1.7;
+  font-size: var(--fs-body);
 }
 
 .readmeContent p {
@@ -73,8 +73,8 @@
   border-left: 3px solid var(--primary-pink);
   padding-left: 1rem;
   margin: 1.4rem 0 0 0;
-  font-size: 0.92rem;
-  line-height: 1.65;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
 }
 
 /* ── Shared section chrome ────────────────────── */
@@ -105,30 +105,36 @@
 }
 
 .ctaPrimary {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background-color: var(--cta-bg);
   color: var(--cta-color);
-  padding: 0.5rem 1.2rem;
-  border-radius: 50px;
+  height: var(--control-h);
+  padding: 0 1.15rem;
+  border-radius: var(--radius-pill);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
-  box-shadow: 0 2px 8px var(--shadow-color);
+  box-shadow: var(--shadow-card);
   transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .ctaPrimary:hover {
   background-color: var(--cta-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--shadow-color-hover);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .ctaSecondary {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1.5px solid var(--primary-pink);
   color: var(--accent-pink);
-  padding: 0.5rem 1.2rem;
-  border-radius: 50px;
+  height: var(--control-h);
+  padding: 0 1.15rem;
+  border-radius: var(--radius-pill);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
@@ -157,7 +163,7 @@
   gap: 0.55rem;
   padding: 0.45rem 0.6rem;
   margin: 0 -0.6rem;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   text-decoration: none;
   transition: background-color 0.15s ease;
 }
@@ -198,6 +204,18 @@
   .ctaSecondary,
   .socialLink {
     transition: none;
+  }
+  .ctaPrimary:hover {
+    transform: none;
+  }
+}
+
+/* 触屏(含触屏笔记本,故用 any-pointer)下保证 ≥44px 触控目标。 */
+@media (any-pointer: coarse) {
+  .ctaPrimary,
+  .ctaSecondary,
+  .socialLink {
+    min-height: 44px;
   }
 }
 

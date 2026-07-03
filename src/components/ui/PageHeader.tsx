@@ -9,8 +9,9 @@ export interface PageHeaderProps {
   actions?: ReactNode
   /** small uppercase eyebrow above the title. */
   eyebrow?: ReactNode
-  size?: 'page' | 'section'
-  /** heading level; defaults to h1 for page, h2 for section. */
+  /** 'card' 用于窄卡片语境(auth/状态页):比 page 收敛一档的标题字号。 */
+  size?: 'page' | 'section' | 'card'
+  /** heading level; defaults to h2 for section, h1 otherwise. */
   as?: 'h1' | 'h2'
   align?: 'start' | 'center'
   className?: string
@@ -30,7 +31,7 @@ export function PageHeader({
   align = 'start',
   className,
 }: PageHeaderProps) {
-  const Heading = as ?? (size === 'page' ? 'h1' : 'h2')
+  const Heading = as ?? (size === 'section' ? 'h2' : 'h1')
   return (
     <header className={cx(styles.header, styles[size], align === 'center' && styles.center, className)}>
       <div className={styles.texts}>

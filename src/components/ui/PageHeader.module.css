@@ -23,8 +23,14 @@
   line-height: 1.2;
 }
 
+/* 对齐主页 .mainTitle 的页级标题尺度:用 --fs-title(clamp)让移动端自动收敛。 */
 .page .title {
-  font-size: 1.6rem;
+  font-size: var(--fs-title);
+}
+
+/* 窄卡片语境(auth/状态页)收敛一档,避免 2rem 在 26rem 卡片里过大。 */
+.card .title {
+  font-size: 1.4rem;
 }
 
 .section .title {
@@ -34,9 +40,15 @@
 
 .desc {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--fs-subtitle);
   color: var(--text-muted);
   line-height: 1.55;
+  /* 超长邮箱/URI 等无空格长串可任意断行,防止撑破窄容器。 */
+  overflow-wrap: anywhere;
+}
+
+.card .desc {
+  font-size: 0.95rem;
 }
 
 .section .desc {
@@ -77,9 +89,7 @@
   .header {
     gap: 0.85rem;
   }
-  .page .title {
-    font-size: 1.4rem;
-  }
+  /* 标题字号由 --fs-title(clamp)在小视口自动收敛到 ~1.5rem,无需断点硬切。 */
   .actions {
     width: 100%;
   }

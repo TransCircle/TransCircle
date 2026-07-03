@@ -15,6 +15,9 @@
     "remove": "移除",
     "rename": "重命名",
     "add": "添加",
+    "edit": "编辑",
+    "change": "修改",
+    "manage": "管理",
     "back": "返回",
     "retry": "重试",
     "submit": "提交",
@@ -32,7 +35,9 @@
     "comingSoon": "开发中",
     "processing": "处理中…",
     "loadFailed": "加载失败",
-    "loadMore": "加载更多"
+    "loadMore": "加载更多",
+    "loadedCount": "已加载 {{count}} 条",
+    "copyFailed": "复制失败"
   },
   "shell": {
     "skipToContent": "跳到主要内容",
@@ -49,15 +54,25 @@
   "theme": {
     "light": "亮色模式",
     "dark": "深色模式",
-    "selectLabel": "主题选择"
+    "selectLabel": "主题选择",
+    "switchToLight": "切换至亮色模式",
+    "switchToDark": "切换至深色模式"
+  },
+  "toc": {
+    "label": "目录"
   },
   "landing": {
-    "title": "TransCircle Pass",
-    "subtitle": "一个账户，畅行 TransCircle 全站。",
-    "description": "使用 TransCircle Pass 管理您的账户、安全设置，并以单点登录访问各业务站点。",
-    "ctaLogin": "登录账户",
-    "ctaAccount": "进入账户中心",
-    "ctaHome": "返回导航站"
+    "title": "TransCircle Project",
+    "subtitle": "我们的存在，就是对恶意最大的反抗。",
+    "greeting": "您好！我们正在进行 TransCircle Project 的初期准备。",
+    "intro1": "长此以往，中文 MtF 社群有个很奇怪的现象：我们确实有比较全面的社群 wiki，HRT 指南等，但几乎没有一个能见证我们社群存在与抗争的地方。",
+    "intro2": "跨性别社群流动性极大，这里发生过很多故事，但没有人把它们完整地记录下来过。",
+    "intro3": "因此，这个女性倾向跨性别社群史官工程应运而生。我们希望，把我们的故事归档记录，团结社群，争取跨性别权利。",
+    "emphasis": "我们深信历史终将向前。这份记录，就是我们走过长夜的铁证。",
+    "joinHeading": "加入项目",
+    "joinForm": "填写申请表单",
+    "joinChat": "加入 X 聊天群",
+    "followHeading": "关注我们"
   },
   "nav": {
     "home": "首页",
@@ -65,6 +80,8 @@
     "admin": "管理后台",
     "login": "登录",
     "logout": "退出登录",
+    "loggingOut": "退出中…",
+    "logoutFailed": "退出登录失败，请重试",
     "primary": "主导航",
     "links": "链接",
     "blog": "博客",
@@ -102,10 +119,19 @@
     "x": "使用 X 登录",
     "passkey": "使用 Passkey 登录",
     "passkeyFailed": "Passkey 登录失败，请重试",
-    "mfaPrompt": "请输入身份验证器中的 6 位验证码，或一个恢复码。",
+    "mfaPrompt": "请输入身份验证器中的 6 位验证码。",
+    "mfaChoosePrompt": "请使用 Passkey 或验证器验证码完成二次验证。",
+    "mfaRecoveryPrompt": "请输入一个恢复码以完成登录。",
+    "mfaPasskeyPrompt": "请出示您的 Passkey 完成二次验证。",
     "mfaCode": "验证码",
+    "mfaRecoveryCode": "恢复码",
     "mfaSubmit": "验证并登录",
-    "adminEntry": "管理员登录（IAM）"
+    "mfaPasskey": "使用 Passkey 验证",
+    "mfaOr": "或",
+    "mfaUseRecovery": "改用恢复码",
+    "mfaBackToOther": "返回其他验证方式",
+    "adminEntry": "管理员登录（IAM）",
+    "mfaChallengeMissing": "登录需要多因素验证，但服务器未返回验证挑战，请重试；若问题持续请联系管理员。"
   },
   "register": {
     "title": "创建账户",
@@ -129,7 +155,7 @@
     "subtitle": "请设置一个新的登录密码。",
     "submit": "重置密码",
     "invalidTitle": "链接无效",
-    "invalidDesc": "重置链接缺失或已过期，请重新发起找回密码。",
+    "invalidDesc": "重置链接缺失或已过期；出于安全考虑，链接为一次性使用，页面刷新后即失效，请重新发起找回密码。",
     "doneTitle": "密码已重置",
     "doneDesc": "您的密码已更新，请使用新密码登录。"
   },
@@ -152,7 +178,10 @@
     "eyebrow": "通过 {{provider}} 登录",
     "title": "完善账户信息",
     "subtitle": "首次使用第三方登录，请补全账户信息以完成注册。",
-    "submit": "完成注册"
+    "submit": "完成注册",
+    "cancel": "取消并返回登录",
+    "invalidTitle": "链接无效或已过期",
+    "invalidDesc": "该第三方登录链接无效或已过期，请从登录页重新发起第三方登录。"
   },
   "consent": {
     "title": "授权请求",
@@ -167,11 +196,18 @@
       "email": "读取您的邮箱地址",
       "offline_access": "在您离线时保持登录",
       "pass.profile.full": "读取完整账户资料"
-    }
+    },
+    "asUser": "以 {{name}} 的身份授权",
+    "scopesLabel": "此应用将获得以下权限",
+    "redirectNotice": "授权后将跳转至 {{domain}}",
+    "scopeFallback": "基础身份信息"
   },
   "callback": {
     "processing": "正在完成登录…",
-    "failed": "登录回调处理失败"
+    "failed": "登录回调处理失败",
+    "title": "完成登录",
+    "invalid": "回调链接无效或已过期，请重新登录。",
+    "retryLogin": "重新登录"
   },
   "authError": {
     "title": "登录失败",
@@ -199,6 +235,7 @@
       "password": "登录密码",
       "twoFactor": "两步验证",
       "passkeys": "Passkey",
+      "recoveryCodes": "恢复码",
       "oauth": "第三方账号",
       "sessions": "登录设备",
       "danger": "账户安全"
@@ -209,7 +246,7 @@
       "avatar": "头像",
       "changeAvatar": "更换头像",
       "removeAvatar": "移除头像",
-      "avatarHint": "支持 PNG / JPG / WebP / GIF，将自动缩放为小尺寸方形头像。",
+      "avatarHint": "支持 PNG / JPG / WebP / GIF 格式。",
       "avatarUpdated": "头像已更新",
       "avatarRemoved": "头像已移除",
       "avatarFailed": "头像更新失败，请重试",
@@ -223,7 +260,16 @@
       "accountId": "账户 ID",
       "createdAt": "注册时间",
       "save": "保存资料",
-      "saved": "资料已更新"
+      "saved": "资料已更新",
+      "info": "账户信息",
+      "displayNameSection": "公开昵称",
+      "displayNameRequired": "昵称不能为空或全为空格",
+      "cropTitle": "编辑头像",
+      "uploadNew": "上传新图片",
+      "rotate": "旋转",
+      "zoom": "缩放",
+      "apply": "应用",
+      "dragHint": "拖动或方向键调整位置，滑块缩放，按钮旋转"
     },
     "password": {
       "title": "登录密码",
@@ -235,7 +281,8 @@
       "mismatch": "两次输入的新密码不一致",
       "saved": "密码已更新",
       "setTitle": "设置登录密码",
-      "noPassword": "当前账户未设置密码（仅第三方登录）。"
+      "noPassword": "当前账户未设置密码（仅第三方登录）。",
+      "tooShort": "新密码至少需要 8 个字符"
     },
     "twoFactor": {
       "title": "两步验证（TOTP）",
@@ -244,7 +291,8 @@
       "enabled": "已启用",
       "disabled": "未启用",
       "setup": "开始设置",
-      "scanQr": "使用身份验证器 App 扫描二维码，或手动输入密钥：",
+      "scanQr": "使用身份验证器 App 扫描下方二维码。",
+      "cantScan": "无法扫描？手动输入密钥",
       "secretLabel": "密钥",
       "enterCode": "输入身份验证器生成的 6 位验证码以完成启用",
       "enable": "启用两步验证",
@@ -255,13 +303,10 @@
       "disableMessage": "停用后将降低账户安全性。请输入验证码或恢复码以确认。",
       "disableCodeLabel": "验证码或恢复码",
       "passwordLabel": "当前密码",
-      "remainingCodes": "剩余恢复码：{{count}} 个",
-      "recoveryTitle": "恢复码",
-      "recoveryHint": "请妥善保存以下恢复码，每个仅可使用一次。丢失验证器时可用于登录。",
-      "regenerate": "重新生成恢复码",
-      "regenerateTitle": "重新生成恢复码？",
-      "regenerateMessage": "旧的恢复码将全部失效。请输入验证码以确认。",
-      "regenerated": "恢复码已重新生成"
+      "loadFailed": "无法获取两步验证状态，请重试。",
+      "setupTitle": "设置两步验证",
+      "qrAlt": "两步验证绑定二维码",
+      "codeLabel": "验证码"
     },
     "passkeys": {
       "title": "Passkey",
@@ -282,7 +327,26 @@
       "addedOk": "Passkey 已添加",
       "renamedOk": "已重命名",
       "deletedOk": "Passkey 已删除",
-      "registerFailed": "Passkey 注册失败，请重试"
+      "registerFailed": "Passkey 注册失败，请重试",
+      "listLabel": "已添加的 Passkey"
+    },
+    "recoveryCodes": {
+      "title": "恢复码",
+      "subtitle": "TOTP 与 Passkey 共享的备份；丢失验证器或设备时用于登录。",
+      "hint": "请妥善保存以下恢复码，每个仅可使用一次。丢失两步验证方式时可用于登录。",
+      "label": "备份恢复码",
+      "remaining": "剩余 {{count}} 个",
+      "regenerate": "重新生成",
+      "generate": "生成恢复码",
+      "regenerated": "恢复码已重新生成",
+      "regenerateTitle": "重新生成恢复码？",
+      "regenerateMessage": "旧的恢复码将全部失效。请完成身份复核以确认。",
+      "codeLabel": "验证码或恢复码",
+      "passwordLabel": "当前密码",
+      "saved": "我已保存恢复码",
+      "copyFailed": "复制失败，请手动选中并复制。",
+      "loadFailed": "无法获取恢复码状态，请重试。",
+      "needFactor": "恢复码已用尽,且账户暂无验证码或密码可用于身份复核。请先设置登录密码或启用身份验证器,再重新生成恢复码。"
     },
     "oauth": {
       "title": "第三方账号",
@@ -299,7 +363,9 @@
       "bindConfirmTitle": "完成第三方账号绑定",
       "bindProcessing": "正在完成绑定…",
       "boundOk": "绑定成功",
-      "boundOkDesc": "第三方账号已绑定到您的账户。"
+      "boundOkDesc": "第三方账号已绑定到您的账户。",
+      "stepUpWaiting": "请在对话框中完成二次验证，以继续绑定。",
+      "bindStepUpFailed": "二次验证未生效，绑定未能完成，请返回第三方账号页面重试。"
     },
     "sessions": {
       "title": "登录设备与会话",
@@ -315,7 +381,14 @@
       "revokeOthersTitle": "注销其他所有会话？",
       "revokeOthersMessage": "除当前设备外的所有登录会话都将被退出。",
       "revoked": "会话已注销",
-      "empty": "暂无活跃会话"
+      "empty": "暂无活跃会话",
+      "method": {
+        "password": "密码登录",
+        "passkey": "Passkey 登录",
+        "oauth": "第三方账号登录",
+        "github": "GitHub 登录",
+        "x": "X 登录"
+      }
     },
     "danger": {
       "title": "账户安全",
@@ -330,8 +403,12 @@
       "deleteConfirmTitle": "确认注销账户？",
       "deleteConfirmMessage": "这是高危操作。请按提示确认并完成二次验证。注销后进入 30 天冷静期，期间可撤销。",
       "confirmTypeLabel": "请输入 {{phrase}} 以确认注销",
+      "confirmInstruction": "请输入以下短语以确认注销：",
       "passwordLabel": "当前密码",
-      "deleteRequested": "账户注销已发起，已进入冷静期。"
+      "deleteRequested": "账户注销已发起，已进入冷静期。",
+      "confirmPhrase": "我确认注销我的账户",
+      "deleteRequestedTitle": "注销申请已提交",
+      "deleteRequestedDesc": "您的账户已进入 30 天冷静期，期间登录可按提示撤销注销；冷静期结束后，账户与数据将被永久删除。"
     }
   },
   "stepUp": {
@@ -418,7 +495,10 @@
       "reasonLabel": "操作原因",
       "reasonPlaceholder": "请填写原因（1-500 字）",
       "actionOk": "操作已完成",
-      "needsStepUp": "此操作需要先完成管理员二次验证。"
+      "needsStepUp": "此操作需要先完成管理员二次验证。",
+      "filterStatusAll": "全部状态",
+      "unsuspendMessage": "该用户将恢复正常登录与访问。",
+      "reasonRequired": "操作原因不能为空"
     },
     "clients": {
       "title": "OAuth 客户端",
@@ -466,7 +546,15 @@
       "updatedOk": "客户端已更新",
       "rotatedOk": "客户端密钥已轮换",
       "nameRequired": "请填写名称（1–100 字）",
-      "redirectRequired": "请至少提供一个回调地址"
+      "redirectRequired": "请至少提供一个回调地址",
+      "count": "共 {{count}} 个客户端",
+      "disableTitle": "停用该客户端？",
+      "disableMessage": "停用后「{{name}}」将立即无法发起授权登录，依赖它登录的站点会受影响。确定继续？",
+      "enableTitle": "启用该客户端？",
+      "enableMessage": "启用后「{{name}}」将恢复发起授权登录。确定继续？",
+      "secretCloseTitle": "关闭密钥窗口？",
+      "secretCloseMessage": "关闭后将无法再次查看该密钥，只能轮换重新生成。请确认已复制并妥善保存。",
+      "secretCloseConfirm": "已保存，关闭"
     },
     "audit": {
       "title": "审计日志",
@@ -479,7 +567,8 @@
       "filterActionAll": "全部操作",
       "empty": "暂无审计记录",
       "loadMore": "加载更多",
-      "requestId": "请求 ID"
+      "requestId": "请求 ID",
+      "viewActor": "查看该用户详情"
     }
   },
   "status": {
@@ -489,7 +578,8 @@
     "banned": "已封禁",
     "pending_deletion": "待注销",
     "deleted": "已注销",
-    "merged": "已合并"
+    "merged": "已合并",
+    "disabled": "已停用"
   },
   "error": {
     "generic": "出错了，请稍后重试",
@@ -497,6 +587,23 @@
     "forbidden": "您没有执行此操作的权限",
     "notFound": "页面不存在",
     "notFoundDetail": "您访问的页面不存在或已被移动。",
-    "backHome": "返回首页"
+    "backHome": "返回首页",
+    "notFoundEyebrow": "404 Not Found",
+    "backPrev": "返回上一页"
+  },
+  "errors": {
+    "networkFailed": "网络请求失败",
+    "unknown": "未知错误",
+    "requestFailed": "请求失败 ({{status}})"
+  },
+  "auth": {
+    "password": {
+      "show": "显示密码",
+      "hide": "隐藏密码"
+    }
+  },
+  "tagInput": {
+    "maxReached": "最多只能添加 {{max}} 个标签",
+    "duplicate": "标签「{{tag}}」已存在"
   }
 }
