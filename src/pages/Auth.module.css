@@ -67,6 +67,47 @@
   letter-spacing: 0.08em;
 }
 
+/* MFA 次要方式入口：Passkey 优先时，验证码/恢复码折叠在此低调链接之后。 */
+.mfaAltLink {
+  align-self: center;
+  background: none;
+  border: none;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.mfaAltLink:hover {
+  color: var(--accent-pink);
+  text-decoration: underline;
+}
+
+.mfaAltLink:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.mfaAltLink:disabled:hover {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+@media (any-pointer: coarse) {
+  .mfaAltLink {
+    padding: 0.85rem 0.9rem;
+    margin: -0.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mfaAltLink {
+    transition: none;
+  }
+}
+
 /* OAuth / alternate-action button stack */
 .oauthSection {
   display: flex;
