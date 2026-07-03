@@ -179,8 +179,7 @@
       "email": "讀取您的郵箱地址",
       "offline_access": "在您離線時保持登入",
       "pass.profile.full": "讀取完整賬戶資料"
-    },
-    "sessionExpired": "會話已過期，請重新登入"
+    }
   },
   "callback": {
     "processing": "正在完成登入…",

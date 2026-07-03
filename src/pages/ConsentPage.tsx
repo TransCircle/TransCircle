@@ -87,8 +87,7 @@ const ConsentPage = () => {
     if (!getUserToken()) {
       const token = await tryRefreshToken();
       if (!token) {
-        setError(t("consent.sessionExpired"));
-        setPending(null);
+        navigate(`/login?oidc=${encodeURIComponent(uid)}`, { replace: true });
         return;
       }
     }

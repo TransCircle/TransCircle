@@ -200,8 +200,7 @@
     "asUser": "以 {{name}} 的身份授权",
     "scopesLabel": "此应用将获得以下权限",
     "redirectNotice": "授权后将跳转至 {{domain}}",
-    "scopeFallback": "基础身份信息",
-    "sessionExpired": "会话已过期，请重新登录"
+    "scopeFallback": "基础身份信息"
   },
   "callback": {
     "processing": "正在完成登录…",
