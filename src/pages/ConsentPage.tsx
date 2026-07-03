@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, tryRefreshToken, getUserToken, setUserToken } from "../api/client";
+import { api } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { usePageTitle } from "../utils/usePageTitle";
 import type { OidcInteractionInfo } from "../api/types";
@@ -84,11 +84,6 @@ const ConsentPage = () => {
     if (!uid || pending) return;
     setPending(action);
     setError(null);
-    // 全页跳转后内存 token 可能丢失，先确保有合法 token
-    if (!getUserToken()) {
-      const token = await tryRefreshToken();
-      if (token) setUserToken(token);
-    }
     const res = await api.post<{ redirectTo?: string }>(
       `/oauth2/interaction/${encodeURIComponent(uid)}/${action}`,
     );
