@@ -212,7 +212,7 @@ async function handle401(
 ): Promise<Response> {
   if (res.status !== 401) return res;
   if (plane === "user") {
-    if (!skipRefresh && _userToken) {
+    if (!skipRefresh) {
       const newToken = await doRefresh();
       if (newToken) {
         // ReadableStream 请求体只能消费一次,已被首次请求耗尽,无法透明重放;
