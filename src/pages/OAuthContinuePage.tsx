@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, setUserToken, clearCsrfToken } from "../api/client";
+import { api, setUserToken, saveCsrfToken, clearCsrfToken } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { sanitizeRedirect } from "../utils/url";
 import { usePageTitle } from "../utils/usePageTitle";
@@ -30,6 +30,12 @@ const OAuthContinuePage = () => {
   const provider = params.get("provider") ?? "";
   // 来自 URL 的重定向目标必须净化，防开放重定向。
   const redirectAfter = sanitizeRedirect(params.get("redirectAfter"), "/account");
+
+  // 从 URL 参数读取 CSRF token（跨域 cookie 不可读时的兜底通道），写入 sessionStorage 供后续 POST 使用
+  const csrfFromUrl = params.get("csrfToken");
+  if (csrfFromUrl) {
+    saveCsrfToken(csrfFromUrl);
+  }
 
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
