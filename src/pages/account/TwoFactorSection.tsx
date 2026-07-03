@@ -14,6 +14,7 @@ import {
 import { Dialog } from "../../components/ui/Dialog";
 import { CodeInput } from "../../components/ui/CodeInput";
 import { cx } from "../../components/admin/cx";
+import { RecoveryCodesDialog } from "./RecoveryCodesDialog";
 import s from "./Account.module.css";
 import sec from "./Security.module.css";
 
@@ -32,7 +33,7 @@ const CheckIcon = () => (
 /** 两步验证（TOTP）+ 恢复码分区。契约:setup 返回 setupId/qrCodeImage,enable 需 {setupId,code}。 */
 export function TwoFactorSection() {
   const { t } = useTranslation();
-  const { user } = useSession();
+  const { user, refresh } = useSession();
   const [status, setStatus] = useState<TotpStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -41,10 +42,8 @@ export function TwoFactorSection() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // 启用时一次性下发的恢复码（共享备份；后续管理在「恢复码」分区）。
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [copyFailed, setCopyFailed] = useState(false);
-  const copiedTimer = useRef<number | null>(null);
   const codeRef = useRef<HTMLInputElement>(null);
   // 密钥默认隐藏,由「无法扫描」主动展开;复制反馈短暂显示。
   const [showSecret, setShowSecret] = useState(false);
@@ -52,16 +51,12 @@ export function TwoFactorSection() {
   const secretCopiedTimer = useRef<number | null>(null);
   const secretBoxRef = useRef<HTMLElement>(null);
 
-  // 停用 / 重新生成对话框（错误就近渲染在各自弹窗内,不写分区顶部）
+  // 停用对话框（错误就近渲染在弹窗内,不写分区顶部）
   const [disableOpen, setDisableOpen] = useState(false);
   const [disableCode, setDisableCode] = useState("");
   const [disablePassword, setDisablePassword] = useState("");
   const [disableError, setDisableError] = useState<string | null>(null);
   const disableRef = useRef<HTMLInputElement>(null);
-  const [regenOpen, setRegenOpen] = useState(false);
-  const [regenCode, setRegenCode] = useState("");
-  const [regenError, setRegenError] = useState<string | null>(null);
-  const regenRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
@@ -82,7 +77,6 @@ export function TwoFactorSection() {
 
   useEffect(
     () => () => {
-      if (copiedTimer.current !== null) window.clearTimeout(copiedTimer.current);
       if (secretCopiedTimer.current !== null) window.clearTimeout(secretCopiedTimer.current);
     },
     [],
@@ -148,11 +142,15 @@ export function TwoFactorSection() {
         setError(res.error.message);
         return;
       }
-      setRecoveryCodes(res.data?.recoveryCodes ?? null);
+      const newCodes = res.data?.recoveryCodes?.length ? res.data.recoveryCodes : null;
+      setRecoveryCodes(newCodes);
       setNotice(t("account.twoFactor.enabledOk"));
       setSetup(null);
       setCode("");
       await load();
+      // 有一次性恢复码时,把会话刷新推迟到用户「我已保存」关闭弹窗之后(见 RecoveryCodesDialog onDismiss)：
+      // refresh() 若瞬时失败会清空会话→跳登录→弹窗卸载,恢复码永久丢失。无码时(已有其它 2FA)才立即同步。
+      if (!newCodes) await refresh();
     } finally {
       setBusy(false);
     }
@@ -177,60 +175,11 @@ export function TwoFactorSection() {
       setDisableCode("");
       setDisablePassword("");
       await load();
+      // 同步会话资料（security.totpEnabled）→ 「恢复码」分区随之更新/隐藏。
+      await refresh();
     } finally {
       setBusy(false);
     }
-  };
-
-  const regenerate = async () => {
-    if (busy) return; // 防 Enter 连击重复提交
-    setRegenError(null);
-    setBusy(true);
-    try {
-      const res = await api.post<{ recoveryCodes?: string[] }>("/v1/me/mfa/recovery-codes/regenerate", { code: regenCode });
-      if (!res.ok) {
-        setRegenError(res.error.message);
-        return;
-      }
-      setRecoveryCodes(res.data?.recoveryCodes ?? null);
-      setNotice(t("account.twoFactor.regenerated"));
-      setRegenOpen(false);
-      setRegenCode("");
-      await load();
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const copyCodes = async () => {
-    if (!recoveryCodes) return;
-    setCopyFailed(false);
-    try {
-      await navigator.clipboard.writeText(recoveryCodes.join("\n"));
-      setCopied(true);
-      if (copiedTimer.current !== null) window.clearTimeout(copiedTimer.current);
-      copiedTimer.current = window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard 不可用（非安全上下文/权限拒绝）：给出可见提示而非静默失败。
-      setCopyFailed(true);
-    }
-  };
-
-  const downloadCodes = () => {
-    if (!recoveryCodes) return;
-    const blob = new Blob([recoveryCodes.join("\n")], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "transcircle-recovery-codes.txt";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const dismissRecovery = () => {
-    setRecoveryCodes(null);
-    setCopied(false);
-    setCopyFailed(false);
   };
 
   const enabled = !!status?.totpEnabled;
@@ -273,40 +222,25 @@ export function TwoFactorSection() {
                       label={enabled ? t("account.twoFactor.enabled") : t("account.twoFactor.disabled")}
                     />
                   </span>
-                  {enabled && (
-                    <span className={s.rowMeta}>
-                      <span>{t("account.twoFactor.remainingCodes", { count: status?.remainingRecoveryCodes ?? 0 })}</span>
-                    </span>
-                  )}
+                  <span className={s.rowMeta}>
+                    <span>{t("account.twoFactor.subtitle")}</span>
+                  </span>
                 </div>
               </div>
               <div className={s.rowActions}>
                 {enabled ? (
-                  <>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => {
-                        setRegenError(null);
-                        setRegenCode("");
-                        setRegenOpen(true);
-                      }}
-                    >
-                      {t("account.twoFactor.regenerate")}
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => {
-                        setDisableError(null);
-                        setDisableCode("");
-                        setDisablePassword("");
-                        setDisableOpen(true);
-                      }}
-                    >
-                      {t("account.twoFactor.disable")}
-                    </Button>
-                  </>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => {
+                      setDisableError(null);
+                      setDisableCode("");
+                      setDisablePassword("");
+                      setDisableOpen(true);
+                    }}
+                  >
+                    {t("account.twoFactor.disable")}
+                  </Button>
                 ) : (
                   <Button variant="primary" size="sm" loading={busy} onClick={() => void startSetup()}>
                     {t("account.twoFactor.setup")}
@@ -379,77 +313,15 @@ export function TwoFactorSection() {
         </form>
       </Dialog>
 
-      {/* 恢复码展示:一次性、服务端已生效且不可再取,必须显式确认已保存。
-          背景点击禁关、Esc 禁关、无右上角关闭按钮——否则误操作会静默丢弃未保存的恢复码。
-          唯一关闭路径是页脚「我已保存」按钮(调用 dismissRecovery)。 */}
-      <Dialog
-        open={!!recoveryCodes}
-        onClose={() => {}}
-        title={t("account.twoFactor.recoveryTitle")}
-        description={t("account.twoFactor.recoveryHint")}
-        dismissOnBackdrop={false}
-        dismissOnEsc={false}
-        showClose={false}
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => void copyCodes()}>
-              {copied ? t("common.copied") : t("common.copy")}
-            </Button>
-            <Button variant="secondary" onClick={downloadCodes}>
-              {t("common.download")}
-            </Button>
-            <Button variant="primary" onClick={dismissRecovery}>
-              {t("account.twoFactor.savedCodes")}
-            </Button>
-          </>
-        }
-      >
-        {copyFailed && <Alert tone="error">{t("account.twoFactor.copyFailed")}</Alert>}
-        <ul className={`${sec.recoveryCodes} ${s.codeList}`}>
-          {(recoveryCodes ?? []).map((c) => (
-            <li key={c} className={s.codeItem}>
-              {c}
-            </li>
-          ))}
-        </ul>
-      </Dialog>
-
-      {/* 重新生成恢复码（仅接受 6 位验证码） */}
-      <Dialog
-        open={regenOpen}
-        onClose={() => setRegenOpen(false)}
-        busy={busy}
-        title={t("account.twoFactor.regenerateTitle")}
-        description={t("account.twoFactor.regenerateMessage")}
-        initialFocusRef={regenRef}
-        footer={
-          <>
-            <Button variant="secondary" disabled={busy} onClick={() => setRegenOpen(false)}>
-              {t("common.cancel")}
-            </Button>
-            <Button variant="primary" loading={busy} disabled={!regenCode} onClick={() => void regenerate()}>
-              {t("common.confirm")}
-            </Button>
-          </>
-        }
-      >
-        <form
-          className={s.form}
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (regenCode.length === 6) void regenerate();
-          }}
-        >
-          {regenError && <Alert tone="error">{regenError}</Alert>}
-          <CodeInput
-            ref={regenRef}
-            value={regenCode}
-            onChange={setRegenCode}
-            label={t("account.twoFactor.codeLabel")}
-            ariaLabel={t("account.twoFactor.codeLabel")}
-          />
-        </form>
-      </Dialog>
+      {/* 启用时一次性下发的恢复码：与「恢复码」分区共用同一展示组件（不可再取，须显式保存）。
+          关闭(用户已保存)后再刷新会话,同步 totpEnabled 让「恢复码」分区显现。 */}
+      <RecoveryCodesDialog
+        codes={recoveryCodes}
+        onDismiss={() => {
+          setRecoveryCodes(null);
+          void refresh();
+        }}
+      />
 
       {/* 停用 2FA（验证码或恢复码均可,故不限定数字键盘/长度） */}
       <Dialog

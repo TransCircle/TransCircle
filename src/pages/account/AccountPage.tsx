@@ -10,6 +10,7 @@ import { ProfileSection } from "./ProfileSection";
 import { PasswordSection } from "./PasswordSection";
 import { TwoFactorSection } from "./TwoFactorSection";
 import { PasskeysSection } from "./PasskeysSection";
+import { RecoveryCodesSection } from "./RecoveryCodesSection";
 import { OAuthSection } from "./OAuthSection";
 import { SessionsSection } from "./SessionsSection";
 import { DangerSection } from "./DangerSection";
@@ -68,6 +69,7 @@ const AccountPage = () => {
       <PasswordSection />
       <TwoFactorSection />
       <PasskeysSection />
+      <RecoveryCodesSection />
       <OAuthSection />
       <SessionsSection />
       <DangerSection />

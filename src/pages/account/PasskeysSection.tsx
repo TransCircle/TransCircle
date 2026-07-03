@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../api/client";
 import type { Passkey } from "../../api/types";
+import { useSession } from "../../context/SessionContext";
 import { useFormatTs } from "../../utils/datetime";
 import {
   performRegistration,
@@ -18,6 +19,7 @@ import {
   StatusBadge,
 } from "../../components/ui";
 import { Dialog, ConfirmDialog } from "../../components/ui/Dialog";
+import { RecoveryCodesDialog } from "./RecoveryCodesDialog";
 import s from "./Account.module.css";
 
 const FingerIcon = () => (
@@ -29,12 +31,15 @@ const FingerIcon = () => (
 /** Passkey 分区:注册(弹窗)/ 列表 / 重命名(弹窗)/ 删除(危险确认框)。 */
 export function PasskeysSection() {
   const { t } = useTranslation();
+  const { refresh } = useSession();
   const fmt = useFormatTs();
   const supported = isWebAuthnSupported();
   const [items, setItems] = useState<Passkey[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // 首次注册 Passkey（此前无 2FA）时服务端一次性下发的共享恢复码。
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
 
   const [addOpen, setAddOpen] = useState(false);
   const [name, setName] = useState("");
@@ -83,7 +88,7 @@ export function PasskeysSection() {
         return;
       }
       const credential: RegistrationResponseJSON = await performRegistration(start.data.publicKey);
-      const finish = await api.post(
+      const finish = await api.post<{ recoveryCodes?: string[] | null }>(
         "/v1/me/passkeys/register/finish",
         { registrationId: start.data.registrationId, name, credential },
         { idempotent: true },
@@ -95,7 +100,13 @@ export function PasskeysSection() {
       setNotice(t("account.passkeys.addedOk"));
       setName("");
       setAddOpen(false);
+      // 首次启用 2FA 时服务端会一并下发共享恢复码，需一次性展示给用户保存。
+      const newCodes = finish.data?.recoveryCodes?.length ? finish.data.recoveryCodes : null;
+      setRecoveryCodes(newCodes);
       await load();
+      // 有一次性恢复码时把会话刷新推迟到弹窗关闭后(见 onDismiss)——避免 refresh 失败清空会话、
+      // 弹窗被卸载丢码;无码时立即同步 passkeyCount 让「恢复码」分区随之显隐。
+      if (!newCodes) await refresh();
     } catch (err) {
       if ((err as DOMException)?.name !== "NotAllowedError") setAddError(t("account.passkeys.registerFailed"));
     } finally {
@@ -127,6 +138,8 @@ export function PasskeysSection() {
     if (res.ok) {
       setNotice(t("account.passkeys.deletedOk"));
       await load();
+      // 同步会话资料（security.passkeyCount）→ 移除最后一个 2FA 时「恢复码」分区随之隐藏。
+      await refresh();
     } else setError(res.error.message);
     setBusy(false);
     setDeleteTarget(null);
@@ -287,6 +300,9 @@ export function PasskeysSection() {
         onConfirm={() => void doDelete()}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      {/* 首次注册 Passkey 时一并下发的共享恢复码（与「恢复码」分区共用展示组件）。 */}
+      <RecoveryCodesDialog codes={recoveryCodes} onDismiss={() => setRecoveryCodes(null)} />
     </section>
   );
 }
