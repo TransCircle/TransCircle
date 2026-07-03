@@ -1,3 +1,7 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { usePageTitle } from './utils/usePageTitle';
 import styles from './App.module.css';
 
 const GitHubIcon = () => (
@@ -18,66 +22,80 @@ const BlueskyIcon = () => (
   </svg>
 );
 
-const App = () => (
-  <>
-    <div className={styles.mainContent}>
-      <header className={styles.contentHeader}>
-        <h1 className={styles.mainTitle}>TransCircle Project</h1>
-        <p className={styles.subTitle}>我们的存在，就是对恶意最大的反抗。</p>
-      </header>
+const App = () => {
+  const { t } = useTranslation();
+  const location = useLocation();
 
-      <section id="about" className={styles.introSection}>
-        <p className={styles.greeting}>您好！我们正在进行 TransCircle Project 的初期准备。</p>
-        <div className={styles.readmeContent}>
-          <p>长此以往，中文 MtF 社群有个很奇怪的现象：我们确实有比较全面的社群 wiki，HRT 指南等，但几乎没有一个能见证我们社群存在与抗争的地方。</p>
-          <p>跨性别社群流动性极大，这里发生过很多故事，但没有人把它们完整地记录下来过。</p>
-          <p>因此，这个女性倾向跨性别社群史官工程应运而生。我们希望，把我们的故事归档记录，团结社群，争取跨性别权利。</p>
-        </div>
-        <p className={styles.emphasis}>
-          我们深信历史终将向前。这份记录，就是我们走过长夜的铁证。
-        </p>
-      </section>
+  // 主页沿用 index.html 的默认站点标题(usePageTitle 不传参即恢复默认),
+  // 同时保证从子页返回时标题被复位。
+  usePageTitle();
 
-      <section id="join" className={styles.actionSection}>
-        <h2 className={styles.sectionHeading}>加入项目</h2>
-        <div className={styles.ctaRow}>
-          <a href="https://transcircle.org/s/join" className={styles.ctaPrimary} target="_blank" rel="noopener noreferrer">
-            填写申请表单
-          </a>
-          <a href="https://transcircle.org/s/x-chat" className={styles.ctaSecondary} target="_blank" rel="noopener noreferrer">
-            加入 X 聊天群
-          </a>
-        </div>
-      </section>
+  // 顶栏锚点(如 /#about)经 SPA 路由到达时浏览器不会自动滚动到目标分区,
+  // 这里补齐;各 section 的 scroll-margin-top 已抵消吸顶导航高度。
+  useEffect(() => {
+    if (!location.hash) return;
+    document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  }, [location.hash]);
 
-      <section id="follow" className={styles.followSection}>
-        <h2 className={styles.sectionHeading}>关注我们</h2>
-        <ul className={styles.socialList}>
-          <li>
-            <a href="https://github.com/TransCircle/TransCircle" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
-              <span className={styles.socialIcon}><GitHubIcon /></span>
-              <span className={styles.socialName}>GitHub</span>
-              <span className={styles.socialHandle}>github.com/TransCircle/TransCircle</span>
+  return (
+    <>
+      <div className={styles.mainContent}>
+        <header className={styles.contentHeader}>
+          <h1 className={styles.mainTitle}>{t('landing.title')}</h1>
+          <p className={styles.subTitle}>{t('landing.subtitle')}</p>
+        </header>
+
+        <section id="about" className={styles.introSection}>
+          <p className={styles.greeting}>{t('landing.greeting')}</p>
+          <div className={styles.readmeContent}>
+            <p>{t('landing.intro1')}</p>
+            <p>{t('landing.intro2')}</p>
+            <p>{t('landing.intro3')}</p>
+          </div>
+          <p className={styles.emphasis}>{t('landing.emphasis')}</p>
+        </section>
+
+        <section id="join" className={styles.actionSection}>
+          <h2 className={styles.sectionHeading}>{t('landing.joinHeading')}</h2>
+          <div className={styles.ctaRow}>
+            <a href="https://transcircle.org/s/join" className={styles.ctaPrimary} target="_blank" rel="noopener noreferrer">
+              {t('landing.joinForm')}
             </a>
-          </li>
-          <li>
-            <a href="https://x.com/TransCircleOrg" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
-              <span className={styles.socialIcon}><XIcon /></span>
-              <span className={styles.socialName}>X (Twitter)</span>
-              <span className={styles.socialHandle}>@TransCircleOrg</span>
+            <a href="https://transcircle.org/s/x-chat" className={styles.ctaSecondary} target="_blank" rel="noopener noreferrer">
+              {t('landing.joinChat')}
             </a>
-          </li>
-          <li>
-            <a href="https://bsky.app/profile/TransCircle.org" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
-              <span className={styles.socialIcon}><BlueskyIcon /></span>
-              <span className={styles.socialName}>Bluesky</span>
-              <span className={styles.socialHandle}>TransCircle.org</span>
-            </a>
-          </li>
-        </ul>
-      </section>
-    </div>
-  </>
-);
+          </div>
+        </section>
+
+        <section id="follow" className={styles.followSection}>
+          <h2 className={styles.sectionHeading}>{t('landing.followHeading')}</h2>
+          <ul className={styles.socialList}>
+            <li>
+              <a href="https://github.com/TransCircle/TransCircle" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
+                <span className={styles.socialIcon}><GitHubIcon /></span>
+                <span className={styles.socialName}>GitHub</span>
+                <span className={styles.socialHandle}>github.com/TransCircle/TransCircle</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://x.com/TransCircleOrg" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
+                <span className={styles.socialIcon}><XIcon /></span>
+                <span className={styles.socialName}>X (Twitter)</span>
+                <span className={styles.socialHandle}>@TransCircleOrg</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://bsky.app/profile/TransCircle.org" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
+                <span className={styles.socialIcon}><BlueskyIcon /></span>
+                <span className={styles.socialName}>Bluesky</span>
+                <span className={styles.socialHandle}>TransCircle.org</span>
+              </a>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </>
+  );
+};
 
 export default App;

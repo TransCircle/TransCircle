@@ -1,10 +1,6 @@
 .footer {
-  /* 固定在视口底部，不随内容滚动（内容区已由 RootLayout 预留 --footer-h 底部空间）。 */
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 40;
+  /* 文档流静态页脚:由 RootLayout(flex column + main flex:1)推至内容底部,
+     不再 fixed 悬浮,正文无需预留 --footer-h 底部空间。 */
   width: 100%;
   border-top: 1px solid var(--divider-color);
   background-color: var(--bg-color);
@@ -19,7 +15,8 @@
   justify-content: space-between;
   gap: 0.5rem 1.25rem;
   flex-wrap: wrap;
-  font-size: 0.76rem;
+  /* 法律/许可信息也要可读:不低于 0.78rem。 */
+  font-size: 0.78rem;
   color: var(--text-muted);
   line-height: 1.5;
 }
@@ -48,10 +45,4 @@
   margin: 0;
   white-space: nowrap;
   flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  .bar {
-    font-size: 0.72rem;
-  }
 }

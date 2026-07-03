@@ -33,11 +33,13 @@ export function Card({ children, padding = 'md', tone = 'surface', accent, class
 
 export interface SectionLabelProps {
   children: ReactNode
+  /** 渲染的标签名：按页面文档大纲选择层级，默认 h3（不改变既有调用方）。 */
+  as?: 'h2' | 'h3' | 'h4' | 'p'
   className?: string
 }
 
-export function SectionLabel({ children, className }: SectionLabelProps) {
-  return <h3 className={cx(styles.sectionLabel, className)}>{children}</h3>
+export function SectionLabel({ children, as: Tag = 'h3', className }: SectionLabelProps) {
+  return <Tag className={cx(styles.sectionLabel, className)}>{children}</Tag>
 }
 
 /* ── Toolbar ─────────────────────────────────────────────── */

@@ -1,5 +1,5 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { type ReactNode } from "react";
+import { NavLink, Outlet } from "react-router-dom";
 import { Avatar } from "./Avatar";
 import { cx } from "./admin/cx";
 import styles from "./SectionShell.module.css";
@@ -29,15 +29,7 @@ export interface SectionShellProps {
  * 使二者与 landing 在同一视觉框架内，消除割裂。移动端侧栏退化为横向标签条。
  */
 export function SectionShell({ eyebrow, identity, navItems, ariaLabel }: SectionShellProps) {
-  const navRef = useRef<HTMLElement>(null);
-  const location = useLocation();
-
-  // 移动端横向标签条：路由变化时把当前分区滚入可见区（block:nearest 避免连带滚动页面）。
-  useEffect(() => {
-    const active = navRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
-    active?.scrollIntoView({ block: "nearest", inline: "center" });
-  }, [location.pathname]);
-
+  // 移动端导航已改为「全展示 + 换行」的分段工具栏,无横向滚动,不再需要把当前项滚入可见区。
   return (
     <div className={styles.wrap}>
       <aside className={styles.sidebar}>
@@ -49,7 +41,7 @@ export function SectionShell({ eyebrow, identity, navItems, ariaLabel }: Section
             {identity.sub && <span className={styles.idSub}>{identity.sub}</span>}
           </span>
         </div>
-        <nav ref={navRef} className={styles.nav} aria-label={ariaLabel}>
+        <nav className={styles.nav} aria-label={ariaLabel}>
           {navItems.map((item) => (
             <NavLink
               key={item.to}

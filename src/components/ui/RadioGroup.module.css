@@ -49,9 +49,11 @@
   border-color: var(--primary-pink);
 }
 
+/* 与 Select/Checkbox 统一的 box-shadow 焦点环(输入类控件家族)。 */
 .option:focus-visible {
-  outline: 2px solid var(--primary-pink);
-  outline-offset: 2px;
+  outline: none;
+  border-color: var(--primary-pink);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .option:disabled {
@@ -113,6 +115,13 @@
 .optionHint {
   font-size: 0.78rem;
   color: var(--text-muted);
+}
+
+/* any-pointer 而非 pointer:触屏笔记本主指针是鼠标,但触摸仍需 44px 目标。 */
+@media (any-pointer: coarse) {
+  .option {
+    min-height: 44px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

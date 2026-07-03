@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { StepUpStart } from "../api/types";
 import { performAssertion } from "../utils/webauthn";
-import { Modal, RadioGroup, TextField, AdminButton as Button, Alert, Spinner } from "./ui";
+import { RadioGroup, TextField, AdminButton as Button, Alert, Spinner } from "./ui";
+import { Dialog } from "./ui/Dialog";
 import styles from "./StepUpDialog.module.css";
 
 type Method = "password" | "totp" | "recovery_code" | "passkey";
@@ -27,6 +28,8 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // start 失败后的重试计数：递增即重跑下方 effect 重新发起 challenge。
+  const [startAttempt, setStartAttempt] = useState(0);
 
   useEffect(() => {
     if (!open) {
@@ -38,6 +41,7 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
     }
     let alive = true;
     setLoading(true);
+    setError(null);
     void (async () => {
       const res = await api.post<StepUpStart>("/v1/auth/step-up/start");
       if (!alive) return;
@@ -53,7 +57,7 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
     return () => {
       alive = false;
     };
-  }, [open]);
+  }, [open, startAttempt]);
 
   const verify = async () => {
     if (!challenge || !method) return;
@@ -94,15 +98,24 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
     label: t(`stepUp.method.${m}`),
   }));
 
+  // 输入框 Enter 直接提交，与点击「验证」等价（禁用条件也一致）。
+  const submitOnEnter = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && secret && !busy) {
+      e.preventDefault();
+      void verify();
+    }
+  };
+
   return (
-    <Modal
+    <Dialog
       open={open}
       onClose={onClose}
+      busy={busy}
       title={t("stepUp.title")}
       description={t("stepUp.subtitle")}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" disabled={busy} onClick={onClose}>
             {t("common.cancel")}
           </Button>
           {method === "passkey" ? (
@@ -122,6 +135,12 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
       ) : (
         <div className={styles.body}>
           {error && <Alert tone="error">{error}</Alert>}
+          {/* start 失败时没有 challenge，页脚「验证」钮永久禁用——给出重试出口。 */}
+          {error && !challenge && (
+            <Button variant="secondary" onClick={() => setStartAttempt((n) => n + 1)}>
+              {t("common.retry")}
+            </Button>
+          )}
           {methodOptions.length > 1 && (
             <RadioGroup
               label={t("stepUp.chooseMethod")}
@@ -140,6 +159,7 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
               autoComplete="current-password"
               value={secret}
               onChange={(e) => setSecret(e.target.value)}
+              onKeyDown={submitOnEnter}
             />
           )}
           {(method === "totp" || method === "recovery_code") && (
@@ -148,11 +168,12 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
               autoComplete="one-time-code"
               value={secret}
               onChange={(e) => setSecret(e.target.value)}
+              onKeyDown={submitOnEnter}
             />
           )}
           {method === "passkey" && <p className={styles.hint}>{t("stepUp.passkeyPrompt")}</p>}
         </div>
       )}
-    </Modal>
+    </Dialog>
   );
 }

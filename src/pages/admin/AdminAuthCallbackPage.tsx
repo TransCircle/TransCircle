@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { adminApi } from "../../api/client";
 import { useAdmin } from "../../context/AdminContext";
+import { usePageTitle } from "../../utils/usePageTitle";
 import { StatusScreen } from "../../components/ui";
 
 /**
@@ -12,6 +13,7 @@ import { StatusScreen } from "../../components/ui";
  */
 const AdminAuthCallbackPage = () => {
   const { t } = useTranslation();
+  usePageTitle(t("admin.login.title"));
   const navigate = useNavigate();
   const { setToken } = useAdmin();
   const [error, setError] = useState<string | null>(null);

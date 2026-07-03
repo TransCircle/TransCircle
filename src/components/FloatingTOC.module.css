@@ -3,7 +3,7 @@
   display: none;
 }
 
-/* ── Visible at 1100px+ ─────────────────────────
+/* ── Visible at 1100px+(与 AppNav 移动断点同值)──────
  * 目錄佔左側至多 25% 寬度，無背景無邊框無陰影，
  * 與正文之間以 border-right 分隔。
  */
@@ -16,7 +16,7 @@
     width: min(16vw, 14rem);
     z-index: 100;
     /* 與 nav .inner 左緣同步再加 1.5rem，大屏不貼邊 */
-    left: max(1.5rem, calc((100vw - 1280px) / 2 + 3rem));
+    left: max(1.5rem, calc((100vw - var(--width-content)) / 2 + 3rem));
     /* 右側分隔線 & 內邊距讓 hover 不貼邊 */
     height: calc(100vh - 7rem - 4rem);
     border-right: 1px solid var(--divider-color);
@@ -25,6 +25,7 @@
 }
 
 /* ── Heading ──────────────────────────────────── */
+/* 对齐主页 .sectionHeading 的小节标签语言(uppercase/0.68rem/muted)。 */
 
 .heading {
   display: block;
@@ -32,7 +33,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--primary-pink);
+  color: var(--text-muted);
   padding: 0 0.6rem 0.75rem;
   user-select: none;
 }
@@ -54,7 +55,7 @@
   font-size: 0.9rem;
   color: var(--text-secondary);
   padding: 0.5rem 0.9rem;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   white-space: nowrap;
   transition: background-color 0.15s ease, color 0.15s ease;
 }

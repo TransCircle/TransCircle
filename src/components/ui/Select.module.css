@@ -40,14 +40,7 @@
 .trigger:focus-visible,
 .trigger.open {
   border-color: var(--primary-pink);
-  box-shadow: 0 0 0 3px rgba(255, 133, 162, 0.18);
-}
-
-@supports (box-shadow: 0 0 0 3px color-mix(in srgb, red 18%, transparent)) {
-  .trigger:focus-visible,
-  .trigger.open {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-pink) 22%, transparent);
-  }
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .trigger.invalid {
@@ -87,6 +80,7 @@
   left: 0;
   right: 0;
   z-index: 50;
+  /* max-height 与 .tsx 中 measureFlip 的 296px 预估联动,改动需同步。 */
   margin: 0;
   padding: 0.3rem;
   list-style: none;
@@ -98,13 +92,19 @@
   overflow-y: auto;
 }
 
+/* 视口底部空间不足时向上翻转(由 JS 打开时测量决定)。 */
+.listbox.flipUp {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
 .option {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem 0.7rem;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
   font-size: 0.9rem;
   color: var(--text-body);
   cursor: pointer;
@@ -151,7 +151,31 @@
   color: var(--error-color);
 }
 
-@media (pointer: coarse) {
+/* ── Inline 形态(工具栏内) ──────────────────────────────── */
+/* 宽度收敛到内容但保留最小宽度;弹层脱离触发器宽度按内容自适应,
+   避免长选项在窄触发器下被截断。 */
+.field.inline {
+  width: auto;
+}
+
+.inline .wrap {
+  width: auto;
+}
+
+.inline .trigger {
+  width: auto;
+  min-width: 8rem;
+}
+
+.inline .listbox {
+  right: auto;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(22rem, calc(100vw - 2rem));
+}
+
+/* any-pointer 而非 pointer:触屏笔记本主指针是鼠标,但触摸仍需 44px 目标。 */
+@media (any-pointer: coarse) {
   .trigger {
     min-height: 44px;
   }

@@ -1,21 +1,166 @@
-/* 账户中心各页共享的轻量布局类（行级控件来自 components/ui 原语）。 */
+/* 账户中心共享布局:把主页的「安静文档风」带进设置页 ——
+   节式分区(细分隔线) + 平铺表单 + 至多一两张安静列表卡。
+   行级控件统一来自 components/ui 原语。 */
 
-.stack {
+/* ══════════════════════════════════════════════════════════
+   单页账户中心(概览页):身份头 + 分组卡片,所有编辑走弹窗。
+   ══════════════════════════════════════════════════════════ */
+.wrap {
+  width: 100%;
+  max-width: 48rem;
+  margin-inline: auto;
+  padding: 2.25rem 1.5rem 4rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 2rem;
 }
 
-.cardStack {
+/* ── 身份头:可点击头像(→更换弹窗) + 昵称 + 次级信息 ── */
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+.avatarBtn {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    transform 130ms var(--ease-standard),
+    box-shadow 130ms var(--ease-standard);
+}
+.avatarBtn > * {
+  pointer-events: none;
+}
+.avatarBtn:hover {
+  box-shadow: 0 0 0 3px var(--soft-pink);
+}
+.avatarBtn:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 3px;
+}
+.avatarBtn:active {
+  transform: scale(0.97);
+}
+/* 右下角小徽标,提示头像可更换。 */
+.avatarEdit {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background-color: var(--accent-pink);
+  color: var(--on-accent);
+  box-shadow: 0 0 0 2px var(--surface-card);
+}
+.identityText {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.identityEyebrow {
+  font-size: 0.64rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+.identityName {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.identitySub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
 }
 
+/* ── 分组:小标题 + 一张安静卡(卡内 .list 分行) ── */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.groupTitle {
+  margin: 0;
+  padding-left: 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+/* 分组内的贴士/错误/成功提示,与卡片同宽堆叠。 */
+.groupFeedback {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+@media (max-width: 560px) {
+  .wrap {
+    padding: 1.5rem 1rem 3rem;
+    gap: 1.6rem;
+  }
+  .identityName {
+    font-size: 1.3rem;
+  }
+}
+
+
+/* ── 节式分区(对齐主页 .actionSection 的分隔线节奏) ──
+   .page 弹性列自带 1.25rem gap,叠加 0.75rem 外边距 ≈ 2rem 节间呼吸。 */
+.section {
+  margin-top: 0.75rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--divider-color);
+}
+
+.sectionFirst {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* 节标题与状态徽章同行(SectionLabel 自带的下边距移到行容器上)。 */
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0 0 0.9rem;
+}
+
+.sectionHeadLabel {
+  margin: 0;
+}
+
+/* ── 表单:输入控件自带边框足以成形,不再包卡;
+       60rem 阅读轨内限宽约 30rem,不拉满。 ── */
 .form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.formNarrow {
+  max-width: 30rem;
 }
 
 .actions {
@@ -25,8 +170,22 @@
   align-items: center;
 }
 
-/* 设置式列表：单张卡片内以分隔线分行，取代「每行一个重边框卡片」的重复 chrome。
-   行内复用 .rowMain / .rowText / .rowTitle / .rowMeta / .providerIcon / .actions。 */
+/* 节内小纵向堆叠(说明文字 + 操作行等)。 */
+.stackSm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.muted {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* ── 设置式列表:一页至多一张安静卡片,卡内以分隔线分行。
+   行内复用 .rowMain / .rowText / .rowTitle / .rowMeta / .providerIcon / .rowActions。 ── */
 .list {
   list-style: none;
   margin: 0;
@@ -34,39 +193,20 @@
   display: flex;
   flex-direction: column;
 }
+
 .listRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem 1rem;
   flex-wrap: wrap;
   padding: 0.9rem 1.1rem;
 }
+
 .listRow + .listRow {
   border-top: 1px solid var(--divider-color);
 }
 
-/* 卡片头部：区块标签 + 状态徽章同一行居中对齐（修复 SectionLabel 默认下边距造成的错位）。 */
-.cardHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-.cardHeadLabel {
-  margin: 0;
-}
-
-/* 危险区：以红色（语义色 token）表达危险，而非品牌粉，避免「不像危险操作」。 */
-.dangerCard {
-  border-color: var(--error-border);
-  border-left: 3px solid var(--error-color);
-}
-[data-theme="dark"] .dangerCard {
-  border-color: rgba(255, 180, 171, 0.2);
-  border-left-color: var(--error-color);
-}
 .rowMain {
   display: flex;
   align-items: center;
@@ -89,6 +229,7 @@
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  overflow-wrap: anywhere;
 }
 
 .rowMeta {
@@ -97,6 +238,44 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 行内操作按钮区。 */
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* 行内图标按钮(如昵称「编辑」):紧凑方形,移动端也不拉伸成整行。 */
+.rowIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--divider-color);
+  background-color: var(--surface-card);
+  border-radius: var(--radius-control);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 130ms var(--ease-standard),
+    color 130ms var(--ease-standard),
+    background-color 130ms var(--ease-standard);
+}
+.rowIconBtn:hover {
+  border-color: var(--primary-pink);
+  color: var(--accent-pink);
+  background-color: var(--hover-bg);
+}
+.rowIconBtn:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
 }
 
 .providerIcon {
@@ -111,11 +290,85 @@
   flex-shrink: 0;
 }
 
-.muted {
-  color: var(--text-muted);
-  font-size: 0.85rem;
+/* ── Passkey 分区:白卡内「顶部添加行 + 可滚动列表」 ──
+   overflow:hidden 让卡内滚动内容/滚动条被圆角裁切干净。 */
+.passkeyCard {
+  overflow: hidden;
+}
+.passkeyHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 1.1rem;
+  border-bottom: 1px solid var(--divider-color);
+}
+.passkeyHeadLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+/* 列表区:Passkey 多时不无限撑高,卡内滚动(高度随视口收敛,兼顾矮屏)。 */
+.passkeyBody {
+  max-height: min(19rem, 55dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.passkeyPlaceholder {
+  display: flex;
+  justify-content: center;
+  padding: 1.75rem 1.1rem;
 }
 
+/* 窄屏:行内容与操作区折行后,操作区满宽、按钮拉满对齐
+   (参照 Modal footer 移动端满宽堆叠的习惯)。 */
+@media (max-width: 640px) {
+  .listRow {
+    align-items: flex-start;
+  }
+  .rowActions {
+    width: 100%;
+  }
+  .rowActions > * {
+    flex: 1 1 auto;
+  }
+  /* 图标按钮例外(如昵称「编辑」):行动区不独占一行、不拉伸,与标签/值同行右侧紧凑呈现,
+     避免小图标被挤到单独一行留下大片空白。 */
+  .listRow:has(.rowIconBtn) {
+    align-items: center;
+  }
+  .rowActions:has(.rowIconBtn) {
+    width: auto;
+  }
+  .rowActions > .rowIconBtn {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+}
+
+/* ── 危险区:红色语义走 --error 系 token(dark 取值由 token 自身覆写,
+   不再手写 rgba)。 ── */
+.dangerCard {
+  border-color: var(--error-border);
+  border-left: 3px solid var(--error-color);
+}
+
+/* 注销确认短语:醒目红色、居中呈现。 */
+.dangerPhrase {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--error-color);
+  background-color: var(--soft-error-bg);
+  border: 1px solid var(--soft-error-border);
+  border-radius: var(--radius-sm);
+}
+
+/* ── 恢复码栅格(模态内) ── */
 .codeList {
   list-style: none;
   margin: 0;
@@ -130,6 +383,7 @@
   font-size: 0.9rem;
   letter-spacing: 0.04em;
   color: var(--text-body);
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 480px) {
@@ -138,16 +392,85 @@
   }
 }
 
-/* 头像区 */
+/* 头像更换弹窗内的居中大预览。 */
+.avatarDialogPreview {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 0 0.5rem;
+}
+
+/* 概览页设置行:右侧动作按钮不因内容折行被拉伸。 */
+.rowValue {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* ── 头像区(平铺在节里,不包卡) ── */
 .avatarRow {
   display: flex;
   align-items: center;
   gap: 1.25rem;
   flex-wrap: wrap;
 }
+
 .avatarActions {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   min-width: 0;
+}
+
+/* ── 头像更换弹窗:不显示原头像,只有一枚居中的方形圆角上传瓦片(+ 可选移除入口)。 ── */
+.avatarUpload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.5rem 0 0.25rem;
+}
+.uploadTile {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 8rem;
+  height: 8rem;
+  padding: 0.75rem;
+  border: 1.5px dashed var(--divider-color);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface-card);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    border-color 150ms var(--ease-standard),
+    background-color 150ms var(--ease-standard),
+    color 150ms var(--ease-standard);
+}
+.uploadTile:hover {
+  border-color: var(--primary-pink);
+  background-color: var(--hover-bg);
+  color: var(--accent-pink);
+}
+.uploadTile:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+.uploadTile:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.uploadTileIcon {
+  display: inline-flex;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uploadTile {
+    transition: none;
+  }
 }
