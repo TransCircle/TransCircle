@@ -92,6 +92,15 @@ export interface TotpStatus {
   remainingRecoveryCodes: number;
 }
 
+/** GET /v1/me/mfa/recovery-codes —— 恢复码状态（TOTP / Passkey 共享的账户级备份） */
+export interface RecoveryCodesStatus {
+  /** 是否已启用任一 2FA 方式——决定是否展示恢复码框 */
+  mfaEnabled: boolean;
+  totpEnabled: boolean;
+  passkeyCount: number;
+  remaining: number;
+}
+
 /** POST /v1/me/mfa/totp/setup —— 启用前的配置载荷 */
 export interface TotpSetup {
   setupId: string;

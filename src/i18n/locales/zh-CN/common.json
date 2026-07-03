@@ -235,6 +235,7 @@
       "password": "登录密码",
       "twoFactor": "两步验证",
       "passkeys": "Passkey",
+      "recoveryCodes": "恢复码",
       "oauth": "第三方账号",
       "sessions": "登录设备",
       "danger": "账户安全"
@@ -302,19 +303,10 @@
       "disableMessage": "停用后将降低账户安全性。请输入验证码或恢复码以确认。",
       "disableCodeLabel": "验证码或恢复码",
       "passwordLabel": "当前密码",
-      "remainingCodes": "剩余恢复码：{{count}} 个",
-      "recoveryTitle": "恢复码",
-      "recoveryHint": "请妥善保存以下恢复码，每个仅可使用一次。丢失验证器时可用于登录。",
-      "regenerate": "重新生成恢复码",
-      "regenerateTitle": "重新生成恢复码？",
-      "regenerateMessage": "旧的恢复码将全部失效。请输入验证码以确认。",
-      "regenerated": "恢复码已重新生成",
       "loadFailed": "无法获取两步验证状态，请重试。",
       "setupTitle": "设置两步验证",
       "qrAlt": "两步验证绑定二维码",
-      "codeLabel": "验证码",
-      "savedCodes": "我已保存恢复码",
-      "copyFailed": "复制失败，请手动选中并复制。"
+      "codeLabel": "验证码"
     },
     "passkeys": {
       "title": "Passkey",
@@ -337,6 +329,24 @@
       "deletedOk": "Passkey 已删除",
       "registerFailed": "Passkey 注册失败，请重试",
       "listLabel": "已添加的 Passkey"
+    },
+    "recoveryCodes": {
+      "title": "恢复码",
+      "subtitle": "TOTP 与 Passkey 共享的备份；丢失验证器或设备时用于登录。",
+      "hint": "请妥善保存以下恢复码，每个仅可使用一次。丢失两步验证方式时可用于登录。",
+      "label": "备份恢复码",
+      "remaining": "剩余 {{count}} 个",
+      "regenerate": "重新生成",
+      "generate": "生成恢复码",
+      "regenerated": "恢复码已重新生成",
+      "regenerateTitle": "重新生成恢复码？",
+      "regenerateMessage": "旧的恢复码将全部失效。请完成身份复核以确认。",
+      "codeLabel": "验证码或恢复码",
+      "passwordLabel": "当前密码",
+      "saved": "我已保存恢复码",
+      "copyFailed": "复制失败，请手动选中并复制。",
+      "loadFailed": "无法获取恢复码状态，请重试。",
+      "needFactor": "恢复码已用尽,且账户暂无验证码或密码可用于身份复核。请先设置登录密码或启用身份验证器,再重新生成恢复码。"
     },
     "oauth": {
       "title": "第三方账号",
