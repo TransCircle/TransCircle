@@ -6,14 +6,12 @@ import { useFormatTs } from "../../utils/datetime";
 import { StepUpDialog } from "../../components/StepUpDialog";
 import {
   Card,
-  PageHeader,
   AdminButton as Button,
   Alert,
   Spinner,
   StatusBadge,
-  ConfirmDialog,
 } from "../../components/ui";
-import page from "../Page.module.css";
+import { ConfirmDialog } from "../../components/ui/Dialog";
 import s from "./Account.module.css";
 
 const GithubIcon = () => (
@@ -32,8 +30,12 @@ const PROVIDERS = [
   { id: "x", label: "X", icon: <XIcon /> },
 ] as const;
 
-/** 第三方账号绑定（实现占位页）：绑定 / 解绑（解绑需 step-up）。 */
-const OAuthBindingsPage = () => {
+/** 从 PROVIDERS 查表取展示名，未知 provider 回退原始 id。 */
+const providerLabel = (id: string | null) =>
+  PROVIDERS.find((p) => p.id === id)?.label ?? id ?? "";
+
+/** 第三方账号绑定：绑定 / 解绑（解绑需 step-up）。 */
+export function OAuthSection() {
   const { t } = useTranslation();
   const fmt = useFormatTs();
   const [bindings, setBindings] = useState<OAuthBinding[]>([]);
@@ -41,6 +43,8 @@ const OAuthBindingsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  /** 正在发起绑定跳转的 provider id（防重复点击 + 按钮 busy 态）。 */
+  const [bindingId, setBindingId] = useState<string | null>(null);
   const [unbindTarget, setUnbindTarget] = useState<string | null>(null);
   const [stepUpOpen, setStepUpOpen] = useState(false);
   const [pendingUnbind, setPendingUnbind] = useState<string | null>(null);
@@ -59,9 +63,15 @@ const OAuthBindingsPage = () => {
 
   const bind = async (provider: string) => {
     setError(null);
+    setBindingId(provider);
     const res = await api.get<{ authorizationUrl: string }>(`/v1/me/oauth/${provider}/bind/start`);
-    if (res.ok && res.data.authorizationUrl) window.location.href = res.data.authorizationUrl;
-    else setError(res.ok ? t("error.generic") : res.error.message);
+    if (res.ok && res.data.authorizationUrl) {
+      // 保持 busy 态直到浏览器完成跳转，避免等待期间重复点击。
+      window.location.href = res.data.authorizationUrl;
+      return;
+    }
+    setError(res.ok ? t("error.generic") : res.error.message);
+    setBindingId(null);
   };
 
   const doUnbind = async (provider: string) => {
@@ -83,10 +93,14 @@ const OAuthBindingsPage = () => {
   };
 
   return (
-    <div className={`${page.page} ${page.pageNarrow}`}>
-      <PageHeader title={t("account.oauth.title")} description={t("account.oauth.subtitle")} />
-      {error && <Alert tone="error">{error}</Alert>}
-      {notice && <Alert tone="success">{notice}</Alert>}
+    <section className={s.group}>
+      <h2 className={s.groupTitle}>{t("account.nav.oauth")}</h2>
+      {(error || notice) && (
+        <div className={s.groupFeedback}>
+          {error && <Alert tone="error">{error}</Alert>}
+          {notice && <Alert tone="success">{notice}</Alert>}
+        </div>
+      )}
 
       {loading ? (
         <Spinner size="lg" label={t("common.loading")} />
@@ -112,15 +126,23 @@ const OAuthBindingsPage = () => {
                       )}
                     </div>
                   </div>
-                  {bound ? (
-                    <Button variant="danger" size="sm" disabled={busy} onClick={() => setUnbindTarget(p.id)}>
-                      {t("account.oauth.unbind")}
-                    </Button>
-                  ) : (
-                    <Button variant="secondary" size="sm" onClick={() => void bind(p.id)}>
-                      {t("account.oauth.bind")}
-                    </Button>
-                  )}
+                  <div className={s.rowActions}>
+                    {bound ? (
+                      <Button variant="danger" size="sm" disabled={busy || bindingId !== null} onClick={() => setUnbindTarget(p.id)}>
+                        {t("account.oauth.unbind")}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        loading={bindingId === p.id}
+                        disabled={bindingId !== null && bindingId !== p.id}
+                        onClick={() => void bind(p.id)}
+                      >
+                        {t("account.oauth.bind")}
+                      </Button>
+                    )}
+                  </div>
                 </li>
               );
             })}
@@ -130,12 +152,12 @@ const OAuthBindingsPage = () => {
 
       <ConfirmDialog
         open={!!unbindTarget}
-        title={t("account.oauth.unbindTitle", { provider: unbindTarget === "x" ? "X" : "GitHub" })}
+        title={t("account.oauth.unbindTitle", { provider: providerLabel(unbindTarget) })}
         message={t("account.oauth.unbindMessage")}
         confirmText={t("account.oauth.unbind")}
         cancelText={t("common.cancel")}
-        variant="danger"
-        confirmLoading={busy}
+        tone="danger"
+        loading={busy}
         onConfirm={() => unbindTarget && void doUnbind(unbindTarget)}
         onCancel={() => setUnbindTarget(null)}
       />
@@ -150,8 +172,6 @@ const OAuthBindingsPage = () => {
           if (provider) void doUnbind(provider);
         }}
       />
-    </div>
+    </section>
   );
-};
-
-export default OAuthBindingsPage;
+}

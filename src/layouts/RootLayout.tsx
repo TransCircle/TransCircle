@@ -28,7 +28,9 @@ const RootLayout = () => {
       <AppNav />
       {/* location.pathname === '/' && <FloatingTOC items={TOC_ITEMS} /> */}
       <main id="main-content" tabIndex={-1} className={styles.main}>
-        <div key={location.pathname + location.search} className={styles.pageWrap}>
+        {/* 仅按 pathname 重挂载做页面进入动画:查询参数/哈希变化(筛选、锚点)
+            不应整页重挂载丢状态。 */}
+        <div key={location.pathname} className={styles.pageWrap}>
           <Outlet />
         </div>
       </main>

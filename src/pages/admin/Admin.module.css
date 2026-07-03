@@ -57,6 +57,16 @@
   min-width: 0;
 }
 
+/* 回调地址列表：逐行完整展示、可断行（.code 已带 overflow-wrap:anywhere）。
+   回调地址需要精确核对，不能像 Pill 那样 nowrap 截断。 */
+.uriList {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
 .actionsRow {
   display: flex;
   gap: 0.6rem;
@@ -83,6 +93,15 @@
   margin-top: 0.9rem;
   padding-top: 0.9rem;
   border-top: 1px solid var(--divider-color);
+}
+
+/* 641–768px：侧栏已收成横向标签条、内容轨整体变窄，
+   label 列与行距同步收紧，避免 140px 标签列挤压值列。 */
+@media (min-width: 641px) and (max-width: 768px) {
+  .kv {
+    grid-template-columns: 116px 1fr;
+    gap: 0.4rem 0.75rem;
+  }
 }
 
 @media (max-width: 640px) {

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { adminApi } from "../api/client";
 import { Modal, AdminButton as Button, Alert, Spinner } from "./ui";
+// 复用 Modal 的正文排版类，保持对话框内文本一个声音。
+import modalStyles from "./admin/Modal.module.css";
 import type { AdminStepUpStart } from "../api/types";
 
 interface Props {
@@ -23,7 +25,20 @@ const AdminStepUpDialog = ({ open, onClose, onVerified }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const startedRef = useRef(false);
 
-  // 打开时发起验证请求并跳转 IAM。
+  const start = async (): Promise<void> => {
+    setStarting(true);
+    setError(null);
+    const res = await adminApi.post<AdminStepUpStart>("/v1/admin/step-up/iam/start");
+    setStarting(false);
+    if (!res.ok) {
+      setError(res.error.message);
+      return;
+    }
+    setInfo(res.data);
+  };
+
+  // 打开时自动发起一次验证请求；失败后由正文的「重试」按钮手动重发，
+  // startedRef 只挡自动重复发起，不挡手动重试。
   useEffect(() => {
     if (!open) {
       startedRef.current = false;
@@ -33,17 +48,9 @@ const AdminStepUpDialog = ({ open, onClose, onVerified }: Props) => {
     }
     if (startedRef.current) return;
     startedRef.current = true;
-    void (async () => {
-      setStarting(true);
-      setError(null);
-      const res = await adminApi.post<AdminStepUpStart>("/v1/admin/step-up/iam/start");
-      setStarting(false);
-      if (!res.ok) {
-        setError(res.error.message);
-        return;
-      }
-      setInfo(res.data);
-    })();
+    void start();
+    // start 为稳定的本地函数；仅在 open 翻转时触发。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const poll = async (silent = false): Promise<void> => {
@@ -82,6 +89,7 @@ const AdminStepUpDialog = ({ open, onClose, onVerified }: Props) => {
           <Button variant="secondary" onClick={onClose}>
             {t("common.cancel")}
           </Button>
+          {/* 页脚「我已完成验证」是本对话框唯一的 primary 主操作。 */}
           <Button variant="primary" loading={polling} disabled={!info} onClick={() => void poll()}>
             {t("stepUp.adminPoll")}
           </Button>
@@ -89,19 +97,28 @@ const AdminStepUpDialog = ({ open, onClose, onVerified }: Props) => {
       }
     >
       {starting && <Spinner label={t("common.loading")} />}
-      {info && !error && (
+      {error && <Alert tone="error">{error}</Alert>}
+      {info ? (
+        /* 轮询出错也保留「前往验证」入口：错误提示与操作并存，用户可再次前往或重试轮询。 */
         <>
-          {/* 用户手势点击打开，避免浏览器拦截弹窗 */}
+          {/* 用户手势点击打开，避免浏览器拦截弹窗；降为 secondary，避免与页脚主操作同屏双 primary */}
           <Button
-            variant="primary"
+            variant="secondary"
             onClick={() => window.open(info.verifyUrl, "_blank", "noopener,noreferrer")}
           >
             {t("stepUp.adminStart")}
           </Button>
-          <p>{t("stepUp.adminWaiting")}</p>
+          <p className={modalStyles.prompt}>{t("stepUp.adminWaiting")}</p>
         </>
+      ) : (
+        /* start 失败（有错误且无 info）时给出重试出口，否则页脚按钮永久禁用。 */
+        !starting &&
+        error && (
+          <Button variant="secondary" onClick={() => void start()}>
+            {t("common.retry")}
+          </Button>
+        )
       )}
-      {error && <Alert tone="error">{error}</Alert>}
     </Modal>
   );
 };

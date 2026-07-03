@@ -1,10 +1,12 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api, setUserToken } from "../api/client";
 import { useSession } from "../context/SessionContext";
-import type { LoginResult } from "../api/types";
+import type { LoginResult, WebAuthnRequestOptions } from "../api/types";
 import { performAssertion, isWebAuthnSupported } from "../utils/webauthn";
+import { sanitizeRedirect } from "../utils/url";
+import { usePageTitle } from "../utils/usePageTitle";
 import {
   CenteredCard,
   PageHeader,
@@ -32,12 +34,17 @@ const FingerIcon = () => (
 
 /**
  * 登录屏（修正契约）：
- * - POST /v1/auth/login { identifier, password } → tokens 或 { mfaRequired, mfaChallengeToken }。
- * - MFA：POST /v1/auth/mfa/totp/verify { mfaChallengeToken, code }（支持 TOTP / 恢复码）。
- * - Passkey 登录：/v1/auth/passkey/login/start → 浏览器断言 → /finish。
+ * - POST /v1/auth/login { identifier, password } → tokens 或 { mfaRequired, mfaChallengeToken, availableMethods, passkey }。
+ * - MFA（密码后二次验证，任一 2FA 方式即触发）：
+ *     · TOTP / 恢复码：POST /v1/auth/mfa/totp/verify { mfaChallengeToken, code }。
+ *     · Passkey：      POST /v1/auth/mfa/passkey/verify { mfaChallengeToken, credential }。
+ * - Passkey 免密登录：/v1/auth/passkey/login/start → 浏览器断言 → /finish。
  * - OAuth：GET /v1/auth/oauth/:provider/start 返回 { authorizationUrl }（需前端跳转，非 302）。
  * - OIDC 交互（?oidc=uid）：登录后 POST /oauth2/interaction/:uid/login → redirectTo。
  */
+/** 在途动作标识：任一在途时其余入口全部禁用，且各自按钮能显示自己的 loading。 */
+type PendingAction = "login" | "mfa" | "mfaPasskey" | "github" | "x" | "passkey" | "admin";
+
 const LoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -45,17 +52,33 @@ const LoginPage = () => {
   const [params] = useSearchParams();
 
   const oidcUid = params.get("oidc");
-  const redirectTo = params.get("redirect") ?? "/account/profile";
+  // 来自 URL 的重定向目标必须净化，防开放重定向。
+  const redirectTo = sanitizeRedirect(params.get("redirect"), "/account");
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [mfaToken, setMfaToken] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState("");
+  // 二次验证可用方式与（如有）Passkey 断言参数——由 /login 的挑战响应下发。
+  const [mfaMethods, setMfaMethods] = useState<NonNullable<LoginResult["availableMethods"]>>([]);
+  const [mfaPasskey, setMfaPasskey] = useState<WebAuthnRequestOptions | null>(null);
+  // Passkey 与验证码为同级主方式并列展示；恢复码为回退：开启此模式后切到恢复码专用输入。
+  const [mfaRecoveryMode, setMfaRecoveryMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<PendingAction | null>(null);
+  const busy = pending !== null;
 
-  /** 登录态建立后的后续：OIDC 交互续跑或普通跳转。 */
+  usePageTitle(oidcUid ? t("login.oidcTitle") : t("login.title"));
+
+  /**
+   * 登录态建立后的后续：OIDC 交互续跑或普通跳转。
+   * onTokens 里的 refresh() 会让 useEffect([user, oidcUid]) 再次触发 finish，
+   * 用 ref 保证一次性交互 POST 只执行一次，避免双发竞态。
+   */
+  const finished = useRef(false);
   const finish = async () => {
+    if (finished.current) return;
+    finished.current = true;
     if (oidcUid) {
       const res = await api.post<{ redirectTo?: string }>(
         `/oauth2/interaction/${encodeURIComponent(oidcUid)}/login`,
@@ -70,9 +93,14 @@ const LoginPage = () => {
     navigate(redirectTo, { replace: true });
   };
 
-  /** 已登录且带 oidc：直接续跑交互。 */
+  /** 已登录：带 oidc 直接续跑交互；普通访问不再展示登录表单，直接跳转目的地。 */
   useEffect(() => {
-    if (user && oidcUid) void finish();
+    if (!user) return;
+    if (oidcUid) {
+      void finish();
+      return;
+    }
+    navigate(redirectTo, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, oidcUid]);
 
@@ -91,8 +119,9 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setError(null);
-    setBusy(true);
+    setPending("login");
     try {
       const res = await api.post<LoginResult>("/v1/auth/login", { identifier, password }, { noAuth: true });
       if (!res.ok) {
@@ -104,19 +133,28 @@ const LoginPage = () => {
         return;
       }
       if (res.data.mfaRequired) {
-        setMfaToken(res.data.mfaChallengeToken ?? null);
+        if (!res.data.mfaChallengeToken) {
+          // 服务端声明需要 MFA 却未下发挑战令牌：显式报错，而非静默停留。
+          setError(t("login.mfaChallengeMissing"));
+          return;
+        }
+        setMfaToken(res.data.mfaChallengeToken);
+        setMfaMethods(res.data.availableMethods ?? []);
+        setMfaPasskey(res.data.passkey?.publicKey ?? null);
+        setMfaRecoveryMode(false);
         return;
       }
       await onTokens(res.data);
     } finally {
-      setBusy(false);
+      setPending(null);
     }
   };
 
   const handleMfa = async (e: FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setError(null);
-    setBusy(true);
+    setPending("mfa");
     try {
       const res = await api.post<LoginResult>(
         "/v1/auth/mfa/totp/verify",
@@ -133,32 +171,88 @@ const LoginPage = () => {
       }
       await onTokens(res.data);
     } finally {
-      setBusy(false);
+      setPending(null);
+    }
+  };
+
+  /** 密码通过后以 Passkey 完成二次验证（仅有 Passkey / 或与 TOTP 并存时可选）。 */
+  const handleMfaPasskey = async () => {
+    if (busy || !mfaToken || !mfaPasskey) return;
+    setError(null);
+    setPending("mfaPasskey");
+    try {
+      const credential = await performAssertion(
+        mfaPasskey as Parameters<typeof performAssertion>[0],
+      );
+      const res = await api.post<LoginResult>(
+        "/v1/auth/mfa/passkey/verify",
+        { mfaChallengeToken: mfaToken, credential },
+        { noAuth: true },
+      );
+      if (!res.ok) {
+        if (res.error.code === "EMAIL_NOT_VERIFIED") {
+          goVerifyEmail(res.error.data?.email);
+          return;
+        }
+        setError(res.error.message);
+        return;
+      }
+      await onTokens(res.data);
+    } catch (err) {
+      if ((err as DOMException)?.name !== "NotAllowedError") setError(t("login.passkeyFailed"));
+    } finally {
+      setPending(null);
     }
   };
 
   const startOAuth = async (provider: "github" | "x") => {
+    if (busy) return;
     setError(null);
+    setPending(provider);
     const next = oidcUid ? `/login?oidc=${encodeURIComponent(oidcUid)}` : redirectTo;
-    const res = await api.get<{ authorizationUrl: string }>(
-      `/v1/auth/oauth/${provider}/start?redirectAfter=${encodeURIComponent(next)}`,
-      { noAuth: true },
-    );
-    if (res.ok && res.data.authorizationUrl) window.location.href = res.data.authorizationUrl;
-    else setError(res.ok ? t("error.generic") : res.error.message);
+    // try/catch:api.get 若因异常(如 2xx 空/非法响应体解析失败)reject,必须复位 pending,
+    // 否则 busy 恒为 true、所有登录入口被永久禁用且无反馈,只能刷新页面。
+    try {
+      const res = await api.get<{ authorizationUrl: string }>(
+        `/v1/auth/oauth/${provider}/start?redirectAfter=${encodeURIComponent(next)}`,
+        { noAuth: true },
+      );
+      if (res.ok && res.data.authorizationUrl) {
+        // 保持 pending 直到整页跳转，避免离开前按钮短暂恢复可点。
+        window.location.href = res.data.authorizationUrl;
+        return;
+      }
+      setError(res.ok ? t("error.generic") : res.error.message);
+      setPending(null);
+    } catch {
+      setError(t("error.generic"));
+      setPending(null);
+    }
   };
 
   // 管理员登录（IAM tc_main）统一收纳于登录页底部，不再有独立 /admin/login 入口。
   const startAdminLogin = async () => {
+    if (busy) return;
     setError(null);
-    const res = await api.get<{ authorizationUrl: string }>("/v1/admin/oauth/iam/start", { noAuth: true });
-    if (res.ok && res.data.authorizationUrl) window.location.href = res.data.authorizationUrl;
-    else setError(res.ok ? t("error.generic") : res.error.message);
+    setPending("admin");
+    try {
+      const res = await api.get<{ authorizationUrl: string }>("/v1/admin/oauth/iam/start", { noAuth: true });
+      if (res.ok && res.data.authorizationUrl) {
+        window.location.href = res.data.authorizationUrl;
+        return;
+      }
+      setError(res.ok ? t("error.generic") : res.error.message);
+      setPending(null);
+    } catch {
+      setError(t("error.generic"));
+      setPending(null);
+    }
   };
 
   const loginWithPasskey = async () => {
+    if (busy) return;
     setError(null);
-    setBusy(true);
+    setPending("passkey");
     try {
       const start = await api.post<{ challengeId: string; publicKey: Parameters<typeof performAssertion>[0] }>(
         "/v1/auth/passkey/login/start",
@@ -187,9 +281,12 @@ const LoginPage = () => {
     } catch (err) {
       if ((err as DOMException)?.name !== "NotAllowedError") setError(t("login.passkeyFailed"));
     } finally {
-      setBusy(false);
+      setPending(null);
     }
   };
+
+  // 已登录且非 OIDC 交互：上方 effect 即将跳转，不再闪现登录表单。
+  if (user && !oidcUid) return null;
 
   return (
     <CenteredCard>
@@ -226,7 +323,7 @@ const LoginPage = () => {
                 </Link>
               </div>
             </div>
-            <Button type="submit" variant="primary" fullWidth loading={busy}>
+            <Button type="submit" variant="primary" fullWidth loading={pending === "login"} disabled={busy}>
               {t("login.submit")}
             </Button>
           </form>
@@ -234,14 +331,35 @@ const LoginPage = () => {
           <div className={authStyles.divider}>{t("login.orContinueWith")}</div>
 
           <div className={authStyles.oauthRow}>
-            <Button variant="secondary" fullWidth iconLeft={<GithubIcon />} onClick={() => void startOAuth("github")}>
+            <Button
+              variant="secondary"
+              fullWidth
+              iconLeft={<GithubIcon />}
+              loading={pending === "github"}
+              disabled={busy}
+              onClick={() => void startOAuth("github")}
+            >
               {t("login.github")}
             </Button>
-            <Button variant="secondary" fullWidth iconLeft={<XIcon />} onClick={() => void startOAuth("x")}>
+            <Button
+              variant="secondary"
+              fullWidth
+              iconLeft={<XIcon />}
+              loading={pending === "x"}
+              disabled={busy}
+              onClick={() => void startOAuth("x")}
+            >
               {t("login.x")}
             </Button>
             {isWebAuthnSupported() && (
-              <Button variant="secondary" fullWidth iconLeft={<FingerIcon />} onClick={() => void loginWithPasskey()} disabled={busy}>
+              <Button
+                variant="secondary"
+                fullWidth
+                iconLeft={<FingerIcon />}
+                loading={pending === "passkey"}
+                disabled={busy}
+                onClick={() => void loginWithPasskey()}
+              >
                 {t("login.passkey")}
               </Button>
             )}
@@ -256,32 +374,142 @@ const LoginPage = () => {
 
           {!oidcUid && (
             <div className={authStyles.adminEntry}>
-              <button type="button" className={authStyles.adminLink} onClick={() => void startAdminLogin()}>
-                {t("login.adminEntry")}
+              <button
+                type="button"
+                className={authStyles.adminLink}
+                disabled={busy}
+                aria-busy={pending === "admin" || undefined}
+                onClick={() => void startAdminLogin()}
+              >
+                {pending === "admin" ? t("common.processing") : t("login.adminEntry")}
               </button>
             </div>
           )}
         </>
       ) : (
-        <form className={authStyles.form} onSubmit={handleMfa}>
-          <p className={authStyles.aside}>{t("login.mfaPrompt")}</p>
-          <TextField
-            label={t("login.mfaCode")}
-            inputMode="text"
-            autoComplete="one-time-code"
-            autoFocus
-            className={authStyles.mfaCode}
-            value={mfaCode}
-            onChange={(e) => setMfaCode(e.target.value)}
-            required
-          />
-          <Button type="submit" variant="primary" fullWidth loading={busy}>
-            {t("login.mfaSubmit")}
-          </Button>
-          <Button variant="ghost" fullWidth onClick={() => { setMfaToken(null); setMfaCode(""); setError(null); }}>
-            {t("common.back")}
-          </Button>
-        </form>
+        (() => {
+          const legacy = mfaMethods.length === 0; // 旧契约:未下发 availableMethods
+          const hasTotp = mfaMethods.includes("totp");
+          // Passkey 二次验证需环境支持 WebAuthn(与独立 Passkey 登录按钮一致),否则展示的按钮点了必失败。
+          const hasPasskey = isWebAuthnSupported() && mfaPasskey !== null && mfaMethods.includes("passkey");
+          const hasRecovery = mfaMethods.includes("recovery_code");
+          // 无 availableMethods（旧契约兜底）时默认展示验证码输入(该输入兼容恢复码,见下)。
+          const hasCode = hasTotp || legacy;
+
+          const back = () => {
+            setMfaToken(null);
+            setMfaCode("");
+            setMfaMethods([]);
+            setMfaPasskey(null);
+            setMfaRecoveryMode(false);
+            setError(null);
+          };
+
+          // 回退模式：恢复码专用界面（正常方式不可用时的兜底）。
+          if (mfaRecoveryMode) {
+            return (
+              <form className={authStyles.form} onSubmit={handleMfa}>
+                <p className={authStyles.aside}>{t("login.mfaRecoveryPrompt")}</p>
+                <TextField
+                  label={t("login.mfaRecoveryCode")}
+                  inputMode="text"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  className={`${authStyles.mfaCode} ${authStyles.mfaCodeLong}`}
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value)}
+                  required
+                />
+                <Button type="submit" variant="primary" fullWidth loading={pending === "mfa"} disabled={busy}>
+                  {t("login.mfaSubmit")}
+                </Button>
+                <button
+                  type="button"
+                  className={authStyles.mfaAltLink}
+                  disabled={busy}
+                  onClick={() => { setMfaRecoveryMode(false); setMfaCode(""); setError(null); }}
+                >
+                  {t("login.mfaBackToOther")}
+                </button>
+                <Button type="button" variant="ghost" fullWidth disabled={busy} onClick={back}>
+                  {t("common.back")}
+                </Button>
+              </form>
+            );
+          }
+
+          // 正常模式：Passkey 与验证码为同级主方式并列展示；恢复码为回退链接。
+          const prompt =
+            hasCode && hasPasskey
+              ? t("login.mfaChoosePrompt")
+              : hasPasskey
+                ? t("login.mfaPasskeyPrompt")
+                : t("login.mfaPrompt");
+
+          return (
+            <form className={authStyles.form} onSubmit={handleMfa}>
+              <p className={authStyles.aside}>{prompt}</p>
+
+              {/* 验证器验证码：与 Passkey 同级的主方式。 */}
+              {hasCode && (
+                <>
+                  <TextField
+                    label={t("login.mfaCode")}
+                    // 旧契约兜底:此字段需兼容恢复码(更长),故不限 6 位数字、字距随长度降级。
+                    inputMode={legacy ? "text" : "numeric"}
+                    maxLength={legacy ? undefined : 6}
+                    autoComplete="one-time-code"
+                    autoFocus
+                    className={
+                      legacy && mfaCode.length > 8
+                        ? `${authStyles.mfaCode} ${authStyles.mfaCodeLong}`
+                        : authStyles.mfaCode
+                    }
+                    value={mfaCode}
+                    onChange={(e) => setMfaCode(e.target.value)}
+                    required
+                  />
+                  <Button type="submit" variant="primary" fullWidth loading={pending === "mfa"} disabled={busy}>
+                    {t("login.mfaSubmit")}
+                  </Button>
+                </>
+              )}
+
+              {hasCode && hasPasskey && <div className={authStyles.divider}>{t("login.mfaOr")}</div>}
+
+              {/* Passkey：与验证码同级的主方式（无验证码时为唯一主操作）。 */}
+              {hasPasskey && (
+                <Button
+                  type="button"
+                  variant={hasCode ? "secondary" : "primary"}
+                  fullWidth
+                  iconLeft={<FingerIcon />}
+                  loading={pending === "mfaPasskey"}
+                  disabled={busy}
+                  onClick={() => void handleMfaPasskey()}
+                >
+                  {t("login.mfaPasskey")}
+                </Button>
+              )}
+
+              {/* 恢复码：回退策略，次要链接。 */}
+              {hasRecovery && (
+                <button
+                  type="button"
+                  className={authStyles.mfaAltLink}
+                  disabled={busy}
+                  onClick={() => { setMfaRecoveryMode(true); setMfaCode(""); setError(null); }}
+                >
+                  {t("login.mfaUseRecovery")}
+                </button>
+              )}
+
+              <Button type="button" variant="ghost" fullWidth disabled={busy} onClick={back}>
+                {t("common.back")}
+              </Button>
+            </form>
+          );
+        })()
       )}
     </CenteredCard>
   );

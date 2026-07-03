@@ -40,6 +40,8 @@ export interface SelectProps<V extends string = string> {
   fieldClassName?: string
   /** aria-label when no visible `label` is supplied. */
   ariaLabel?: string
+  /** 工具栏内联形态:宽度收敛到内容(保留最小宽度);默认仍为整行全宽。 */
+  inline?: boolean
   renderOption?: (opt: SelectOption<V>, state: { active: boolean; selected: boolean }) => ReactNode
 }
 
@@ -60,6 +62,7 @@ export function Select<V extends string = string>({
   id,
   fieldClassName,
   ariaLabel,
+  inline,
   renderOption,
 }: SelectProps<V>) {
   const base = useId()
@@ -73,6 +76,8 @@ export function Select<V extends string = string>({
 
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(() => (selectedIndex >= 0 ? selectedIndex : 0))
+  // 视口底部空间不足时弹层向上翻转;在每次打开前测量,避免被视口裁切。
+  const [flipUp, setFlipUp] = useState(false)
 
   const wrapRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -113,9 +118,20 @@ export function Select<V extends string = string>({
     triggerRef.current?.focus()
   }
 
+  // 打开前判断是否需要向上翻转:下方剩余空间放不下弹层(max-height 280px + 边距)
+  // 且上方空间更宽裕时才翻,避免两头都不够时反而翻进更小的空间。
+  const measureFlip = () => {
+    const rect = triggerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const needed = 296
+    const below = window.innerHeight - rect.bottom
+    setFlipUp(below < needed && rect.top > below)
+  }
+
   const openWith = (idx: number) => {
     const start = idx >= 0 && !options[idx]?.disabled ? idx : findEnabled(0, 1)
     setActive(start >= 0 ? start : 0)
+    measureFlip()
     setOpen(true)
   }
 
@@ -170,17 +186,18 @@ export function Select<V extends string = string>({
           window.clearTimeout(typeahead.current.timer)
           typeahead.current.timer = window.setTimeout(() => { typeahead.current.buf = '' }, 500)
           const match = options.findIndex((o) => !o.disabled && o.label.toLowerCase().startsWith(buf))
-          if (match !== -1) { setActive(match); if (!open) setOpen(true) }
+          if (match !== -1) { setActive(match); if (!open) { measureFlip(); setOpen(true) } }
         }
     }
   }
 
   return (
-    <div className={cx(styles.field, fieldClassName)}>
+    <div className={cx(styles.field, inline && styles.inline, fieldClassName)}>
       {label && (
-        <span id={labelId} className={styles.label}>
+        /* 真 label + htmlFor:点击可将焦点/激活转发给触发按钮(span 不可点)。 */
+        <label id={labelId} htmlFor={triggerId} className={styles.label}>
           {label}
-        </span>
+        </label>
       )}
       <div ref={wrapRef} className={styles.wrap}>
         <button
@@ -207,7 +224,7 @@ export function Select<V extends string = string>({
           <ChevronIcon />
         </button>
         {open && (
-          <ul ref={listRef} id={listId} role="listbox" aria-labelledby={labelId} className={styles.listbox} tabIndex={-1}>
+          <ul ref={listRef} id={listId} role="listbox" aria-labelledby={labelId} className={cx(styles.listbox, flipUp && styles.flipUp)} tabIndex={-1}>
             {options.map((o, i) => {
               const isSelected = o.value === value
               return (

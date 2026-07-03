@@ -14,9 +14,9 @@
   position: sticky;
   top: 4.75rem;
   align-self: start;
-  /* 限高到视口（扣除顶栏 4.75rem、固定页脚 --footer-h 与留白）；过高则侧栏内部滚动，
-     保证侧栏始终固定可见、不随内容上下乱动。 */
-  max-height: calc(100dvh - 4.75rem - var(--footer-h, 3rem) - 1rem);
+  /* 限高到视口（扣除顶栏 4.75rem 与留白）；页脚已改为文档流静态、不再常驻视口，
+     无需预留其高度。过高则侧栏内部滚动，保证侧栏始终固定可见、不随内容上下乱动。 */
+  max-height: calc(100dvh - 4.75rem - 1rem);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -25,6 +25,10 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 0.5rem;
+  /* 网格项默认 min-width:auto——移动端(.wrap 单列 1fr)时,内部横向 pill 滚动条
+     .nav 的 max-content 会撑开侧栏、进而把整页宽度拉到视口之外(横向溢出)。
+     min-width:0 让网格轨道收敛到视口宽,.nav 改在自身内部横向滚动。 */
+  min-width: 0;
 }
 
 .identity {
@@ -132,7 +136,9 @@
   .navItem { min-height: 44px; }
 }
 
-/* ── 平板 / 手机：侧栏退化为「身份卡 + 水平 pill 标签条」 ─────────────── */
+/* ── 平板 / 手机：侧栏退化为「身份卡 + 分段工具栏」 ─────────────────────
+   工具栏 = 一整块带边卡片内的自适应网格:7 项全展示、超出自动换行、点哪高亮哪,
+   无横向滚动、无翻页、无胶囊。空缺网格单元与容器同底色(surface-card),自然隐形。 */
 @media (max-width: 768px) {
   .wrap {
     grid-template-columns: 1fr;
@@ -148,34 +154,47 @@
   .identity {
     margin-bottom: 0.5rem;
   }
+
   .nav {
-    flex-direction: row;
-    gap: 0.4rem;
-    overflow-x: auto;
-    /* 四周留白让键盘焦点环（outline 2px + offset 2px ≈ 4px）不被滚动容器边缘裁掉；
-       scroll-padding 让聚焦/选中项滚入时避开右缘渐隐区（mask 末端 28px）。 */
-    padding: 0.3rem 0.3rem;
-    scroll-padding-inline: 34px;
-    scroll-snap-type: x proximity;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    /* 右缘渐隐，提示「可横向滚动、还有更多」 */
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
-    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
-  }
-  .nav::-webkit-scrollbar {
-    display: none;
-  }
-  .navItem {
-    flex-shrink: 0;
-    min-height: 44px;
-    padding: 0.5rem 0.95rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr));
+    gap: 0.35rem;
+    overflow: visible;
+    /* 收敛 min-width,避免网格在列 flex 里把侧栏撑出视口。 */
+    min-width: 0;
+    padding: 0.35rem;
     border: 1px solid var(--divider-color);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-pop);
     background-color: var(--surface-card);
-    scroll-snap-align: start;
+    /* 退掉旧横滚标签条的右缘渐隐。 */
+    -webkit-mask-image: none;
+    mask-image: none;
   }
-  /* pill 标签条上不再画左侧指示条，改为整枚填充表达选中。 */
+
+  .navItem {
+    /* 单元格:图标在上、文字在下,居中,紧凑。 */
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: var(--control-h-cell);
+    padding: 0.5rem 0.3rem;
+    border: none; /* 无胶囊、无逐项描边 */
+    border-radius: var(--radius-control); /* 圆角矩形 10px,非胶囊 */
+    background-color: transparent;
+    font-size: var(--fs-sm);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .navItem:hover {
+    background-color: var(--hover-bg-mix, var(--hover-bg));
+  }
+  /* 单元格窄,标签允许换行、不省略。 */
+  .navLabel {
+    overflow: visible;
+    white-space: normal;
+  }
+
+  /* 选中 = 实心 accent 填充圆角矩形(沿用桌面选中的品牌色,去掉左侧指示条)。 */
   .navItemActive::before {
     display: none;
   }
@@ -183,7 +202,7 @@
   .navItemActive:hover {
     background-color: var(--accent-pink);
     color: var(--on-accent);
-    border-color: transparent;
+    font-weight: 600;
   }
 }
 

@@ -14,14 +14,7 @@ import AuthErrorPage from "./pages/AuthErrorPage";
 import ConsentPage from "./pages/ConsentPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
-import AccountLayout from "./pages/account/AccountLayout";
-import ProfilePage from "./pages/account/ProfilePage";
-import PasswordPage from "./pages/account/PasswordPage";
-import TwoFactorPage from "./pages/account/TwoFactorPage";
-import PasskeysPage from "./pages/account/PasskeysPage";
-import OAuthBindingsPage from "./pages/account/OAuthBindingsPage";
-import SessionsPage from "./pages/account/SessionsPage";
-import DangerZonePage from "./pages/account/DangerZonePage";
+import AccountPage from "./pages/account/AccountPage";
 
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminAuthCallbackPage from "./pages/admin/AdminAuthCallbackPage";
@@ -61,21 +54,15 @@ export const router = createBrowserRouter([
       { path: "/admin/auth/error", element: <AdminAuthErrorPage /> },
       { path: "/admin/step-up/done", element: <AdminStepUpDonePage /> },
 
-      // 账户中心
-      {
-        path: "/account",
-        element: <AccountLayout />,
-        children: [
-          { index: true, element: <Navigate to="/account/profile" replace /> },
-          { path: "profile", element: <ProfilePage /> },
-          { path: "password", element: <PasswordPage /> },
-          { path: "two-factor", element: <TwoFactorPage /> },
-          { path: "passkeys", element: <PasskeysPage /> },
-          { path: "oauth", element: <OAuthBindingsPage /> },
-          { path: "sessions", element: <SessionsPage /> },
-          { path: "danger", element: <DangerZonePage /> },
-        ],
-      },
+      // 账户中心:单页概览(所有编辑走弹窗)。旧子路由重定向到单页,避免书签/外链 404。
+      { path: "/account", element: <AccountPage /> },
+      { path: "/account/profile", element: <Navigate to="/account" replace /> },
+      { path: "/account/password", element: <Navigate to="/account" replace /> },
+      { path: "/account/two-factor", element: <Navigate to="/account" replace /> },
+      { path: "/account/passkeys", element: <Navigate to="/account" replace /> },
+      { path: "/account/oauth", element: <Navigate to="/account" replace /> },
+      { path: "/account/sessions", element: <Navigate to="/account" replace /> },
+      { path: "/account/danger", element: <Navigate to="/account" replace /> },
 
       // 管理后台
       {

@@ -1,4 +1,5 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cx } from '../admin/cx'
 import { limitByUnicode } from '../../utils/string'
 import styles from './TagInput.module.css'
@@ -19,7 +20,7 @@ export interface TagInputProps {
   maxTags?: number
   maxTagLength?: number
   placeholder?: string
-  /** placeholder shown once `maxTags` is reached (input is disabled). */
+  /** placeholder shown once `maxTags` is reached (input stays enabled; adds are blocked). */
   maxReachedPlaceholder?: string
   /** accessible label for each chip's remove button, e.g. t('submit.removeTag', { tag }). */
   removeTagLabel: (tag: string) => string
@@ -32,7 +33,8 @@ export interface TagInputProps {
 /**
  * Controlled tag/chip editor matching the Pill visual language. Enter or comma adds
  * a tag; Backspace on an empty input removes the last; chips have a ≥40px accessible
- * remove control. Dedupes, trims, and caps by tag count + Unicode-aware length.
+ * remove control. Dedupes, trims, and caps by tag count + Unicode-aware length;
+ * rejected adds (duplicate / max reached) are announced via the polite live region.
  */
 export function TagInput({
   label,
@@ -49,6 +51,7 @@ export function TagInput({
   id,
   fieldClassName,
 }: TagInputProps) {
+  const { t } = useTranslation()
   const autoId = useId()
   const inputId = id ?? autoId
   const hintId = hint ? `${inputId}-hint` : undefined
@@ -61,8 +64,18 @@ export function TagInput({
 
   const commit = (raw: string) => {
     const tag = limitByUnicode(raw.trim(), maxTagLength)
-    if (!tag || full || value.includes(tag)) {
+    if (!tag) {
       setBuffer('')
+      return
+    }
+    // 被拒时保留输入内容并通过 live region 播报原因,
+    // 而不是静默清空(用户会以为添加成功)。
+    if (full) {
+      setLive(t('tagInput.maxReached', { max: maxTags }))
+      return
+    }
+    if (value.includes(tag)) {
+      setLive(t('tagInput.duplicate', { tag }))
       return
     }
     onChange([...value, tag])
@@ -77,6 +90,9 @@ export function TagInput({
   }
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    // 输入法组合期间的 Enter 是候选“上屏”而非提交,必须放行,
+    // 否则中文拼音确认会被误捕获成添加标签(zh 站点必现)。
+    if (e.nativeEvent.isComposing) return
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault()
       commit(buffer)
@@ -107,14 +123,14 @@ export function TagInput({
             </button>
           </span>
         ))}
+        {/* 满额时不 disable(disable 会让焦点丢失),仅在 commit 时阻止并播报。 */}
         <input
           ref={inputRef}
           id={inputId}
           type="text"
           className={styles.input}
           value={buffer}
-          disabled={full}
-          placeholder={full ? maxReachedPlaceholder : placeholder}
+          placeholder={full ? maxReachedPlaceholder ?? placeholder : placeholder}
           aria-invalid={invalid || undefined}
           aria-describedby={hintId}
           onChange={(e) => setBuffer(e.target.value)}

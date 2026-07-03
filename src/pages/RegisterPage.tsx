@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { checkPasswordStrength } from "../utils/string";
+import { usePageTitle } from "../utils/usePageTitle";
 import {
   CenteredCard,
   PageHeader,
@@ -26,6 +27,8 @@ const RegisterPage = () => {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
+  usePageTitle(t("register.title"));
+
   const strength = password ? checkPasswordStrength(password) : 0;
   const mismatch = confirm.length > 0 && confirm !== password;
 
@@ -33,7 +36,7 @@ const RegisterPage = () => {
     e.preventDefault();
     setError(null);
     if (password !== confirm) {
-      setError(t("account.password.mismatch"));
+      // 不匹配提示由确认密码字段的 hintError 就近呈现（组件自带 aria-live）。
       return;
     }
     setBusy(true);
@@ -57,7 +60,8 @@ const RegisterPage = () => {
         description={t("register.doneDesc", { email })}
         actions={[
           { label: t("nav.login"), to: "/login" },
-          { label: t("verify.resendTitle"), to: "/verify-email" },
+          // 带上已填邮箱，重发页免去二次输入。
+          { label: t("verify.resendTitle"), to: `/verify-email?email=${encodeURIComponent(email)}` },
         ]}
       />
     );
@@ -79,6 +83,7 @@ const RegisterPage = () => {
         <TextField
           label={t("account.profile.displayName")}
           autoComplete="nickname"
+          autoFocus
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           required

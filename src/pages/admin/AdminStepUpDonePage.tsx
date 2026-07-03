@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { usePageTitle } from "../../utils/usePageTitle";
 import { StatusScreen } from "../../components/ui";
 
 /**
@@ -7,6 +8,7 @@ import { StatusScreen } from "../../components/ui";
  */
 const AdminStepUpDonePage = () => {
   const { t } = useTranslation();
+  usePageTitle(t("stepUp.doneTitle"));
   return (
     <StatusScreen
       kind="success"

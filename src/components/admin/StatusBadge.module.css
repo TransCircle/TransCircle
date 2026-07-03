@@ -3,12 +3,14 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.2rem 0.6rem 0.2rem 0.5rem;
-  border-radius: 50px;
+  border-radius: var(--radius-pill);
   border: 1px solid transparent;
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.4;
   white-space: nowrap;
+  /* nowrap 的长文案（如异常状态串）不许撑破所在行：容器内收敛并截断。 */
+  max-width: 100%;
 }
 
 .badge.sm {
@@ -25,23 +27,32 @@
   opacity: 0.9;
 }
 
-/* ── Light tones ─────────────────────────────────────────── */
+/* 文字部分单独截断（flex 容器本身不做 text-overflow），完整值经 title 提示。 */
+.badgeLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ── Tones ────────────────────────────────────────────────────
+   语义软色 token 随主题取值（含系统暗色），不再手工写 dark 覆盖。 */
 
 .tone_amber {
-  color: #b26a00;
-  background-color: #fff3e0;
+  color: var(--soft-amber-text);
+  background-color: var(--soft-amber-bg);
 }
 .tone_blue {
-  color: #1a56c4;
-  background-color: #e9f1ff;
+  color: var(--soft-info-text);
+  background-color: var(--soft-info-bg);
 }
 .tone_green {
-  color: #1e7d34;
-  background-color: #e7f6ec;
+  color: var(--soft-success-text);
+  background-color: var(--soft-success-bg);
 }
 .tone_red {
-  color: var(--error-color);
-  background-color: #FFF0EE;
+  color: var(--soft-error-text);
+  background-color: var(--soft-error-bg);
 }
 .tone_accent {
   color: var(--accent-pink);
@@ -56,32 +67,13 @@
   background-color: var(--hover-bg);
 }
 
-/* ── Dark tones ──────────────────────────────────────────── */
-
-[data-theme='dark'] .tone_amber {
-  color: #e0a32e;
-  background-color: rgba(245, 166, 35, 0.13);
-}
-[data-theme='dark'] .tone_blue {
-  color: #6ea8ff;
-  background-color: rgba(59, 130, 246, 0.14);
-}
-[data-theme='dark'] .tone_green {
-  color: #66bb6a;
-  background-color: rgba(46, 160, 75, 0.14);
-}
-[data-theme='dark'] .tone_red {
-  color: var(--error-color);
-  background-color: rgba(255, 180, 171, 0.1);
-}
-
 /* ── Pill (neutral marker) ───────────────────────────────── */
 
 .pill {
   display: inline-flex;
   align-items: center;
   padding: 0.15rem 0.6rem;
-  border-radius: 50px;
+  border-radius: var(--radius-pill);
   background-color: var(--hover-bg);
   color: var(--text-secondary);
   font-size: 0.75rem;
@@ -95,4 +87,3 @@
 .pillAccent {
   color: var(--accent-pink);
 }
-

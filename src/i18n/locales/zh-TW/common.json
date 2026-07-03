@@ -49,15 +49,25 @@
   "theme": {
     "light": "亮色模式",
     "dark": "深色模式",
-    "selectLabel": "主題選擇"
+    "selectLabel": "主題選擇",
+    "switchToLight": "切換至亮色模式",
+    "switchToDark": "切換至深色模式"
+  },
+  "toc": {
+    "label": "目錄"
   },
   "landing": {
-    "title": "TransCircle Pass",
-    "subtitle": "一個賬戶，暢行 TransCircle 全站。",
-    "description": "使用 TransCircle Pass 管理您的賬戶、安全設定，並以單點登入訪問各業務站點。",
-    "ctaLogin": "登入賬戶",
-    "ctaAccount": "進入賬戶中心",
-    "ctaHome": "返回導航站"
+    "title": "TransCircle Project",
+    "subtitle": "我們的存在，就是對惡意最大的反抗。",
+    "greeting": "您好！我們正在進行 TransCircle Project 的初期準備。",
+    "intro1": "長此以往，中文 MtF 社群有個很奇怪的現象：我們確實有比較全面的社群 wiki，HRT 指南等，但幾乎沒有一個能見證我們社群存在與抗爭的地方。",
+    "intro2": "跨性別社群流動性極大，這裡發生過很多故事，但沒有人把它們完整地記錄下來過。",
+    "intro3": "因此，這個女性傾向跨性別社群史官工程應運而生。我們希望，把我們的故事歸檔記錄，團結社群，爭取跨性別權利。",
+    "emphasis": "我們深信歷史終將向前。這份記錄，就是我們走過長夜的鐵證。",
+    "joinHeading": "加入專案",
+    "joinForm": "填寫申請表單",
+    "joinChat": "加入 X 聊天群",
+    "followHeading": "關注我們"
   },
   "nav": {
     "home": "首頁",
@@ -65,6 +75,8 @@
     "admin": "管理後臺",
     "login": "登入",
     "logout": "退出登入",
+    "loggingOut": "退出中…",
+    "logoutFailed": "退出登入失敗，請重試",
     "primary": "主導航",
     "links": "連結",
     "blog": "部落格",
@@ -498,5 +510,10 @@
     "notFound": "頁面不存在",
     "notFoundDetail": "您訪問的頁面不存在或已被移動。",
     "backHome": "返回首頁"
+  },
+  "errors": {
+    "networkFailed": "網路請求失敗",
+    "unknown": "未知錯誤",
+    "requestFailed": "請求失敗 ({{status}})"
   }
 }

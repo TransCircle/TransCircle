@@ -1,5 +1,6 @@
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { usePageTitle } from "../utils/usePageTitle";
 import { StatusScreen } from "../components/ui";
 
 /**
@@ -10,6 +11,8 @@ const AuthErrorPage = () => {
   const { t } = useTranslation();
   const [params] = useSearchParams();
   const code = params.get("code") ?? "OAUTH_ERROR";
+
+  usePageTitle(t("authError.title"));
 
   const key = `authError.${code}`;
   const msg = t(key);
