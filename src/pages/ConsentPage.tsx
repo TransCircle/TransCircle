@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api } from "../api/client";
+import { api, getUserToken, tryRefreshToken } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { usePageTitle } from "../utils/usePageTitle";
 import type { OidcInteractionInfo } from "../api/types";
@@ -84,6 +84,14 @@ const ConsentPage = () => {
     if (!uid || pending) return;
     setPending(action);
     setError(null);
+    if (!getUserToken()) {
+      const token = await tryRefreshToken();
+      if (!token) {
+        setError(t("consent.sessionExpired"));
+        setPending(null);
+        return;
+      }
+    }
     const res = await api.post<{ redirectTo?: string }>(
       `/oauth2/interaction/${encodeURIComponent(uid)}/${action}`,
     );
