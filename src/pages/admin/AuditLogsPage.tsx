@@ -13,7 +13,7 @@ import {
   Alert,
   Spinner,
   EmptyState,
-  AdminButton as Button,
+  SegmentedControl,
 } from "../../components/ui";
 import styles from "../Page.module.css";
 
@@ -27,6 +27,7 @@ const AuditLogsPage = () => {
   const fmt = useFormatTs();
   usePageTitle(t("admin.audit.title"));
 
+  const [viewMode, setViewMode] = useState<"table" | "list">("table");
   const [action, setAction] = useState<string>("");
   const [logs, setLogs] = useState<AuditLog[]>([]);
   // 会话内见过的 action 全集（跨筛选累计）：选中某项后其余选项不再消失。
@@ -92,6 +93,17 @@ const AuditLogsPage = () => {
           <Select ariaLabel={t("admin.audit.filterAction")} value={action} onChange={changeAction} options={actionOptions} inline />
           {/* 语义如实：已加载条数（游标分页，无总数可言）。 */}
           {!loading && <span className={styles.count}>{t("common.loadedCount", { count: logs.length })}</span>}
+          <span className={styles.btnGroup}>
+            <SegmentedControl
+              options={[
+                { value: "table", label: t("admin.audit.viewTable") },
+                { value: "list", label: t("admin.audit.viewList") },
+              ]}
+              value={viewMode}
+              onChange={setViewMode}
+              ariaLabel={t("admin.audit.filterAction")}
+            />
+          </span>
         </Toolbar>
       </div>
 
@@ -103,16 +115,55 @@ const AuditLogsPage = () => {
         <EmptyState title={t("admin.audit.empty")} />
       ) : (
         <>
-          <ul className={styles.list}>
+        {viewMode === "list" ? (
+          <div className={styles.listWrap}>
             {logs.map((l) => (
-              <li key={l.id} className={styles.rowStatic}>
-                <span className={styles.rowMain}>
-                  <span className={styles.rowTitle}>
-                    <Pill tone="accent">{l.action}</Pill>
-                  </span>
-                  <span className={styles.rowMeta}>
-                    <span>
-                      {t("admin.audit.actor")}:{" "}
+              <div key={l.id} className={styles.listRow}>
+                <Pill tone="accent">{l.action}</Pill>
+                <span className={styles.listRowMeta}>
+                  {l.actorUserId ? (
+                    <Link
+                      to={`/admin/users/${l.actorUserId}`}
+                      className={styles.codeLink}
+                      title={t("admin.audit.viewActor")}
+                    >
+                      <code className={styles.code}>{l.actorUserId}</code>
+                    </Link>
+                  ) : (
+                    <code className={styles.code}>—</code>
+                  )}
+                  {(l.resourceType || l.resourceId) ? (
+                    <code className={styles.code}>{[l.resourceType, l.resourceId].filter(Boolean).join(":")}</code>
+                  ) : (
+                    <span className={styles.cellEmpty}>—</span>
+                  )}
+                  {l.requestId ? (
+                    <code className={styles.code}>{l.requestId}</code>
+                  ) : (
+                    <span className={styles.cellEmpty}>—</span>
+                  )}
+                </span>
+                <span className={styles.listRowTime}>{fmt(l.createdAt)}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col" className={styles.cellAction}>{t("admin.audit.action")}</th>
+                  <th scope="col">{t("admin.audit.actor")}</th>
+                  <th scope="col">{t("admin.audit.resource")}</th>
+                  <th scope="col">{t("admin.audit.requestId")}</th>
+                  <th scope="col" className={styles.colTime}>{t("admin.audit.time")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((l) => (
+                  <tr key={l.id}>
+                    <td className={styles.cellAction}><Pill tone="accent">{l.action}</Pill></td>
+                    <td className={styles.cellCode}>
                       {l.actorUserId ? (
                         <Link
                           to={`/admin/users/${l.actorUserId}`}
@@ -124,26 +175,39 @@ const AuditLogsPage = () => {
                       ) : (
                         <code className={styles.code}>—</code>
                       )}
-                    </span>
-                    {(l.resourceType || l.resourceId) && (
-                      <>
-                        <span className={styles.rowMetaSep}>·</span>
-                        <span>{t("admin.audit.resource")}: <code className={styles.code}>{[l.resourceType, l.resourceId].filter(Boolean).join(":")}</code></span>
-                      </>
-                    )}
-                  </span>
-                  {l.requestId && <span className={styles.rowMeta}><code className={styles.code}>{l.requestId}</code></span>}
-                </span>
-                <span className={styles.rowRight}>{fmt(l.createdAt)}</span>
-              </li>
-            ))}
-          </ul>
-          {hasMore && (
+                    </td>
+                    <td className={styles.cellCode}>
+                      {(l.resourceType || l.resourceId) ? (
+                        <code className={styles.code}>{[l.resourceType, l.resourceId].filter(Boolean).join(":")}</code>
+                      ) : (
+                        <span className={styles.cellEmpty}>—</span>
+                      )}
+                    </td>
+                    <td className={styles.cellCode}>
+                      {l.requestId ? (
+                        <code className={styles.code}>{l.requestId}</code>
+                      ) : (
+                        <span className={styles.cellEmpty}>—</span>
+                      )}
+                    </td>
+                    <td className={styles.cellTime}>{fmt(l.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {hasMore && (
             <div className={styles.loadMoreWrap}>
               {moreError && <Alert tone="error">{moreError}</Alert>}
-              <Button variant="secondary" loading={loadingMore} onClick={() => void load({ action, cursor })}>
+              <button
+                className={`${styles.loadMoreTab}${loadingMore ? ` ${styles.loadMoreTabActive}` : ""}`}
+                disabled={loadingMore}
+                onClick={() => void load({ action, cursor })}
+              >
                 {t("admin.audit.loadMore")}
-              </Button>
+                {loadingMore && <Spinner size="sm" inline />}
+              </button>
             </div>
           )}
         </>
