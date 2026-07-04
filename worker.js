@@ -23,14 +23,28 @@ export default {
     ) {
       const backend = env.PASS_API_URL;
       if (!backend) {
-        return new Response('PASS_API_URL not configured', { status: 502 });
+        return new Response(
+          JSON.stringify({ error: 'PASS_API_URL not configured' }),
+          { status: 502, headers: { 'Content-Type': 'application/json' } },
+        );
       }
 
       // Forward request to Pass backend, preserving all headers and cookies
-      return fetch(`${backend}${url.pathname}${url.search}`, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
+      const backendResponse = await fetch(
+        `${backend}${url.pathname}${url.search}`,
+        {
+          method: request.method,
+          headers: request.headers,
+          body: request.body,
+        },
+      );
+
+      // 逐头透传后端响应，显式保留 Set-Cookie 等所有响应头。
+      // 使用 Headers 构造确保响应头（包括 Set-Cookie）不被 Cloudflare 运行时过滤。
+      const responseHeaders = new Headers(backendResponse.headers);
+      return new Response(backendResponse.body, {
+        status: backendResponse.status,
+        headers: responseHeaders,
       });
     }
 
