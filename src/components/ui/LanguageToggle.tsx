@@ -5,7 +5,6 @@ import styles from './LanguageToggle.module.css'
 
 const LANGS = [
   { id: 'zh-CN', label: '简体', fullLabel: '简体中文', i18nKey: 'language.zhCN' },
-  { id: 'zh-TW', label: '繁體', fullLabel: '繁體中文', i18nKey: 'language.zhTW' },
 ] as const
 
 export interface LanguageToggleProps {
@@ -15,14 +14,13 @@ export interface LanguageToggleProps {
 }
 
 /**
- * Accessible language switcher mirroring ThemeToggle's segmented-control model
- * (role=radiogroup + roving tabindex + Arrow/Home/End). Persists the choice to
- * localStorage and applies it via i18next, replacing the inline navbar buttons.
+ * Accessible language switcher.
+ * Persists the choice to localStorage and applies it via i18next.
  */
 export const LanguageToggle = ({ variant = 'card', className = '' }: LanguageToggleProps) => {
   const { t, i18n } = useTranslation()
   const refs = useRef<HTMLButtonElement[]>([])
-  const current = i18n.language === 'zh-TW' ? 'zh-TW' : 'zh-CN'
+  const current = 'zh-CN'
 
   const select = useCallback(
     (id: string) => {
