@@ -17,7 +17,11 @@
     color 0.18s ease,
     border-color 0.18s ease,
     box-shadow 0.18s ease,
-    transform 0.18s ease;
+    transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn:not(:disabled):not([aria-disabled='true']):active {
+  transform: scale(0.94);
 }
 
 .md {
@@ -27,7 +31,7 @@
 }
 
 .sm {
-  padding: 0.4rem 0.9rem;
+  padding: 0.25rem 0.7rem;
   font-size: 0.82rem;
 }
 
@@ -64,16 +68,28 @@
 
 /* ── Secondary ───────────────────────────────────────────── */
 
-/* 对齐主页 .ctaSecondary：粉描边 + 粉文字，hover 粉底加深描边。 */
+/* 对齐主页 .ctaSecondary：粉文字 + hover 粉底，无外框。 */
 .secondary {
   background-color: transparent;
   color: var(--accent-pink);
-  border-color: var(--primary-pink);
 }
 
 .secondary:not(:disabled):not([aria-disabled='true']):hover {
-  border-color: var(--accent-pink);
   background-color: var(--hover-bg);
+}
+
+/* ── Soft Error ─────────────────────────────────────────── */
+
+/* 与 danger 样式一致：红文字 + 红边框 + 浅红 hover 背景。 */
+.softError {
+  background-color: transparent;
+  color: var(--soft-error-text);
+  border-color: var(--soft-error-border);
+}
+
+.softError:not(:disabled):not([aria-disabled='true']):hover {
+  border-color: var(--soft-error-border);
+  background-color: var(--soft-error-bg);
 }
 
 /* ── Ghost ───────────────────────────────────────────────── */

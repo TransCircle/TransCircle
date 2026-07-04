@@ -333,7 +333,8 @@ const LoginPage = () => {
 
           <div className={authStyles.oauthRow}>
             <Button
-              variant="secondary"
+              variant="ghost"
+              className={authStyles.oauthBtn}
               fullWidth
               iconLeft={<GithubIcon />}
               loading={pending === "github"}
@@ -343,7 +344,8 @@ const LoginPage = () => {
               {t("login.github")}
             </Button>
             <Button
-              variant="secondary"
+              variant="ghost"
+              className={authStyles.oauthBtn}
               fullWidth
               iconLeft={<XIcon />}
               loading={pending === "x"}
@@ -354,7 +356,8 @@ const LoginPage = () => {
             </Button>
             {isWebAuthnSupported() && (
               <Button
-                variant="secondary"
+                variant="ghost"
+                className={authStyles.oauthBtn}
                 fullWidth
                 iconLeft={<FingerIcon />}
                 loading={pending === "passkey"}
