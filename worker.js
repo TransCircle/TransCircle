@@ -39,13 +39,11 @@ export default {
         },
       );
 
-      // 逐头透传后端响应，显式保留 Set-Cookie 等所有响应头。
-      // 使用 Headers 构造确保响应头（包括 Set-Cookie）不被 Cloudflare 运行时过滤。
-      const responseHeaders = new Headers(backendResponse.headers);
-      return new Response(backendResponse.body, {
-        status: backendResponse.status,
-        headers: responseHeaders,
-      });
+      // 直接透传后端响应。之前用 new Headers(backendResponse.headers) 重建响应头，
+      // 但 Fetch 规范禁止迭代 Set-Cookie，导致 refresh token 轮换后的新 cookie 丢失，
+      // 浏览器继续提交已被轮换的旧 token → 触发 reuse detection → 全部会话吊销。
+      // Cloudflare Workers 直接返回 backendResponse 即可保留所有头（含 Set-Cookie）。
+      return backendResponse;
     }
 
     // SPA fallback is handled by wrangler.jsonc asset config
