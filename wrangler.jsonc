@@ -1,14 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "transcircle",
+  "main": "worker.js",
   "compatibility_date": "2026-05-09",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
   },
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  "vars": {
+    "PASS_API_URL": "https://api.transcircle.org/pass"
+  }
 }
