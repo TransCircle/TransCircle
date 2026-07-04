@@ -49,7 +49,7 @@ const CopyButton = ({ text }: { text: string }) => {
     timerRef.current = window.setTimeout(() => setState("idle"), 1500);
   };
   return (
-    <Button variant="ghost" size="sm" iconLeft={<CopyIcon />} onClick={() => void copy()}>
+    <Button variant="ghost" size="sm" className={admin.copyBtn} iconLeft={<CopyIcon />} onClick={() => void copy()}>
       {/* aria-live：结果文案变化时读屏器即时播报 */}
       <span aria-live="polite">
         {state === "copied" ? t("common.copied") : state === "failed" ? t("common.copyFailed") : t("common.copy")}
@@ -492,15 +492,15 @@ const ClientsPage = () => {
           {creating && (
             <>
               <Checkbox
+                label={t("admin.clients.refreshToken")}
+                checked={form.refreshToken}
+                onChange={(e) => setForm((f) => ({ ...f, refreshToken: e.target.checked }))}
+              />
+              <Checkbox
                 label={t("admin.clients.publicClient")}
                 hint={t("admin.clients.publicClientHint")}
                 checked={form.publicClient}
                 onChange={(e) => setForm((f) => ({ ...f, publicClient: e.target.checked }))}
-              />
-              <Checkbox
-                label={t("admin.clients.refreshToken")}
-                checked={form.refreshToken}
-                onChange={(e) => setForm((f) => ({ ...f, refreshToken: e.target.checked }))}
               />
             </>
           )}

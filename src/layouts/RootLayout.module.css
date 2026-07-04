@@ -40,16 +40,31 @@
   transform: translateY(0);
 }
 
-/* 页面容器:仅承载布局,不做进入动画(已移除页面切换效果)。 */
+/* 页面容器:靠 key={location.pathname} 触发重挂载,每次进入播放淡入上滑动效。 */
 .pageWrap {
   flex: 1;
   display: flex;
   flex-direction: column;
+  animation: pageIn 280ms var(--ease-standard) both;
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .skipLink {
     transition: none;
+  }
+  .pageWrap {
+    animation: none;
   }
 }
 

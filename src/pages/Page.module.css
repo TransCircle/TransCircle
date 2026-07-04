@@ -71,6 +71,88 @@
   color: var(--text-muted);
 }
 
+.btnGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  margin-inline-start: auto;
+}
+
+/* 用户详情页标题行：返回按钮 + 姓名水平排列。 */
+.titleRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--ease-standard), color var(--ease-standard);
+}
+
+.backBtn:hover {
+  background: var(--hover-bg);
+  color: var(--text-main);
+}
+
+.detailTitle {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.detailMeta {
+  margin: 0;
+  font-size: var(--fs-subtitle);
+  color: var(--text-muted);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+/* ── Linked-list rows (用户管理) ─────────────────────────── */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rowBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--divider-color);
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-md);
+  transition: background-color var(--dur-fast) ease;
+}
+
+.rowBtn:last-child {
+  border-bottom: none;
+}
+
+.rowBtn:hover {
+  background-color: var(--hover-bg);
+}
+
 .tabpanel {
   display: flex;
   flex-direction: column;
@@ -78,51 +160,103 @@
   outline: none;
 }
 
-/* ── Data list ───────────────────────────────────────────── */
+/* ── Data table ──────────────────────────────────────────── */
 
-.list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.table thead th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--divider-color);
+  white-space: nowrap;
+}
+
+.table tbody td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--divider-color);
+  color: var(--text-body);
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background-color: var(--hover-bg);
+}
+
+/* ── List view (审计日志列表模式) ─────────────────────────── */
+
+.listWrap {
   display: flex;
   flex-direction: column;
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
   gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--divider-color);
+  font-size: 0.85rem;
+  color: var(--text-body);
 }
 
-.rowBtn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  text-align: left;
-  padding: 0.9rem 1.1rem;
-  background-color: var(--surface-card);
-  border: 1px solid var(--divider-color);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  color: inherit;
-  font: inherit;
-  text-decoration: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+.listRow:last-child {
+  border-bottom: none;
 }
 
-.rowBtn:hover {
-  border-color: var(--primary-pink);
+.listRow:hover {
   background-color: var(--hover-bg);
-  background-color: var(--hover-bg-mix, var(--hover-bg));
-  /* 悬停投影用 hover 级 token：light 主题下 --shadow-color 是白色、看不见。 */
-  box-shadow: var(--shadow-card-hover);
 }
 
-/* 静态行（无下钻，如审计日志） */
-.rowStatic {
+.listRowMeta {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.85rem 1.1rem;
-  background-color: var(--surface-card);
-  border: 1px solid var(--divider-color);
-  border-radius: var(--radius-md);
+  gap: 0.4rem;
+  min-width: 0;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.listRowTime {
+  margin-left: auto;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.colTime,
+.cellTime {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.cellCode {
+  min-width: 0;
+}
+
+.cellAction {
+  min-width: 0;
+  max-width: 14rem;
+}
+
+.cellEmpty {
+  color: var(--text-muted);
 }
 
 .rowMain {
@@ -230,17 +364,7 @@
 .detailHead {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.detailTitle {
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--text-main);
-  letter-spacing: -0.01em;
+  gap: 0.75rem;
 }
 
 .metaRow {
@@ -321,14 +445,69 @@
   align-items: center;
 }
 
-/* 纵向布局：按钮上方可就近容纳「加载更多」的错误提示
-   （用户此刻停在列表底部，页面顶部的 Alert 看不见）。 */
+/* 分页工具栏：仿 underline tabs 样式——横向排列、分隔线、激活态下划线。 */
 .loadMoreWrap {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.25rem;
+  gap: 0.15rem;
+  margin-top: 1.5rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--divider-color);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.loadMoreWrap::-webkit-scrollbar { display: none; }
+
+.loadMoreTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 8px 8px 0 0;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.loadMoreTab:hover { color: var(--text-main); }
+.loadMoreTab:focus-visible { outline-offset: -2px; }
+.loadMoreTab:disabled { opacity: 0.5; cursor: default; }
+
+.loadMoreTabActive {
+  color: var(--accent-pink);
+  border-bottom-color: var(--accent-pink);
+}
+.loadMoreTabActive .loadMoreTabBadge {
+  background-color: var(--accent-pink);
+  color: #fff;
+}
+
+.loadMoreTabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  padding: 0 0.35rem;
+  border-radius: 50px;
+  background-color: var(--hover-bg);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* 右侧弹性空白：将加载更多推到右侧。 */
+.loadMoreSpacer {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ── History / timeline ──────────────────────────────────── */
@@ -398,18 +577,7 @@
 }
 
 @media (max-width: 640px) {
-  .rowBtn,
-  .rowStatic {
+  .rowBtn {
     align-items: flex-start;
-  }
-  /* 静态行（审计日志等）：右侧时间戳不再与主列抢横向空间，
-     换行堆到 meta 下方，避免窄屏挤压出竖排文字。 */
-  .rowStatic {
-    flex-wrap: wrap;
-    gap: 0.35rem 1rem;
-  }
-  .rowStatic .rowRight {
-    width: 100%;
-    justify-content: flex-start;
   }
 }

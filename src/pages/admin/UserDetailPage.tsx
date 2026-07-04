@@ -8,7 +8,6 @@ import { usePageTitle } from "../../utils/usePageTitle";
 import AdminStepUpDialog from "../../components/AdminStepUpDialog";
 import admin from "./Admin.module.css";
 import {
-  PageHeader,
   Card,
   SectionLabel,
   DescriptionList,
@@ -188,7 +187,14 @@ const UserDetailPage = () => {
   if (!user) {
     return (
       <div className={styles.page}>
-        <PageHeader title={t("admin.users.detailTitle")} actions={<Button variant="secondary" onClick={() => navigate("/admin/users")}>{t("admin.users.back")}</Button>} />
+        <div className={styles.detailHead}>
+          <button type="button" className={styles.backBtn} onClick={() => navigate("/admin/users")} aria-label={t("common.back")}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+          </button>
+          <div className={styles.titleRow}>
+            <h1 className={styles.detailTitle}>{t("admin.users.detailTitle")}</h1>
+          </div>
+        </div>
         {error && <Alert tone="error">{error}</Alert>}
       </div>
     );
@@ -208,15 +214,15 @@ const UserDetailPage = () => {
 
   return (
     <div className={styles.page}>
-      <PageHeader
-        title={user.displayName || user.username || user.email}
-        description={user.email}
-        actions={
-          <Button variant="secondary" size="sm" onClick={() => navigate("/admin/users")}>
-            {t("admin.users.back")}
-          </Button>
-        }
-      />
+      <div className={styles.detailHead}>
+        <button type="button" className={styles.backBtn} onClick={() => navigate("/admin/users")} aria-label={t("common.back")}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+        </button>
+        <div className={styles.titleRow}>
+          <h1 className={styles.detailTitle}>{user.displayName || user.username || user.email}</h1>
+          <p className={styles.detailMeta}>{user.email}</p>
+        </div>
+      </div>
 
       {error && <Alert tone="error">{error}</Alert>}
       {notice && <Alert tone="success">{notice}</Alert>}
@@ -261,24 +267,28 @@ const UserDetailPage = () => {
       <Card>
         <SectionLabel>{t("admin.users.actions")}</SectionLabel>
         {/* refreshing 期间禁用操作入口：详情还是旧数据，防止对过期状态叠加操作。 */}
+
+        {/* 第一行：重置两步验证 */}
         <div className={admin.actionsRow}>
-          <Button variant="secondary" disabled={refreshing} loading={busyKey === "force-logout"} onClick={() => openConfirm("force-logout")}>
-            {t("admin.users.forceLogout")}
-          </Button>
-          {isSuspended ? (
-            <Button variant="secondary" disabled={refreshing} loading={busyKey === "unsuspend"} onClick={() => openConfirm("unsuspend")}>
-              {t("admin.users.unsuspend")}
-            </Button>
-          ) : isActive ? (
-            <Button variant="secondary" disabled={refreshing} loading={busyKey === "suspend"} onClick={() => openReason("suspend")}>
-              {t("admin.users.suspend")}
-            </Button>
-          ) : null}
-        </div>
-        <div className={admin.dangerRow}>
           <Button variant="danger" disabled={refreshing} loading={busyKey === "reset-2fa"} onClick={() => openConfirm("reset-2fa")}>
             {t("admin.users.reset2fa")}
           </Button>
+        </div>
+
+        {/* 第二行：强制下线 + 暂停 + 封禁 */}
+        <div className={admin.dangerRow}>
+          <Button variant="softError" disabled={refreshing} loading={busyKey === "force-logout"} onClick={() => openConfirm("force-logout")}>
+            {t("admin.users.forceLogout")}
+          </Button>
+          {isSuspended ? (
+            <Button variant="softError" disabled={refreshing} loading={busyKey === "unsuspend"} onClick={() => openConfirm("unsuspend")}>
+              {t("admin.users.unsuspend")}
+            </Button>
+          ) : isActive ? (
+            <Button variant="softError" disabled={refreshing} loading={busyKey === "suspend"} onClick={() => openReason("suspend")}>
+              {t("admin.users.suspend")}
+            </Button>
+          ) : null}
           {isBanned ? (
             <Button variant="danger" disabled={refreshing} loading={busyKey === "unban"} onClick={() => openReason("unban")}>
               {t("admin.users.unban")}
@@ -288,7 +298,11 @@ const UserDetailPage = () => {
               {t("admin.users.ban")}
             </Button>
           )}
-          <Button variant="danger" disabled={refreshing} loading={busyKey === "delete"} onClick={() => openReason("delete")}>
+        </div>
+
+        {/* 第三行：删除账户 */}
+        <div className={admin.dangerRow}>
+          <Button variant="danger" className={admin.deleteBtn} fullWidth disabled={refreshing} loading={busyKey === "delete"} onClick={() => openReason("delete")}>
             {t("admin.users.deleteUser")}
           </Button>
         </div>

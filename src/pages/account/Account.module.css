@@ -351,7 +351,6 @@
    不再手写 rgba)。 ── */
 .dangerCard {
   border-color: var(--error-border);
-  border-left: 3px solid var(--error-color);
 }
 
 /* 注销确认短语:醒目红色、居中呈现。 */

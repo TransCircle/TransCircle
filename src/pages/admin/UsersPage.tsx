@@ -14,7 +14,6 @@ import {
   Alert,
   Spinner,
   EmptyState,
-  AdminButton as Button,
   type BadgeTone,
 } from "../../components/ui";
 import styles from "../Page.module.css";
@@ -192,9 +191,14 @@ const UsersPage = () => {
           {hasMore && (
             <div className={styles.loadMoreWrap}>
               {moreError && <Alert tone="error">{moreError}</Alert>}
-              <Button variant="secondary" loading={loadingMore} onClick={() => void load({ ...committedRef.current, cursor })}>
+              <button
+                className={`${styles.loadMoreTab}${loadingMore ? ` ${styles.loadMoreTabActive}` : ""}`}
+                disabled={loadingMore}
+                onClick={() => void load({ ...committedRef.current, cursor })}
+              >
                 {t("admin.users.loadMore")}
-              </Button>
+                {loadingMore && <Spinner size="sm" inline />}
+              </button>
             </div>
           )}
         </>
