@@ -48,8 +48,7 @@
   },
   "language": {
     "selectLabel": "语言选择",
-    "zhCN": "简体中文",
-    "zhTW": "繁体中文"
+    "zhCN": "简体中文"
   },
   "theme": {
     "light": "亮色模式",
@@ -369,18 +368,18 @@
     },
     "sessions": {
       "title": "登录设备与会话",
-      "subtitle": "查看并管理已登录的设备。发现陌生设备请立即注销。",
+      "subtitle": "查看并管理已登录的设备。发现陌生设备请立即登出。",
       "current": "当前设备",
       "lastSeen": "最近活跃",
       "expiresAt": "过期时间",
       "loginMethod": "登录方式",
-      "revoke": "注销",
-      "revokeTitle": "注销此会话？",
+      "revoke": "登出",
+      "revokeTitle": "登出此会话？",
       "revokeMessage": "该设备将被强制退出登录。",
-      "revokeOthers": "注销其他所有会话",
-      "revokeOthersTitle": "注销其他所有会话？",
+      "revokeOthers": "登出其他所有会话",
+      "revokeOthersTitle": "登出其他所有会话？",
       "revokeOthersMessage": "除当前设备外的所有登录会话都将被退出。",
-      "revoked": "会话已注销",
+      "revoked": "会话已登出",
       "empty": "暂无活跃会话",
       "method": {
         "password": "密码登录",
@@ -568,7 +567,9 @@
       "empty": "暂无审计记录",
       "loadMore": "加载更多",
       "requestId": "请求 ID",
-      "viewActor": "查看该用户详情"
+      "viewActor": "查看该用户详情",
+      "viewTable": "表格",
+      "viewList": "列表"
     }
   },
   "status": {
