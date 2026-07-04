@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Avatar } from "./Avatar";
 import { cx } from "./admin/cx";
 import styles from "./SectionShell.module.css";
@@ -29,7 +29,7 @@ export interface SectionShellProps {
  * 使二者与 landing 在同一视觉框架内，消除割裂。移动端侧栏退化为横向标签条。
  */
 export function SectionShell({ eyebrow, identity, navItems, ariaLabel }: SectionShellProps) {
-  // 移动端导航已改为「全展示 + 换行」的分段工具栏,无横向滚动,不再需要把当前项滚入可见区。
+  const location = useLocation();
   return (
     <div className={styles.wrap}>
       <aside className={styles.sidebar}>
@@ -55,7 +55,7 @@ export function SectionShell({ eyebrow, identity, navItems, ariaLabel }: Section
           ))}
         </nav>
       </aside>
-      <div className={styles.content}>
+      <div className={styles.content} key={location.pathname}>
         <Outlet />
       </div>
     </div>

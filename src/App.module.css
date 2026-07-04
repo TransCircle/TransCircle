@@ -117,7 +117,11 @@
   font-size: 0.875rem;
   font-weight: 500;
   box-shadow: var(--shadow-card);
-  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.ctaPrimary:active {
+  transform: scale(0.94);
 }
 
 .ctaPrimary:hover {
@@ -138,7 +142,11 @@
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ctaSecondary:active {
+  transform: scale(0.94);
 }
 
 .ctaSecondary:hover {

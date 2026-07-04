@@ -14,7 +14,7 @@
   --soft-pink: #ffccd5;
   --accent-pink: #e67690;
   --nav-bg: rgba(255, 251, 252, 0.85);
-  --divider-color: #ffccd5;
+  --divider-color: #ffdae0;
   --surface-card: #ffffff;
 
   --hover-bg: #ffedf1;
@@ -116,7 +116,7 @@
     --soft-pink: #3a2a35;
     --accent-pink: #ff6b9d;
     --nav-bg: rgba(24, 24, 35, 0.85);
-    --divider-color: #2a2a3a;
+    --divider-color: #363650;
     --surface-card: #1e1e2e;
 
     --hover-bg: #2a1f25;
@@ -165,7 +165,7 @@
   --soft-pink: #3a2a35;
   --accent-pink: #ff6b9d;
   --nav-bg: rgba(24, 24, 35, 0.85);
-  --divider-color: #2a2a3a;
+  --divider-color: #363650;
   --surface-card: #1e1e2e;
 
   --hover-bg: #2a1f25;

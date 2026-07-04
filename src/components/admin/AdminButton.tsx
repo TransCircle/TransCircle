@@ -11,7 +11,7 @@ import { cx } from './cx'
 import { Spinner } from './Feedback'
 import styles from './AdminButton.module.css'
 
-export type AdminButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost'
+export type AdminButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'softError'
 
 export interface AdminButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: AdminButtonVariant

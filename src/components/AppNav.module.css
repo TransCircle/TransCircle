@@ -252,6 +252,12 @@
 }
 .drawerLink:hover { background-color: var(--hover-bg); }
 
+.drawerDivider {
+  margin: 0.5rem 0;
+  border: none;
+  border-top: 1px solid var(--divider-color);
+}
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -285,19 +291,20 @@
   /* 大面积行/链接类:直接给足 44px 物理高度。 */
   .link,
   .menuItem,
-  .drawerLink,
-  .loginCta {
+  .drawerLink {
     min-height: var(--tap-min);
   }
-  /* 顶栏图标控件(汉堡/头像):视觉仍是 34px,用居中透明 ::after 把命中区扩到 44px,
+  /* 顶栏图标控件(汉堡/头像/登录按钮):视觉仍是 34px,用居中透明 ::after 把命中区扩到 44px,
      既满足触控目标又不撑高顶栏(解决移动端顶栏臃肿)。::after 是按钮子级,
      点击仍落到按钮本身,不阻断交互。 */
   .hamburger,
-  .acctBtn {
+  .acctBtn,
+  .loginCta {
     position: relative;
   }
   .hamburger::after,
-  .acctBtn::after {
+  .acctBtn::after,
+  .loginCta::after {
     content: "";
     position: absolute;
     top: 50%;
