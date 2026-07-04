@@ -54,6 +54,7 @@ export function clearUserAuth(): void {
 /** 清除管理台登录态 */
 export function clearAdminAuth(): void {
   setAdminToken(null);
+  dispatchAuthEvent("pass:admin-expired");
 }
 
 // ─── refresh token 轮换（C 端平面）──────────────────────────────
@@ -236,6 +237,7 @@ async function handle401(
       }
     }
     _userToken = null;
+    clearAdminAuth();
     dispatchAuthEvent("pass:session-expired");
   } else {
     clearAdminAuth();

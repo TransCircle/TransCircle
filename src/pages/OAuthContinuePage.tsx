@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, setUserToken, saveCsrfToken, clearCsrfToken } from "../api/client";
+import { api, setUserToken, saveCsrfToken, clearCsrfToken, clearAdminAuth } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { sanitizeRedirect } from "../utils/url";
 import { usePageTitle } from "../utils/usePageTitle";
@@ -108,6 +108,7 @@ const OAuthContinuePage = () => {
         setError(ex.error.message);
         return;
       }
+      clearAdminAuth();
       setUserToken(ex.data.accessToken);
       await refresh();
       // 续跑目标：OIDC 登录经首次注册时为 /login?oidc=...，否则回账户中心。
