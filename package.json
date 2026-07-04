@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "deploy": "wrangler deploy",
-    "locales:convert": "node scripts/convert-locales.mjs"
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "i18next": "^26.3.0",
