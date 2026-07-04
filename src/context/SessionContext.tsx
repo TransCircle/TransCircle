@@ -14,6 +14,7 @@ import {
 import {
   api,
   clearUserAuth,
+  clearAdminAuth,
   setUserToken,
   tryRefreshToken,
 } from "../api/client";
@@ -51,6 +52,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
     // 不再静默吞掉失败：上抛给调用方（AppNav 已有 catch 反馈），避免服务端会话
     // 仍存活的「假登出」。会话本已失效(401)时,客户端会经 session-expired 事件清态。
     if (!res.ok) throw new Error(res.error.message);
+    clearAdminAuth();
     clearUserAuth();
     setUser(null);
   }, []);

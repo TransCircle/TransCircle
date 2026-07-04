@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, setUserToken } from "../api/client";
+import { api, setUserToken, clearAdminAuth } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import type { LoginResult, WebAuthnRequestOptions } from "../api/types";
 import { performAssertion, isWebAuthnSupported } from "../utils/webauthn";
@@ -105,6 +105,7 @@ const LoginPage = () => {
   }, [user, oidcUid]);
 
   const onTokens = async (data: LoginResult) => {
+    clearAdminAuth();
     if (data.accessToken) setUserToken(data.accessToken);
     await refresh();
     await finish();

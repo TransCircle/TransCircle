@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, setUserToken, tryRefreshToken } from "../api/client";
+import { api, setUserToken, tryRefreshToken, clearAdminAuth } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { sanitizeRedirect } from "../utils/url";
 import { usePageTitle } from "../utils/usePageTitle";
@@ -50,6 +50,7 @@ const AuthCallbackPage = () => {
         // 探测一次静默续期，成功即按登录成功处理，避免「实际已登录却显示失败」。
         const token = await tryRefreshToken();
         if (token) {
+          clearAdminAuth();
           setUserToken(token);
           const me = await refresh();
           if (me) {
@@ -63,6 +64,7 @@ const AuthCallbackPage = () => {
         setError(localized === key ? res.error.message : localized);
         return;
       }
+      clearAdminAuth();
       setUserToken(res.data.accessToken);
       await refresh();
       navigate(redirectAfter, { replace: true });
