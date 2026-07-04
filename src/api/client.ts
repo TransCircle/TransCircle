@@ -72,17 +72,30 @@ async function doRefresh(): Promise<string | null> {
         credentials: "include",
       });
       if (res.status === 401) {
+        console.warn("[auth] refresh failed: 401 — session expired or revoked");
         _userToken = null;
         return null;
       }
-      if (!res.ok) return null;
+      if (!res.ok) {
+        // 非 401 错误（500/502/503/429 等瞬态错误）：
+        // - 不清除 _userToken（记忆中的 token 可能仍有效）
+        // - 记录诊断信息，便于排查生产问题
+        console.warn(`[auth] refresh failed: HTTP ${res.status} — transient error, token preserved`);
+        try {
+          const body = await res.json().catch(() => ({}));
+          console.warn(`[auth] refresh error body:`, body);
+        } catch { /* empty */ }
+        return null;
+      }
       const body = (await res.json()) as { data?: { accessToken?: string } };
       if (body.data?.accessToken) {
         _userToken = body.data.accessToken;
         return _userToken;
       }
+      console.warn("[auth] refresh response missing accessToken, body:", body);
       return null;
-    } catch {
+    } catch (err) {
+      console.warn("[auth] refresh network error:", err);
       return null;
     }
   };
