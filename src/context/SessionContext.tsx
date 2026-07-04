@@ -56,14 +56,26 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // 启动：尝试续期恢复会话，再拉取资料。
+  // 失败后等待 1s 重试一次，处理后端瞬态错误（500/502/429）。
   useEffect(() => {
     let alive = true;
     (async () => {
-      const token = await tryRefreshToken();
-      if (!alive) return;
-      if (token) {
-        setUserToken(token);
-        await refresh();
+      const attempt = async (): Promise<boolean> => {
+        const token = await tryRefreshToken();
+        if (!alive) return false;
+        if (token) {
+          setUserToken(token);
+          await refresh();
+          return true;
+        }
+        return false;
+      };
+
+      const ok = await attempt();
+      if (!ok && alive) {
+        // 首次 refresh 失败：等待 1 秒后重试一次
+        await new Promise((r) => setTimeout(r, 1000));
+        if (alive) await attempt();
       }
       if (alive) setLoading(false);
     })();
