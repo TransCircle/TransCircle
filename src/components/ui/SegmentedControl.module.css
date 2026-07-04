@@ -1,0 +1,42 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--hover-bg);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1.2;
+  color: var(--text-secondary);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--dur-fast) ease;
+  min-height: calc(var(--control-h) - 4px);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}
+
+.active {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+}
+
+.option:not(.active):hover {
+  color: var(--text-main);
+}
