@@ -3,13 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { adminApi } from "../../api/client";
 import type { AdminUserDetail, AccountStatus } from "../../api/types";
+import { Avatar } from "../../components/Avatar";
 import { useFormatTs } from "../../utils/datetime";
 import { usePageTitle } from "../../utils/usePageTitle";
 import AdminStepUpDialog from "../../components/AdminStepUpDialog";
 import admin from "./Admin.module.css";
 import {
-  Card,
-  SectionLabel,
   DescriptionList,
   StatusBadge,
   Pill,
@@ -20,13 +19,7 @@ import {
   ReasonPromptDialog,
   type BadgeTone,
 } from "../../components/ui";
-import styles from "../Page.module.css";
-
-const ArrowLeftIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-    <path d="M19 12H5m7-7-7 7 7 7" />
-  </svg>
-);
+import page from "../Page.module.css";
 
 const statusTone = (s: AccountStatus): BadgeTone => {
   switch (s) {
@@ -189,17 +182,13 @@ const UserDetailPage = () => {
     if (reasonKey) void runAction({ key: reasonKey, path: path(reasonKey), body: { reason: trimmed } });
   };
 
-  if (loading) return <div className={styles.page}><Spinner size="lg" label={t("common.loading")} /></div>;
+  if (loading) return <div className={admin.page}><Spinner size="lg" label={t("common.loading")} /></div>;
   if (!user) {
     return (
-      <div className={styles.page}>
-        <div className={styles.detailHead}>
-          <button type="button" className={styles.backBtn} onClick={() => navigate("/admin/users")} aria-label={t("common.back")}>
-            <ArrowLeftIcon />
-          </button>
-          <div className={styles.titleRow}>
-            <h1 className={styles.detailTitle}>{t("admin.users.detailTitle")}</h1>
-          </div>
+      <div className={admin.detail}>
+        <div className={admin.detailHead}>
+          <h1 className={admin.identityName}>{t("admin.users.detailTitle")}</h1>
+          <Button variant="secondary" size="sm" onClick={() => navigate("/admin/users")}>{t("admin.users.back")}</Button>
         </div>
         {error && <Alert tone="error">{error}</Alert>}
       </div>
@@ -217,36 +206,41 @@ const UserDetailPage = () => {
   const isSuspended = user.status === "suspended";
   const isBanned = user.status === "banned";
   const reasonDanger = reasonKey === "ban" || reasonKey === "delete";
+  const name = user.displayName || user.username || user.email;
 
   return (
-    <div className={styles.page}>
-      <div className={styles.detailHead}>
-        <button type="button" className={styles.backBtn} onClick={() => navigate("/admin/users")} aria-label={t("common.back")}>
-          <ArrowLeftIcon />
-        </button>
-        <div className={styles.titleRow}>
-          <h1 className={styles.detailTitle}>{user.displayName || user.username || user.email}</h1>
-          <p className={styles.detailMeta}>{user.email}</p>
+    <div className={admin.detail}>
+      <div className={admin.detailHead}>
+        <div className={admin.detailIdentity}>
+          <Avatar name={name} src={user.avatarUrl} size={56} label={name} />
+          <div className={admin.identityText}>
+            <span className={admin.identityEyebrow}>{t("admin.users.detailTitle")}</span>
+            <h1 className={admin.identityName}>{name}</h1>
+            <span className={admin.identitySub}>{user.email}</span>
+          </div>
         </div>
+        <Button variant="secondary" size="sm" onClick={() => navigate("/admin/users")}>
+          {t("admin.users.back")}
+        </Button>
       </div>
 
       {error && <Alert tone="error">{error}</Alert>}
       {notice && <Alert tone="success">{notice}</Alert>}
 
-      <Card>
+      <section className={admin.group}>
         <DescriptionList
           items={[
             { term: t("admin.users.username"), value: user.username ?? "—" },
-            { term: t("admin.users.email"), value: <span><code className={styles.code}>{user.email}</code>{" "}<StatusBadge size="sm" tone={user.emailVerified ? "green" : "amber"} label={user.emailVerified ? t("account.profile.emailVerified") : t("account.profile.emailUnverified")} /></span> },
+            { term: t("admin.users.email"), value: <span><code className={page.code}>{user.email}</code>{" "}<StatusBadge size="sm" tone={user.emailVerified ? "green" : "amber"} label={user.emailVerified ? t("account.profile.emailVerified") : t("account.profile.emailUnverified")} /></span> },
             { term: t("admin.users.status"), value: <StatusBadge size="sm" tone={statusTone(user.status)} label={t(`status.${user.status}`)} /> },
             { term: t("admin.users.createdAt"), value: fmt(user.createdAt) || "—" },
             { term: t("admin.users.lastLoginAt"), value: fmt(user.lastLoginAt) || t("common.never") },
           ]}
         />
-      </Card>
+      </section>
 
-      <Card>
-        <SectionLabel>{t("admin.users.security")}</SectionLabel>
+      <section className={admin.group}>
+        <h2 className={admin.groupTitle}>{t("admin.users.security")}</h2>
         <DescriptionList
           items={[
             { term: t("admin.users.hasPassword"), value: user.security.hasPassword ? t("common.yes") : t("common.no") },
@@ -255,46 +249,42 @@ const UserDetailPage = () => {
             { term: t("admin.users.activeSessions"), value: String(user.security.activeSessions) },
           ]}
         />
-      </Card>
+      </section>
 
-      <Card>
-        <SectionLabel>{t("admin.users.oauthProviders")}</SectionLabel>
+      <section className={admin.group}>
+        <h2 className={admin.groupTitle}>{t("admin.users.oauthProviders")}</h2>
         {user.oauthProviders.length === 0 ? (
-          <p className={styles.subtleNote}>{t("common.none")}</p>
+          <p className={page.subtleNote}>{t("common.none")}</p>
         ) : (
-          <div className={styles.actions}>
+          <div className={admin.chips}>
             {user.oauthProviders.map((o) => (
               <Pill key={o.provider}>{o.provider}{o.providerUsername ? ` · ${o.providerUsername}` : ""}</Pill>
             ))}
           </div>
         )}
-      </Card>
+      </section>
 
-      <Card>
-        <SectionLabel>{t("admin.users.actions")}</SectionLabel>
+      <section className={admin.group}>
+        <h2 className={admin.groupTitle}>{t("admin.users.actions")}</h2>
         {/* refreshing 期间禁用操作入口：详情还是旧数据，防止对过期状态叠加操作。 */}
-
-        {/* 第一行：重置两步验证 */}
         <div className={admin.actionsRow}>
-          <Button variant="danger" disabled={refreshing} loading={busyKey === "reset-2fa"} onClick={() => openConfirm("reset-2fa")}>
-            {t("admin.users.reset2fa")}
-          </Button>
-        </div>
-
-        {/* 第二行：强制下线 + 暂停 + 封禁 */}
-        <div className={admin.dangerRow}>
-          <Button variant="softError" disabled={refreshing} loading={busyKey === "force-logout"} onClick={() => openConfirm("force-logout")}>
+          <Button variant="secondary" disabled={refreshing} loading={busyKey === "force-logout"} onClick={() => openConfirm("force-logout")}>
             {t("admin.users.forceLogout")}
           </Button>
           {isSuspended ? (
-            <Button variant="softError" disabled={refreshing} loading={busyKey === "unsuspend"} onClick={() => openConfirm("unsuspend")}>
+            <Button variant="secondary" disabled={refreshing} loading={busyKey === "unsuspend"} onClick={() => openConfirm("unsuspend")}>
               {t("admin.users.unsuspend")}
             </Button>
           ) : isActive ? (
-            <Button variant="softError" disabled={refreshing} loading={busyKey === "suspend"} onClick={() => openReason("suspend")}>
+            <Button variant="secondary" disabled={refreshing} loading={busyKey === "suspend"} onClick={() => openReason("suspend")}>
               {t("admin.users.suspend")}
             </Button>
           ) : null}
+        </div>
+        <div className={admin.dangerRow}>
+          <Button variant="danger" disabled={refreshing} loading={busyKey === "reset-2fa"} onClick={() => openConfirm("reset-2fa")}>
+            {t("admin.users.reset2fa")}
+          </Button>
           {isBanned ? (
             <Button variant="danger" disabled={refreshing} loading={busyKey === "unban"} onClick={() => openReason("unban")}>
               {t("admin.users.unban")}
@@ -304,15 +294,11 @@ const UserDetailPage = () => {
               {t("admin.users.ban")}
             </Button>
           )}
-        </div>
-
-        {/* 第三行：删除账户 */}
-        <div className={admin.dangerRow}>
-          <Button variant="danger" className={admin.deleteBtn} fullWidth disabled={refreshing} loading={busyKey === "delete"} onClick={() => openReason("delete")}>
+          <Button variant="danger" disabled={refreshing} loading={busyKey === "delete"} onClick={() => openReason("delete")}>
             {t("admin.users.deleteUser")}
           </Button>
         </div>
-      </Card>
+      </section>
 
       {/* 确认类操作（无需原因）。step-up 期间隐藏，取消后自动恢复；
           失败时错误经 error 插槽就近显示在框内，保持开启可重试。 */}
