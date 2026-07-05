@@ -12,9 +12,9 @@
 /* 侧栏容器：不再自带卡片外观，identity 与 nav 各自成块。 */
 .sidebar {
   position: sticky;
-  top: 4.75rem;
+  top: calc(var(--app-nav-height) + 0.35rem);
   align-self: start;
-  max-height: calc(100dvh - 4.75rem - 1rem);
+  max-height: calc(100dvh - var(--app-nav-height) - 1.35rem);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -192,7 +192,7 @@
     border: none;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
-    border-radius: 8px 8px 0 0;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
     background: none;
     font-size: 0.88rem;
     font-weight: 500;
