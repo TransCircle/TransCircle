@@ -3,20 +3,23 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { adminApi } from "../../api/client";
 import type { AdminUserListItem, AccountStatus } from "../../api/types";
+import { Avatar } from "../../components/Avatar";
+import { cx } from "../../components/admin/cx";
 import { useFormatTs } from "../../utils/datetime";
 import { usePageTitle } from "../../utils/usePageTitle";
 import {
-  PageHeader,
-  Toolbar,
+  Card,
   SearchField,
   Select,
   StatusBadge,
   Alert,
   Spinner,
   EmptyState,
+  Pagination,
   type BadgeTone,
 } from "../../components/ui";
-import styles from "../Page.module.css";
+import admin from "./Admin.module.css";
+import page from "../Page.module.css";
 
 const statusTone = (s: AccountStatus): BadgeTone => {
   switch (s) {
@@ -45,16 +48,12 @@ const STATUS_FILTERS: readonly string[] = [
 ];
 
 const ChevronRight = () => (
-  <svg className={styles.chevron} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg className={admin.chevron} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="m9 18 6-6-6-6" />
   </svg>
 );
 
-interface LoadParams {
-  keyword: string;
-  status: string;
-  cursor?: string | null;
-}
+type NavMode = "reset" | "next" | "prev";
 
 const UsersPage = () => {
   const { t } = useTranslation();
@@ -66,14 +65,16 @@ const UsersPage = () => {
   const [keyword, setKeyword] = useState(() => searchParams.get("keyword") ?? "");
   const [status, setStatus] = useState<string>(() => searchParams.get("status") ?? "");
   const [items, setItems] = useState<AdminUserListItem[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
+  const [pageNum, setPageNum] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // 「加载更多」的失败就近显示在按钮旁（用户停在列表底部，顶部 Alert 看不见）。
-  const [moreError, setMoreError] = useState<string | null>(null);
-  // 最近一次已提交的查询条件：翻页必须延续它，而非输入框里改了但尚未回车的草稿。
+
+  // 游标历史(离散翻页,同审计页):prevCursors 栈 + currentCursor + nextCursor;
+  // committed = 当前查询已提交的筛选,翻页延续它,而非输入框里改了但尚未回车的草稿。
+  const prevCursorsRef = useRef<(string | null)[]>([]);
+  const currentCursorRef = useRef<string | null>(null);
+  const nextCursorRef = useRef<string | null>(null);
   const committedRef = useRef<{ keyword: string; status: string }>({ keyword: "", status: "" });
 
   // 条件写回地址栏；replace 避免每敲一次筛选就多一条历史记录。
@@ -87,51 +88,65 @@ const UsersPage = () => {
     [setSearchParams],
   );
 
-  // 列表加载：筛选条件全部经显式参数传入、不读闭包状态——否则「清除搜索」
-  // 这类在 setState 同一轮内触发的加载会拿到旧 keyword，列表不复位。
-  const load = useCallback(async (params: LoadParams) => {
-    const isMore = Boolean(params.cursor);
-    if (isMore) setLoadingMore(true);
-    else setLoading(true);
-    if (!isMore) committedRef.current = { keyword: params.keyword, status: params.status };
+  // 统一翻页:reset(回第 1 页 / 换筛选)/ next / prev。筛选经显式参数传入、不读闭包状态。
+  // 仅成功后提交页码与游标(失败不改页码,顶部 Alert 报错,可原地重试)。
+  const navigate = useCallback(async (mode: NavMode, kw: string, st: string) => {
+    const target =
+      mode === "reset"
+        ? null
+        : mode === "next"
+          ? nextCursorRef.current
+          : prevCursorsRef.current[prevCursorsRef.current.length - 1] ?? null;
+    setLoading(true);
     setError(null);
-    setMoreError(null);
     const qs = new URLSearchParams({ limit: "20" });
-    if (params.keyword) qs.set("keyword", params.keyword);
-    if (params.status) qs.set("status", params.status);
-    if (params.cursor) qs.set("cursor", params.cursor);
+    if (kw) qs.set("keyword", kw);
+    if (st) qs.set("status", st);
+    if (target) qs.set("cursor", target);
     const res = await adminApi.get<AdminUserListItem[]>(`/v1/admin/users?${qs.toString()}`);
-    if (isMore) setLoadingMore(false);
-    else setLoading(false);
+    setLoading(false);
     if (!res.ok) {
-      if (isMore) setMoreError(res.error.message);
-      else setError(res.error.message);
+      setError(res.error.message);
       return;
     }
-    setItems((prev) => (isMore ? [...prev, ...res.data] : res.data));
-    setCursor(res.pagination?.nextCursor ?? null);
-    setHasMore(res.pagination?.hasMore ?? false);
+    if (mode === "reset") {
+      prevCursorsRef.current = [];
+      currentCursorRef.current = null;
+      committedRef.current = { keyword: kw, status: st };
+      setPageNum(1);
+    } else if (mode === "next") {
+      prevCursorsRef.current.push(currentCursorRef.current);
+      currentCursorRef.current = target;
+      setPageNum((p) => p + 1);
+    } else {
+      prevCursorsRef.current.pop();
+      currentCursorRef.current = target;
+      setPageNum((p) => Math.max(1, p - 1));
+    }
+    setItems(res.data);
+    nextCursorRef.current = res.pagination?.nextCursor ?? null;
+    setHasNext(res.pagination?.hasMore ?? false);
   }, []);
 
-  // 仅挂载时加载：初始条件来自地址栏，后续加载均由交互显式触发。
+  // 仅挂载时加载：初始条件来自地址栏,后续加载均由交互显式触发。
   useEffect(() => {
-    void load({ keyword, status });
+    void navigate("reset", keyword, status);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const search = () => {
     syncParams(keyword, status);
-    void load({ keyword, status });
+    void navigate("reset", keyword, status);
   };
   const clearSearch = () => {
-    // SearchField 已把输入清为空串，这里显式传空、不依赖尚未提交的 state。
+    // SearchField 已把输入清为空串,这里显式传空、不依赖尚未提交的 state。
     syncParams("", status);
-    void load({ keyword: "", status });
+    void navigate("reset", "", status);
   };
   const changeStatus = (v: string) => {
     setStatus(v);
     syncParams(keyword, v);
-    void load({ keyword, status: v });
+    void navigate("reset", keyword, v);
   };
 
   const statusOptions = [
@@ -140,66 +155,66 @@ const UsersPage = () => {
   ];
 
   return (
-    <div className={styles.page}>
-      <div className={styles.stickyHead}>
-        <PageHeader title={t("admin.users.title")} />
-        <Toolbar>
-          <SearchField
-            value={keyword}
-            onValueChange={setKeyword}
-            onSearch={search}
-            onClear={clearSearch}
-            searchAriaLabel={t("admin.users.search")}
-            clearAriaLabel={t("common.close")}
-            placeholder={t("admin.users.search")}
-            fieldClassName={styles.grow}
-          />
-          <Select ariaLabel={t("admin.users.status")} value={status} onChange={changeStatus} options={statusOptions} inline />
-        </Toolbar>
-        {/* 语义如实：这是已加载条数，不冒充结果总数（接口为游标分页，无总数）。 */}
-        {!loading && <span className={styles.count}>{t("common.loadedCount", { count: items.length })}</span>}
+    <div className={admin.page}>
+      <div className={admin.toolbar}>
+        <SearchField
+          value={keyword}
+          onValueChange={setKeyword}
+          onSearch={search}
+          onClear={clearSearch}
+          searchAriaLabel={t("admin.users.search")}
+          clearAriaLabel={t("common.close")}
+          placeholder={t("admin.users.search")}
+          fieldClassName={admin.grow}
+        />
+        <Select ariaLabel={t("admin.users.status")} value={status} onChange={changeStatus} options={statusOptions} inline />
       </div>
 
       {error && <Alert tone="error">{error}</Alert>}
 
-      {loading ? (
+      {loading && items.length === 0 ? (
         <Spinner size="lg" label={t("common.loading")} />
       ) : items.length === 0 ? (
         <EmptyState title={t("admin.users.empty")} />
       ) : (
         <>
-          <ul className={styles.list}>
-            {items.map((u) => (
-              <li key={u.id}>
-                <Link to={`/admin/users/${u.id}`} className={styles.rowBtn}>
-                  <span className={styles.rowMain}>
-                    <span className={styles.rowTitle}>{u.displayName || u.username || u.email}</span>
-                    <span className={styles.rowMeta}>
-                      <code className={styles.code}>{u.email}</code>
-                      <span className={styles.rowMetaSep}>·</span>
-                      {fmt(u.createdAt)}
+          <Card padding="none">
+            <ul className={admin.list}>
+              {items.map((u) => (
+                <li key={u.id}>
+                  <Link to={`/admin/users/${u.id}`} className={cx(admin.listRow, admin.rowLink)}>
+                    <span className={admin.rowMain}>
+                      <Avatar name={u.displayName || u.username || u.email} src={u.avatarUrl} size={38} />
+                      <span className={admin.rowText}>
+                        <span className={admin.rowTitle}>{u.displayName || u.username || u.email}</span>
+                        <span className={admin.rowMeta}>
+                          <code className={page.code}>{u.email}</code>
+                          <span className={admin.rowMetaSep}>·</span>
+                          {fmt(u.createdAt)}
+                        </span>
+                      </span>
                     </span>
-                  </span>
-                  <span className={styles.rowRight}>
-                    <StatusBadge tone={statusTone(u.status)} label={t(`status.${u.status}`)} size="sm" />
-                    <ChevronRight />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-          {hasMore && (
-            <div className={styles.loadMoreWrap}>
-              {moreError && <Alert tone="error">{moreError}</Alert>}
-              <button
-                className={`${styles.loadMoreTab}${loadingMore ? ` ${styles.loadMoreTabActive}` : ""}`}
-                disabled={loadingMore}
-                onClick={() => void load({ ...committedRef.current, cursor })}
-              >
-                {t("admin.users.loadMore")}
-                {loadingMore && <Spinner size="sm" inline />}
-              </button>
-            </div>
+                    <span className={admin.rowRight}>
+                      <StatusBadge tone={statusTone(u.status)} label={t(`status.${u.status}`)} size="sm" />
+                      <ChevronRight />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Card>
+          {(hasNext || pageNum > 1) && (
+            <Pagination
+              hasPrev={pageNum > 1}
+              hasNext={hasNext}
+              onPrev={() => void navigate("prev", committedRef.current.keyword, committedRef.current.status)}
+              onNext={() => void navigate("next", committedRef.current.keyword, committedRef.current.status)}
+              loading={loading}
+              prevLabel={t("common.prevPage")}
+              nextLabel={t("common.nextPage")}
+              label={t("common.pageN", { page: pageNum })}
+              ariaLabel={t("admin.users.title")}
+            />
           )}
         </>
       )}
