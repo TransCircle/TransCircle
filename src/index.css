@@ -70,11 +70,10 @@
   --radius-pop: var(--radius-md);      /* 12px — 下拉菜单 / 抽屉 / 分段工具栏外壳 */
 
   /* ── Motion language ───────────────────────────────────── */
-  --ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);  /* 揭示/入场:主题涟漪、图标交叉淡入 */
+  --ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);  /* 揭示/入场:图标交叉淡入、对话框面板 */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);      /* 悬停/变色/按压 */
   --dur-fast: 130ms;    /* 悬停、变色、按压 */
   --dur-base: 200ms;    /* CTA 悬停抬升 */
-  --dur-reveal: 640ms;  /* 主题切换涟漪 */
 
   /* ── Fluid type scale(移动端字号收敛,桌面像素不变) ──────
      clamp 下限 ≥ 0.9rem(14.4px),满足"移动端不小于 ~14px"。 */
@@ -246,14 +245,15 @@ html {
   scroll-behavior: auto;
 }
 
-/* 仅在用户未偏好减少动画时启用主题切换过渡 */
+/* 明暗切换瞬时生效:至多允许一次 ≤200ms 的全局 color/background-color 过渡,
+   仅在用户未偏好减少动画时启用。禁止任何圆形揭示/遮罩/翻转/闪烁/涟漪。 */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
@@ -287,36 +287,4 @@ select:focus-visible {
 ::selection {
   background-color: var(--select);
   color: var(--text-main);
-}
-
-/* ══════════════════════════════════════════════════
-   View Transitions — Theme switch circle reveal
-   ══════════════════════════════════════════════════ */
-/* Old snapshot fades out quickly, new snapshot grows from click origin */
-::view-transition-old(root) {
-  animation: vt-fade-out 0.15s ease-out both;
-}
-::view-transition-new(root) {
-  animation: vt-theme-grow 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both;
-}
-
-@keyframes vt-fade-out {
-  to { opacity: 0; }
-}
-@keyframes vt-theme-grow {
-  from {
-    clip-path: circle(0 at var(--vt-origin-x, 50%) var(--vt-origin-y, 50%));
-    opacity: 1;
-  }
-  to {
-    clip-path: circle(var(--vt-final-radius, 3000px) at var(--vt-origin-x, 50%) var(--vt-origin-y, 50%));
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation-duration: 0.01ms !important;
-  }
 }
