@@ -38,3 +38,8 @@ pnpm-debug.log*
 # ClaudeCode
 .claude/
 CLAUDE.md
+
+# DesignSync tooling (local only)
+.design-sync/
+.ds-sync/
+ds-bundle/
