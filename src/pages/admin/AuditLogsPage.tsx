@@ -101,7 +101,7 @@ const AuditLogsPage = () => {
               ]}
               value={viewMode}
               onChange={setViewMode}
-              ariaLabel={t("admin.audit.filterAction")}
+              ariaLabel={t("admin.audit.viewMode")}
             />
           </span>
         </Toolbar>
