@@ -349,7 +349,7 @@ const ClientsPage = () => {
             ) : undefined
           }
         />
-        {/* 该接口一次性返回全量列表，可如实标注总数。 */}
+        {/* 该接口一次性返回全量列表，可如实标注总数（非 SectionLabel 的语义误用）。 */}
         {!loading && clients.length > 0 && (
           <span className={styles.count}>{t("admin.clients.count", { count: clients.length })}</span>
         )}

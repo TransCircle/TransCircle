@@ -22,12 +22,6 @@ import {
 } from "../../components/ui";
 import styles from "../Page.module.css";
 
-const ArrowLeftIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-    <path d="M19 12H5m7-7-7 7 7 7" />
-  </svg>
-);
-
 const statusTone = (s: AccountStatus): BadgeTone => {
   switch (s) {
     case "active":
@@ -195,7 +189,7 @@ const UserDetailPage = () => {
       <div className={styles.page}>
         <div className={styles.detailHead}>
           <button type="button" className={styles.backBtn} onClick={() => navigate("/admin/users")} aria-label={t("common.back")}>
-            <ArrowLeftIcon />
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
           </button>
           <div className={styles.titleRow}>
             <h1 className={styles.detailTitle}>{t("admin.users.detailTitle")}</h1>
@@ -222,7 +216,7 @@ const UserDetailPage = () => {
     <div className={styles.page}>
       <div className={styles.detailHead}>
         <button type="button" className={styles.backBtn} onClick={() => navigate("/admin/users")} aria-label={t("common.back")}>
-          <ArrowLeftIcon />
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
         </button>
         <div className={styles.titleRow}>
           <h1 className={styles.detailTitle}>{user.displayName || user.username || user.email}</h1>

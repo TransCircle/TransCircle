@@ -474,11 +474,11 @@
   user-select: none;
   -webkit-user-select: none;
   border-bottom: 2px solid transparent;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-radius: 8px 8px 0 0;
   transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 .loadMoreTab:hover { color: var(--text-main); }
-.loadMoreTab:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: -2px; }
+.loadMoreTab:focus-visible { outline-offset: -2px; }
 .loadMoreTab:disabled { opacity: 0.5; cursor: default; }
 
 .loadMoreTabActive {
