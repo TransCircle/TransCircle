@@ -491,7 +491,11 @@
       "filterActionAll": "全部操作",
       "empty": "暫無審計記錄",
       "loadMore": "載入更多",
-      "requestId": "請求 ID"
+      "requestId": "請求 ID",
+      "viewActor": "查看該使用者詳情",
+      "viewTable": "表格",
+      "viewList": "列表",
+      "viewMode": "檢視切換"
     }
   },
   "status": {
