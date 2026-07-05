@@ -15,6 +15,9 @@
     "remove": "移除",
     "rename": "重新命名",
     "add": "新增",
+    "edit": "編輯",
+    "change": "修改",
+    "manage": "管理",
     "back": "返回",
     "retry": "重試",
     "submit": "提交",
@@ -32,7 +35,12 @@
     "comingSoon": "開發中",
     "processing": "處理中…",
     "loadFailed": "載入失敗",
-    "loadMore": "載入更多"
+    "loadMore": "載入更多",
+    "loadedCount": "已載入 {{count}} 條",
+    "prevPage": "上一頁",
+    "nextPage": "下一頁",
+    "pageN": "第 {{page}} 頁",
+    "copyFailed": "複製失敗"
   },
   "shell": {
     "skipToContent": "跳到主要內容",
@@ -114,10 +122,19 @@
     "x": "使用 X 登入",
     "passkey": "使用 Passkey 登入",
     "passkeyFailed": "Passkey 登入失敗，請重試",
-    "mfaPrompt": "請輸入身份驗證器中的 6 位驗證碼，或一個恢復碼。",
+    "mfaPrompt": "請輸入身份驗證器中的 6 位驗證碼。",
+    "mfaChoosePrompt": "請使用 Passkey 或驗證器驗證碼完成二次驗證。",
+    "mfaRecoveryPrompt": "請輸入一個恢復碼以完成登入。",
+    "mfaPasskeyPrompt": "請出示您的 Passkey 完成二次驗證。",
     "mfaCode": "驗證碼",
+    "mfaRecoveryCode": "恢復碼",
     "mfaSubmit": "驗證並登入",
-    "adminEntry": "管理員登入（IAM）"
+    "mfaPasskey": "使用 Passkey 驗證",
+    "mfaOr": "或",
+    "mfaUseRecovery": "改用恢復碼",
+    "mfaBackToOther": "返回其他驗證方式",
+    "adminEntry": "管理員登入（IAM）",
+    "mfaChallengeMissing": "登入需要多因素驗證，但伺服器未返回驗證挑戰，請重試；若問題持續請聯絡管理員。"
   },
   "register": {
     "title": "建立賬戶",
@@ -141,7 +158,7 @@
     "subtitle": "請設定一個新的登入密碼。",
     "submit": "重置密碼",
     "invalidTitle": "連結無效",
-    "invalidDesc": "重置連結缺失或已過期，請重新發起找回密碼。",
+    "invalidDesc": "重置連結缺失或已過期；出於安全考慮，連結為一次性使用，頁面重新整理後即失效，請重新發起找回密碼。",
     "doneTitle": "密碼已重置",
     "doneDesc": "您的密碼已更新，請使用新密碼登入。"
   },
@@ -164,7 +181,10 @@
     "eyebrow": "通過 {{provider}} 登入",
     "title": "完善賬戶資訊",
     "subtitle": "首次使用第三方登入，請補全賬戶資訊以完成註冊。",
-    "submit": "完成註冊"
+    "submit": "完成註冊",
+    "cancel": "取消並返回登入",
+    "invalidTitle": "連結無效或已過期",
+    "invalidDesc": "該第三方登入連結無效或已過期，請從登入頁重新發起第三方登入。"
   },
   "consent": {
     "title": "授權請求",
@@ -179,11 +199,18 @@
       "email": "讀取您的郵箱地址",
       "offline_access": "在您離線時保持登入",
       "pass.profile.full": "讀取完整賬戶資料"
-    }
+    },
+    "asUser": "以 {{name}} 的身份授權",
+    "scopesLabel": "此應用將獲得以下許可權",
+    "redirectNotice": "授權後將跳轉至 {{domain}}",
+    "scopeFallback": "基礎身份資訊"
   },
   "callback": {
     "processing": "正在完成登入…",
-    "failed": "登入回撥處理失敗"
+    "failed": "登入回撥處理失敗",
+    "title": "完成登入",
+    "invalid": "回撥連結無效或已過期，請重新登入。",
+    "retryLogin": "重新登入"
   },
   "authError": {
     "title": "登入失敗",
@@ -211,6 +238,7 @@
       "password": "登入密碼",
       "twoFactor": "兩步驗證",
       "passkeys": "Passkey",
+      "recoveryCodes": "恢復碼",
       "oauth": "第三方賬號",
       "sessions": "登入裝置",
       "danger": "賬戶安全"
@@ -221,7 +249,7 @@
       "avatar": "頭像",
       "changeAvatar": "更換頭像",
       "removeAvatar": "移除頭像",
-      "avatarHint": "支援 PNG / JPG / WebP / GIF，將自動縮放為小尺寸方形頭像。",
+      "avatarHint": "支援 PNG / JPG / WebP / GIF 格式。",
       "avatarUpdated": "頭像已更新",
       "avatarRemoved": "頭像已移除",
       "avatarFailed": "頭像更新失敗，請重試",
@@ -235,7 +263,16 @@
       "accountId": "賬戶 ID",
       "createdAt": "註冊時間",
       "save": "儲存資料",
-      "saved": "資料已更新"
+      "saved": "資料已更新",
+      "info": "賬戶資訊",
+      "displayNameSection": "公開暱稱",
+      "displayNameRequired": "暱稱不能為空或全為空格",
+      "cropTitle": "編輯頭像",
+      "uploadNew": "上傳新圖片",
+      "rotate": "旋轉",
+      "zoom": "縮放",
+      "apply": "應用",
+      "dragHint": "拖動或方向鍵調整位置，滑塊縮放，按鈕旋轉"
     },
     "password": {
       "title": "登入密碼",
@@ -247,7 +284,8 @@
       "mismatch": "兩次輸入的新密碼不一致",
       "saved": "密碼已更新",
       "setTitle": "設定登入密碼",
-      "noPassword": "當前賬戶未設定密碼（僅第三方登入）。"
+      "noPassword": "當前賬戶未設定密碼（僅第三方登入）。",
+      "tooShort": "新密碼至少需要 8 個字元"
     },
     "twoFactor": {
       "title": "兩步驗證（TOTP）",
@@ -256,7 +294,8 @@
       "enabled": "已啟用",
       "disabled": "未啟用",
       "setup": "開始設定",
-      "scanQr": "使用身份驗證器 App 掃描二維碼，或手動輸入金鑰：",
+      "scanQr": "使用身份驗證器 App 掃描下方二維碼。",
+      "cantScan": "無法掃描？手動輸入金鑰",
       "secretLabel": "金鑰",
       "enterCode": "輸入身份驗證器生成的 6 位驗證碼以完成啟用",
       "enable": "啟用兩步驗證",
@@ -267,13 +306,10 @@
       "disableMessage": "停用後將降低賬戶安全性。請輸入驗證碼或恢復碼以確認。",
       "disableCodeLabel": "驗證碼或恢復碼",
       "passwordLabel": "當前密碼",
-      "remainingCodes": "剩餘恢復碼：{{count}} 個",
-      "recoveryTitle": "恢復碼",
-      "recoveryHint": "請妥善儲存以下恢復碼，每個僅可使用一次。丟失驗證器時可用於登入。",
-      "regenerate": "重新生成恢復碼",
-      "regenerateTitle": "重新生成恢復碼？",
-      "regenerateMessage": "舊的恢復碼將全部失效。請輸入驗證碼以確認。",
-      "regenerated": "恢復碼已重新生成"
+      "loadFailed": "無法獲取兩步驗證狀態，請重試。",
+      "setupTitle": "設定兩步驗證",
+      "qrAlt": "兩步驗證繫結二維碼",
+      "codeLabel": "驗證碼"
     },
     "passkeys": {
       "title": "Passkey",
@@ -294,7 +330,26 @@
       "addedOk": "Passkey 已新增",
       "renamedOk": "已重新命名",
       "deletedOk": "Passkey 已刪除",
-      "registerFailed": "Passkey 註冊失敗，請重試"
+      "registerFailed": "Passkey 註冊失敗，請重試",
+      "listLabel": "已新增的 Passkey"
+    },
+    "recoveryCodes": {
+      "title": "恢復碼",
+      "subtitle": "TOTP 與 Passkey 共享的備份；丟失驗證器或裝置時用於登入。",
+      "hint": "請妥善儲存以下恢復碼，每個僅可使用一次。丟失兩步驗證方式時可用於登入。",
+      "label": "備份恢復碼",
+      "remaining": "剩餘 {{count}} 個",
+      "regenerate": "重新生成",
+      "generate": "生成恢復碼",
+      "regenerated": "恢復碼已重新生成",
+      "regenerateTitle": "重新生成恢復碼？",
+      "regenerateMessage": "舊的恢復碼將全部失效。請完成身份複核以確認。",
+      "codeLabel": "驗證碼或恢復碼",
+      "passwordLabel": "當前密碼",
+      "saved": "我已儲存恢復碼",
+      "copyFailed": "複製失敗，請手動選中並複製。",
+      "loadFailed": "無法獲取恢復碼狀態，請重試。",
+      "needFactor": "恢復碼已用盡,且賬戶暫無驗證碼或密碼可用於身份複核。請先設定登入密碼或啟用身份驗證器,再重新生成恢復碼。"
     },
     "oauth": {
       "title": "第三方賬號",
@@ -311,7 +366,9 @@
       "bindConfirmTitle": "完成第三方賬號繫結",
       "bindProcessing": "正在完成繫結…",
       "boundOk": "繫結成功",
-      "boundOkDesc": "第三方賬號已繫結到您的賬戶。"
+      "boundOkDesc": "第三方賬號已繫結到您的賬戶。",
+      "stepUpWaiting": "請在對話方塊中完成二次驗證，以繼續繫結。",
+      "bindStepUpFailed": "二次驗證未生效，繫結未能完成，請返回第三方賬號頁面重試。"
     },
     "sessions": {
       "title": "登入裝置與會話",
@@ -327,7 +384,14 @@
       "revokeOthersTitle": "登出其他所有會話？",
       "revokeOthersMessage": "除當前裝置外的所有登入會話都將被退出。",
       "revoked": "會話已登出",
-      "empty": "暫無活躍會話"
+      "empty": "暫無活躍會話",
+      "method": {
+        "password": "密碼登入",
+        "passkey": "Passkey 登入",
+        "oauth": "第三方賬號登入",
+        "github": "GitHub 登入",
+        "x": "X 登入"
+      }
     },
     "danger": {
       "title": "賬戶安全",
@@ -342,8 +406,12 @@
       "deleteConfirmTitle": "確認登出賬戶？",
       "deleteConfirmMessage": "這是高危操作。請按提示確認並完成二次驗證。登出後進入 30 天冷靜期，期間可撤銷。",
       "confirmTypeLabel": "請輸入 {{phrase}} 以確認登出",
+      "confirmInstruction": "請輸入以下短語以確認登出：",
       "passwordLabel": "當前密碼",
-      "deleteRequested": "賬戶登出已發起，已進入冷靜期。"
+      "deleteRequested": "賬戶登出已發起，已進入冷靜期。",
+      "confirmPhrase": "我確認登出我的賬戶",
+      "deleteRequestedTitle": "登出申請已提交",
+      "deleteRequestedDesc": "您的賬戶已進入 30 天冷靜期，期間登入可按提示撤銷登出；冷靜期結束後，賬戶與資料將被永久刪除。"
     }
   },
   "stepUp": {
@@ -430,7 +498,10 @@
       "reasonLabel": "操作原因",
       "reasonPlaceholder": "請填寫原因（1-500 字）",
       "actionOk": "操作已完成",
-      "needsStepUp": "此操作需要先完成管理員二次驗證。"
+      "needsStepUp": "此操作需要先完成管理員二次驗證。",
+      "filterStatusAll": "全部狀態",
+      "unsuspendMessage": "該使用者將恢復正常登入與訪問。",
+      "reasonRequired": "操作原因不能為空"
     },
     "clients": {
       "title": "OAuth 客戶端",
@@ -478,7 +549,15 @@
       "updatedOk": "客戶端已更新",
       "rotatedOk": "客戶端金鑰已輪換",
       "nameRequired": "請填寫名稱（1–100 字）",
-      "redirectRequired": "請至少提供一個回撥地址"
+      "redirectRequired": "請至少提供一個回撥地址",
+      "count": "共 {{count}} 個客戶端",
+      "disableTitle": "停用該客戶端？",
+      "disableMessage": "停用後「{{name}}」將立即無法發起授權登入，依賴它登入的站點會受影響。確定繼續？",
+      "enableTitle": "啟用該客戶端？",
+      "enableMessage": "啟用後「{{name}}」將恢復發起授權登入。確定繼續？",
+      "secretCloseTitle": "關閉金鑰視窗？",
+      "secretCloseMessage": "關閉後將無法再次檢視該金鑰，只能輪換重新生成。請確認已複製並妥善儲存。",
+      "secretCloseConfirm": "已儲存，關閉"
     },
     "audit": {
       "title": "審計日誌",
@@ -492,10 +571,53 @@
       "empty": "暫無審計記錄",
       "loadMore": "載入更多",
       "requestId": "請求 ID",
-      "viewActor": "查看該使用者詳情",
+      "viewActor": "檢視該使用者詳情",
       "viewTable": "表格",
       "viewList": "列表",
-      "viewMode": "檢視切換"
+      "viewMode": "檢視切換",
+      "actorStaff": "管理員賬戶(不在使用者列表)",
+      "actionLabels": {
+        "account_merge": "賬戶合併",
+        "admin_login": "管理員登入",
+        "admin_step_up": "管理員二次驗證",
+        "auth_login": "登入",
+        "auth_register": "註冊",
+        "auth_step_up": "二次驗證",
+        "contribution_delete": "刪除投稿",
+        "contribution_edit_request_resolve": "處理編輯申請",
+        "contribution_edit_request_vote": "編輯申請投票",
+        "contribution_hide": "隱藏投稿",
+        "contribution_publish": "釋出投稿",
+        "image_upload": "上傳圖片",
+        "me_delete": "登出賬戶",
+        "me_delete_cancel": "取消登出",
+        "me_export": "匯出個人資料",
+        "mfa_recovery_codes_regenerate": "重新生成恢復碼",
+        "oauth_bind": "繫結第三方賬號",
+        "oauth_bind_start": "發起第三方繫結",
+        "oauth_provider_token_discard": "丟棄第三方令牌",
+        "oauth_unbind": "解綁第三方賬號",
+        "passkey_create": "新增通行金鑰",
+        "password_change": "修改密碼",
+        "role_grant": "授予角色",
+        "role_revoke": "撤銷角色",
+        "session_refresh_reuse_detected": "檢測到重新整理令牌重放",
+        "session_revoke": "登出會話",
+        "session_revoke_all": "登出全部會話",
+        "user_ban": "封停用戶",
+        "user_unban": "解封使用者",
+        "user_suspend": "暫停使用者",
+        "user_unsuspend": "恢復使用者",
+        "user_delete": "刪除使用者",
+        "user_force_logout": "強制登出",
+        "user_reset_2fa": "重置兩步驗證",
+        "user_reset_mfa": "重置兩步驗證",
+        "client_create": "新建客戶端",
+        "client_update": "更新客戶端",
+        "client_rotate_secret": "輪換客戶端金鑰",
+        "client_disable": "停用客戶端",
+        "client_enable": "啟用客戶端"
+      }
     }
   },
   "status": {
@@ -505,7 +627,8 @@
     "banned": "已封禁",
     "pending_deletion": "待登出",
     "deleted": "已登出",
-    "merged": "已合併"
+    "merged": "已合併",
+    "disabled": "已停用"
   },
   "error": {
     "generic": "出錯了，請稍後重試",
@@ -513,11 +636,23 @@
     "forbidden": "您沒有執行此操作的許可權",
     "notFound": "頁面不存在",
     "notFoundDetail": "您訪問的頁面不存在或已被移動。",
-    "backHome": "返回首頁"
+    "backHome": "返回首頁",
+    "notFoundEyebrow": "404 Not Found",
+    "backPrev": "返回上一頁"
   },
   "errors": {
     "networkFailed": "網路請求失敗",
     "unknown": "未知錯誤",
     "requestFailed": "請求失敗 ({{status}})"
+  },
+  "auth": {
+    "password": {
+      "show": "顯示密碼",
+      "hide": "隱藏密碼"
+    }
+  },
+  "tagInput": {
+    "maxReached": "最多隻能新增 {{max}} 個標籤",
+    "duplicate": "標籤「{{tag}}」已存在"
   }
 }
