@@ -9,7 +9,12 @@ export const resources = {
   "zh-CN": { common: zhCN },
 } as const;
 
-const detectedLang = "zh-CN";
+// 复用同一 localStorage key（transcircle-lang），跨子域用户语言体验一致。
+const storedLang =
+  typeof localStorage !== "undefined"
+    ? localStorage.getItem("transcircle-lang")
+    : null;
+const detectedLang = storedLang || "zh-CN";
 
 i18n.use(initReactI18next).init({
   resources,

@@ -569,8 +569,7 @@
       "requestId": "请求 ID",
       "viewActor": "查看该用户详情",
       "viewTable": "表格",
-      "viewList": "列表",
-      "viewMode": "视图切换"
+      "viewList": "列表"
     }
   },
   "status": {
