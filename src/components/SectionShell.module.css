@@ -142,7 +142,7 @@
 }
 
 /* 触控设备：放大点按目标至 ≥44px（DESIGN.md 触控目标约定）。 */
-@media (pointer: coarse) {
+@media (any-pointer: coarse) {
   .navItem { min-height: 44px; }
 }
 
