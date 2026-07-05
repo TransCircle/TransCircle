@@ -40,3 +40,9 @@
 .option:not(.active):hover {
   color: var(--text-main);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .option {
+    transition: none;
+  }
+}

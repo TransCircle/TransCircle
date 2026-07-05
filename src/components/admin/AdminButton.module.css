@@ -105,17 +105,19 @@
 
 /* ── Danger ──────────────────────────────────────────────── */
 
-/* soft-error token 随主题取值（含系统暗色 :root:not([data-theme])），
+/* 与 softError 的区别：danger 用于不可逆/高影响的操作（封禁、删除），
+   使用填充背景以求更强烈的警示语义。
+   soft-error token 随主题取值（含系统暗色 :root:not([data-theme])），
    不再手工写 dark 覆盖——顺带修复系统暗色下旧覆盖不生效的问题。 */
 .danger {
-  background-color: transparent;
+  background-color: var(--soft-error-bg);
   color: var(--soft-error-text);
   border-color: var(--soft-error-border);
 }
 
 .danger:not(:disabled):not([aria-disabled='true']):hover {
-  border-color: var(--soft-error-border);
   background-color: var(--soft-error-bg);
+  filter: brightness(0.92);
 }
 
 /* Comfortable touch targets on touch devices.

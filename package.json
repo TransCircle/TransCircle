@@ -24,7 +24,6 @@
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^4.6.0",
     "jsdom": "^29.1.1",
-    "opencc-js": "^1.3.2",
     "typescript": "~5.9.0",
     "vite": "^7.0.0",
     "vitest": "^4.1.6",
