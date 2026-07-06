@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useSession } from "../context/SessionContext";
 import { useAdmin } from "../context/AdminContext";
 import ThemeToggle from "./ThemeToggle";
+import { LanguageToggle } from "./ui";
 import { Avatar } from "./Avatar";
 import { cx } from "./admin/cx";
 import styles from "./AppNav.module.css";
@@ -12,12 +13,12 @@ import styles from "./AppNav.module.css";
 const MOBILE_BREAKPOINT = 1100;
 
 const ExternalIcon = () => (
-  <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={styles.extIcon}>
+  <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className={styles.extIcon}>
     <path d="M6 2h8v8" /><path d="M14 2 4 12" />
   </svg>
 );
 const ChevronIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6" /></svg>
 );
 
 interface NavLinkDef {
@@ -372,6 +373,7 @@ export function AppNav() {
           </div>
 
           <div className={styles.right}>
+            <LanguageToggle variant="plain" />
             <ThemeToggle />
             {navUser ? (
               <div
