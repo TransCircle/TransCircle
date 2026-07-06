@@ -58,12 +58,22 @@ const clearStoredTheme = (): void => {
   }
 };
 
+/** 各主题对应的移动端浏览器 UI 底色（与 index.html 的 theme-color 一致）。 */
+const THEME_COLORS: Record<Theme, string> = { light: "#fff9fb", dark: "#12121a" };
+
 /**
- * 将主题应用到 DOM：设置 data-theme 属性。
+ * 将主题应用到 DOM：设置 data-theme 属性，并同步移动端 theme-color。
  * 所有 DOM 副作用统一收口于此，避免分散管理导致的漏改风险。
  */
 const applyTheme = (theme: Theme): void => {
   document.documentElement.setAttribute("data-theme", theme);
+  // 用单个 JS 控制的 theme-color 覆盖 index.html 中仅按系统偏好(media)的两条，
+  // 使手动切换主题时移动端浏览器 chrome 底色也随之变化。
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.remove());
+  const meta = document.createElement("meta");
+  meta.name = "theme-color";
+  meta.content = THEME_COLORS[theme];
+  document.head.appendChild(meta);
 };
 
 /**
