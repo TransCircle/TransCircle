@@ -122,12 +122,13 @@ export function VoteProgress({
         role="progressbar"
         aria-valuenow={approve}
         aria-valuemin={0}
-        aria-valuemax={required}
-        aria-label={`${approveLabel} ${approve} / ${required}`}
+        aria-valuemax={denom}
+        aria-valuetext={`${approve} / ${total}`}
+        aria-label={approveLabel}
       >
         <span className={styles.voteApprove} style={{ width: `${approvePct}%` }} />
         <span className={styles.voteReject} style={{ width: `${rejectPct}%` }} />
-        {required > 0 && required <= denom && (
+        {required > 0 && (
           <span className={styles.voteThreshold} style={{ left: `${thresholdPct}%` }} aria-hidden="true" />
         )}
       </div>

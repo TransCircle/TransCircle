@@ -93,7 +93,7 @@ export function TagInput({
     // 输入法组合期间的 Enter 是候选“上屏”而非提交,必须放行,
     // 否则中文拼音确认会被误捕获成添加标签(zh 站点必现)。
     if (e.nativeEvent.isComposing) return
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === 'Enter' || e.key === ',' || e.key === '，') {
       e.preventDefault()
       commit(buffer)
     } else if (e.key === 'Backspace' && !buffer && value.length) {
@@ -117,6 +117,7 @@ export function TagInput({
               type="button"
               className={styles.remove}
               aria-label={removeTagLabel(tag)}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => remove(tag)}
             >
               <CloseIcon />
