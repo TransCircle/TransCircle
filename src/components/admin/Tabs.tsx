@@ -30,6 +30,10 @@ export function Tabs<K extends string = string>({
   const refs = useRef<HTMLButtonElement[]>([])
   // useId 前缀：同页多个 Tabs 实例（或相同 key）不会撞出重复 DOM id。
   const baseId = useId()
+  // roving tabindex：选中项可聚焦；value 不匹配任何项时兜底首项，
+  // 否则所有 tab 都是 -1、整个 tablist 掉出 Tab 序列，键盘无法进入。
+  const selectedIndex = items.findIndex((t) => t.key === value)
+  const rovingIndex = selectedIndex >= 0 ? selectedIndex : 0
 
   const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
     let next: number
@@ -78,7 +82,7 @@ export function Tabs<K extends string = string>({
             aria-selected={active}
             /* 未传 panelId 时不输出 aria-controls，避免指向不存在的元素。 */
             aria-controls={panelId}
-            tabIndex={active ? 0 : -1}
+            tabIndex={i === rovingIndex ? 0 : -1}
             className={cx(styles.tab, active && styles.active)}
             onClick={() => onChange(item.key)}
             onKeyDown={(e) => handleKeyDown(e, i)}
