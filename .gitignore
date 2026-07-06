@@ -43,3 +43,5 @@ CLAUDE.md
 .design-sync/
 .ds-sync/
 ds-bundle/
+
+mock-server/

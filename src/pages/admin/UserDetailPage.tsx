@@ -187,8 +187,14 @@ const UserDetailPage = () => {
     return (
       <div className={admin.detail}>
         <div className={admin.detailHead}>
-          <h1 className={admin.identityName}>{t("admin.users.detailTitle")}</h1>
-          <Button variant="secondary" size="sm" onClick={() => navigate("/admin/users")}>{t("admin.users.back")}</Button>
+          <div className={admin.detailIdentityWrap}>
+            <button type="button" className={admin.backText} onClick={() => navigate("/admin/users")}>
+              ← {t("admin.users.back")}
+            </button>
+            <div className={admin.detailIdentity}>
+              <h1 className={admin.identityName}>{t("admin.users.detailTitle")}</h1>
+            </div>
+          </div>
         </div>
         {error && <Alert tone="error">{error}</Alert>}
       </div>
@@ -211,17 +217,19 @@ const UserDetailPage = () => {
   return (
     <div className={admin.detail}>
       <div className={admin.detailHead}>
-        <div className={admin.detailIdentity}>
-          <Avatar name={name} src={user.avatarUrl} size={56} label={name} />
-          <div className={admin.identityText}>
-            <span className={admin.identityEyebrow}>{t("admin.users.detailTitle")}</span>
-            <h1 className={admin.identityName}>{name}</h1>
-            <span className={admin.identitySub}>{user.email}</span>
+        <div className={admin.detailIdentityWrap}>
+          <button type="button" className={admin.backText} onClick={() => navigate("/admin/users")}>
+            ← {t("admin.users.back")}
+          </button>
+          <div className={admin.detailIdentity}>
+            <Avatar name={name} src={user.avatarUrl} size={56} label={name} />
+            <div className={admin.identityText}>
+              <span className={admin.identityEyebrow}>{t("admin.users.detailTitle")}</span>
+              <h1 className={admin.identityName}>{name}</h1>
+              <span className={admin.identitySub}>{user.email}</span>
+            </div>
           </div>
         </div>
-        <Button variant="secondary" size="sm" onClick={() => navigate("/admin/users")}>
-          {t("admin.users.back")}
-        </Button>
       </div>
 
       {error && <Alert tone="error">{error}</Alert>}
