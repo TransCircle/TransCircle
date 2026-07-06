@@ -121,7 +121,7 @@
     --hover-bg: #2a1f25;
     --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, #12121a);
     --cta-bg: #ff85a2;
-    --cta-color: #f5d6dd;
+    --cta-color: #412a2a; /* 深字上亮粉 CTA：#412a2a on #ff85a2 = 5.7:1，达 WCAG AA；与浅色主题/--on-accent 统一 */
     --cta-hover: #cc537c;
     --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
     --shadow-color: rgba(255, 107, 156, 0.04);
@@ -170,7 +170,7 @@
   --hover-bg: #2a1f25;
   --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, #12121a);
   --cta-bg: #ff85a2;
-  --cta-color: #f4e7ea;
+  --cta-color: #412a2a; /* 深字上亮粉 CTA：#412a2a on #ff85a2 = 5.7:1，达 WCAG AA；与浅色主题/--on-accent 统一 */
   --cta-hover: #cc537c;
   --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
   --shadow-color: rgba(255, 107, 156, 0.04);
