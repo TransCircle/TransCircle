@@ -3,10 +3,10 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  width: var(--control-h); /* 34px（原 32），与其余顶栏控件同高 */
-  height: var(--control-h);
+  width: 32px; /* 对齐 story */
+  height: 32px;
   border: none;
-  border-radius: var(--radius-control); /* 10px（原 radius-xs 6px） */
+  border-radius: 6px; /* 对齐 story */
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
