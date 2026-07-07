@@ -47,9 +47,9 @@
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-/* 选中态底色为 --accent-pink,前景统一用 --on-accent(dark/高对比随主题)。 */
+/* 选中态底色为 --accent-pink,勾选标记用白色（对齐 story）。 */
 .check {
-  color: var(--on-accent);
+  color: #ffffff;
   opacity: 0;
   transform: scale(0.6);
   transition: opacity 0.15s ease, transform 0.15s ease;
@@ -60,7 +60,7 @@
   width: 10px;
   height: 2px;
   border-radius: var(--radius-pill);
-  background-color: var(--on-accent);
+  background-color: #ffffff;
   opacity: 0;
 }
 
