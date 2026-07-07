@@ -150,8 +150,8 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  width: 38px; /* 对齐 story（内含 34px 头像，四周留 2px 环隙） */
-  height: 38px;
+  width: var(--control-h);
+  height: var(--control-h);
   padding: 0;
   border: none;
   background: none;
@@ -199,18 +199,17 @@
   display: none;
   position: relative;
   flex-direction: column;
-  /* 垂直居中三条横线:按钮本体 38px（对齐 story）,触屏命中区改由 ::after 覆盖层撑到 44px。 */
+  /* 垂直居中三条横线:按钮本体 --control-h(34px),触屏命中区改由 ::after 覆盖层撑到 44px。 */
   justify-content: center;
   gap: 4px;
-  width: 38px; /* 对齐 story */
-  height: 38px;
+  width: var(--control-h);
+  height: var(--control-h);
   padding: 9px 8px;
-  margin-top: 5px; /* 对齐 story */
   box-sizing: border-box;
   border: none;
   background: none;
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-control);
   z-index: 75;
 }
 .hamburger:hover { background-color: var(--hover-bg); }
@@ -318,7 +317,7 @@
   .drawerLink {
     min-height: var(--tap-min);
   }
-  /* 顶栏图标控件(汉堡/头像/登录按钮):视觉保持各自尺寸,用居中透明 ::after 把命中区扩到 44px,
+  /* 顶栏图标控件(汉堡/头像/登录按钮):视觉统一 --control-h(34px),用居中透明 ::after 把命中区扩到 44px,
      既满足触控目标又不撑高顶栏(解决移动端顶栏臃肿)。::after 是按钮子级,
      点击仍落到按钮本身,不阻断交互。 */
   .hamburger,

@@ -55,39 +55,32 @@
 
 /* ── Primary ─────────────────────────────────────────────── */
 
-/* 实心亮粉 + 白字（对齐 story）。用 main 自己的 --accent-pink token：
-   深色模式与 story 同为 #ff6b9d；浅色模式沿用 main 的品牌粉（不改全局 token）。 */
+/* 主 CTA（docs 7.4）：全站唯一实心底 + 阴影 + hover 抬升。--cta-bg 底 + --cta-color 前景，
+   hover 转 --cta-hover 并升 --shadow-card-hover。 */
 .primary {
-  background-color: var(--accent-pink);
-  color: #ffffff;
+  background-color: var(--cta-bg);
+  color: var(--cta-color);
   box-shadow: var(--shadow-card);
 }
 
 .primary:not(:disabled):not([aria-disabled='true']):hover {
-  background-color: var(--accent-pink);
+  background-color: var(--cta-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-card-hover);
 }
 
-/* color-mix 可用时 hover 加深亮粉；不支持则回退为仅抬升 + 投影（背景不变）。 */
-@supports (background-color: color-mix(in srgb, red 85%, black)) {
-  .primary:not(:disabled):not([aria-disabled='true']):hover {
-    background-color: color-mix(in srgb, var(--accent-pink) 88%, black);
-  }
-}
-
 /* ── Secondary ───────────────────────────────────────────── */
 
-/* 中性描边（对齐 story）：卡面底 + 主文字 + 分隔线边框，hover 转粉边 + 浅粉底。
-   与 ghost（透明 + 粉字）区分开，恢复 secondary ≠ ghost 的视觉层次。 */
+/* 次行动（docs 7.4）：透明底 + --accent-pink 文字 + --primary-pink 描边，
+   hover 描边加深到 --accent-pink 并铺 --hover-bg 淡底。 */
 .secondary {
-  background-color: var(--surface-card);
-  color: var(--text-main);
-  border-color: var(--divider-color);
+  background-color: transparent;
+  color: var(--accent-pink);
+  border-color: var(--primary-pink);
 }
 
 .secondary:not(:disabled):not([aria-disabled='true']):hover {
-  border-color: var(--primary-pink);
+  border-color: var(--accent-pink);
   background-color: var(--hover-bg);
 }
 
@@ -124,17 +117,16 @@
 
 /* ── Danger ──────────────────────────────────────────────── */
 
-/* 描边红（对齐 story）：卡面底 + 红字 + 红边框，hover 转深红边 + 浅红底。
-   仍走 soft-error token（随 data-theme 与系统暗色 :root:not([data-theme]) 取值），
-   保留 main 的系统暗色适配，避免退回 story 的硬编码色导致系统暗色下失效。 */
+/* 危险行动（docs 7.4）：透明底 + --soft-error-* 三件套，随主题（含系统暗色）取值，
+   组件层零 dark 分支。hover 补 --soft-error-bg 淡底，描边不变。 */
 .danger {
-  background-color: var(--surface-card);
+  background-color: transparent;
   color: var(--soft-error-text);
   border-color: var(--soft-error-border);
 }
 
 .danger:not(:disabled):not([aria-disabled='true']):hover {
-  border-color: var(--soft-error-text);
+  border-color: var(--soft-error-border);
   background-color: var(--soft-error-bg);
 }
 
