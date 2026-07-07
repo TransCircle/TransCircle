@@ -373,8 +373,10 @@ export function AppNav() {
           </div>
 
           <div className={styles.right}>
-            <LanguageToggle variant="plain" />
-            <ThemeToggle />
+            <div className={styles.toggles}>
+              <LanguageToggle variant="plain" />
+              <ThemeToggle />
+            </div>
             {navUser ? (
               <div
                 ref={acctRef}
