@@ -73,8 +73,8 @@
 
 .underline .tab.active .badge {
   background-color: var(--accent-pink);
-  /* accent-pink 上的计数徽章文字用白色（对齐 story）。 */
-  color: #ffffff;
+  /* accent-pink 上的计数徽章文字用 --on-accent。 */
+  color: var(--on-accent);
 }
 
 /* ── Segmented variant ───────────────────────────────────── */

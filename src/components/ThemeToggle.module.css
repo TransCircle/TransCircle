@@ -3,10 +3,10 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  width: 32px; /* 对齐 story */
-  height: 32px;
+  width: var(--control-h);
+  height: var(--control-h);
   border: none;
-  border-radius: 6px; /* 对齐 story */
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
