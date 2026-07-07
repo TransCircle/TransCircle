@@ -73,8 +73,8 @@
 
 .underline .tab.active .badge {
   background-color: var(--accent-pink);
-  /* accent-pink 上的前景统一走 token（与 SectionShell 选中 pill 一致）。 */
-  color: var(--on-accent);
+  /* accent-pink 上的计数徽章文字用白色（对齐 story）。 */
+  color: #ffffff;
 }
 
 /* ── Segmented variant ───────────────────────────────────── */

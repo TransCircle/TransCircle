@@ -62,6 +62,21 @@
   background-color: var(--hover-bg-mix, var(--hover-bg));
 }
 
+/* 下拉触发器在其菜单打开时保持高亮（对齐 story）。 */
+.link[aria-expanded="true"] {
+  color: var(--text-main);
+  background-color: var(--hover-bg);
+  background-color: var(--hover-bg-mix, var(--hover-bg));
+}
+
+/* Links 下拉的 chevron 在菜单打开时翻转 180°（对齐 story）。 */
+.chevron {
+  transition: transform 0.15s ease;
+}
+.link[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
 .extIcon { margin-left: 0.15rem; opacity: 0.7; }
 
 .right {
@@ -139,7 +154,7 @@
   transition: box-shadow var(--dur-fast) var(--ease-standard),
     transform var(--dur-fast) var(--ease-standard);
 }
-.acctBtn:hover { box-shadow: 0 0 0 2px var(--soft-pink); }
+.acctBtn:hover { box-shadow: 0 0 0 2px var(--primary-pink); }
 .acctBtn[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--primary-pink); }
 .acctBtn:active { transform: scale(0.96); }
 .acctBtn:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 2px; }

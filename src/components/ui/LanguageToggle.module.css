@@ -44,15 +44,16 @@
   outline-offset: 2px;
 }
 
+/* 激活标签用实心亮粉 + 白字（对齐 story 的 primary 强调按钮体系）。 */
 .btn.active {
-  background-color: var(--cta-bg);
-  color: var(--cta-color);
+  background-color: var(--accent-pink);
+  color: #ffffff;
   font-weight: 600;
 }
 
 .btn.active:hover {
-  background-color: var(--cta-bg);
-  color: var(--cta-color);
+  background-color: var(--accent-pink);
+  color: #ffffff;
 }
 
 /* any-pointer 而非 pointer:触屏笔记本主指针是鼠标,但触摸仍需 44px 目标。 */
@@ -109,13 +110,13 @@
 }
 
 .dropdownBtn.active {
-  background-color: var(--cta-bg);
-  color: var(--cta-color);
+  background-color: var(--accent-pink);
+  color: #ffffff;
   font-weight: 500;
 }
 
 .dropdownBtn.active:hover {
-  background-color: var(--cta-bg);
-  color: var(--cta-color);
+  background-color: var(--accent-pink);
+  color: #ffffff;
 }
 
