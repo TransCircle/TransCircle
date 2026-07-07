@@ -3,14 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { adminApi } from "../../api/client";
 import type { AdminUserDetail, AccountStatus } from "../../api/types";
+import { Avatar } from "../../components/Avatar";
 import { useFormatTs } from "../../utils/datetime";
 import { usePageTitle } from "../../utils/usePageTitle";
 import AdminStepUpDialog from "../../components/AdminStepUpDialog";
 import admin from "./Admin.module.css";
 import {
-  PageHeader,
-  Card,
-  SectionLabel,
   DescriptionList,
   StatusBadge,
   Pill,
@@ -21,7 +19,7 @@ import {
   ReasonPromptDialog,
   type BadgeTone,
 } from "../../components/ui";
-import styles from "../Page.module.css";
+import page from "../Page.module.css";
 
 const statusTone = (s: AccountStatus): BadgeTone => {
   switch (s) {
@@ -184,11 +182,20 @@ const UserDetailPage = () => {
     if (reasonKey) void runAction({ key: reasonKey, path: path(reasonKey), body: { reason: trimmed } });
   };
 
-  if (loading) return <div className={styles.page}><Spinner size="lg" label={t("common.loading")} /></div>;
+  if (loading) return <div className={admin.page}><Spinner size="lg" label={t("common.loading")} /></div>;
   if (!user) {
     return (
-      <div className={styles.page}>
-        <PageHeader title={t("admin.users.detailTitle")} actions={<Button variant="secondary" onClick={() => navigate("/admin/users")}>{t("admin.users.back")}</Button>} />
+      <div className={admin.detail}>
+        <div className={admin.detailHead}>
+          <div className={admin.detailIdentityWrap}>
+            <button type="button" className={admin.backText} onClick={() => navigate("/admin/users")}>
+              ← {t("admin.users.back")}
+            </button>
+            <div className={admin.detailIdentity}>
+              <h1 className={admin.identityName}>{t("admin.users.detailTitle")}</h1>
+            </div>
+          </div>
+        </div>
         {error && <Alert tone="error">{error}</Alert>}
       </div>
     );
@@ -205,36 +212,43 @@ const UserDetailPage = () => {
   const isSuspended = user.status === "suspended";
   const isBanned = user.status === "banned";
   const reasonDanger = reasonKey === "ban" || reasonKey === "delete";
+  const name = user.displayName || user.username || user.email;
 
   return (
-    <div className={styles.page}>
-      <PageHeader
-        title={user.displayName || user.username || user.email}
-        description={user.email}
-        actions={
-          <Button variant="secondary" size="sm" onClick={() => navigate("/admin/users")}>
-            {t("admin.users.back")}
-          </Button>
-        }
-      />
+    <div className={admin.detail}>
+      <div className={admin.detailHead}>
+        <div className={admin.detailIdentityWrap}>
+          <button type="button" className={admin.backText} onClick={() => navigate("/admin/users")}>
+            ← {t("admin.users.back")}
+          </button>
+          <div className={admin.detailIdentity}>
+            <Avatar name={name} src={user.avatarUrl} size={56} label={name} />
+            <div className={admin.identityText}>
+              <span className={admin.identityEyebrow}>{t("admin.users.detailTitle")}</span>
+              <h1 className={admin.identityName}>{name}</h1>
+              <span className={admin.identitySub}>{user.email}</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {error && <Alert tone="error">{error}</Alert>}
       {notice && <Alert tone="success">{notice}</Alert>}
 
-      <Card>
+      <section className={admin.group}>
         <DescriptionList
           items={[
             { term: t("admin.users.username"), value: user.username ?? "—" },
-            { term: t("admin.users.email"), value: <span><code className={styles.code}>{user.email}</code>{" "}<StatusBadge size="sm" tone={user.emailVerified ? "green" : "amber"} label={user.emailVerified ? t("account.profile.emailVerified") : t("account.profile.emailUnverified")} /></span> },
+            { term: t("admin.users.email"), value: <span><code className={page.code}>{user.email}</code>{" "}<StatusBadge size="sm" tone={user.emailVerified ? "green" : "amber"} label={user.emailVerified ? t("account.profile.emailVerified") : t("account.profile.emailUnverified")} /></span> },
             { term: t("admin.users.status"), value: <StatusBadge size="sm" tone={statusTone(user.status)} label={t(`status.${user.status}`)} /> },
             { term: t("admin.users.createdAt"), value: fmt(user.createdAt) || "—" },
             { term: t("admin.users.lastLoginAt"), value: fmt(user.lastLoginAt) || t("common.never") },
           ]}
         />
-      </Card>
+      </section>
 
-      <Card>
-        <SectionLabel>{t("admin.users.security")}</SectionLabel>
+      <section className={admin.group}>
+        <h2 className={admin.groupTitle}>{t("admin.users.security")}</h2>
         <DescriptionList
           items={[
             { term: t("admin.users.hasPassword"), value: user.security.hasPassword ? t("common.yes") : t("common.no") },
@@ -243,23 +257,23 @@ const UserDetailPage = () => {
             { term: t("admin.users.activeSessions"), value: String(user.security.activeSessions) },
           ]}
         />
-      </Card>
+      </section>
 
-      <Card>
-        <SectionLabel>{t("admin.users.oauthProviders")}</SectionLabel>
+      <section className={admin.group}>
+        <h2 className={admin.groupTitle}>{t("admin.users.oauthProviders")}</h2>
         {user.oauthProviders.length === 0 ? (
-          <p className={styles.subtleNote}>{t("common.none")}</p>
+          <p className={page.subtleNote}>{t("common.none")}</p>
         ) : (
-          <div className={styles.actions}>
+          <div className={admin.chips}>
             {user.oauthProviders.map((o) => (
               <Pill key={o.provider}>{o.provider}{o.providerUsername ? ` · ${o.providerUsername}` : ""}</Pill>
             ))}
           </div>
         )}
-      </Card>
+      </section>
 
-      <Card>
-        <SectionLabel>{t("admin.users.actions")}</SectionLabel>
+      <section className={admin.group}>
+        <h2 className={admin.groupTitle}>{t("admin.users.actions")}</h2>
         {/* refreshing 期间禁用操作入口：详情还是旧数据，防止对过期状态叠加操作。 */}
         <div className={admin.actionsRow}>
           <Button variant="secondary" disabled={refreshing} loading={busyKey === "force-logout"} onClick={() => openConfirm("force-logout")}>
@@ -292,7 +306,7 @@ const UserDetailPage = () => {
             {t("admin.users.deleteUser")}
           </Button>
         </div>
-      </Card>
+      </section>
 
       {/* 确认类操作（无需原因）。step-up 期间隐藏，取消后自动恢复；
           失败时错误经 error 插槽就近显示在框内，保持开启可重试。 */}

@@ -7,8 +7,8 @@ import { useAdmin } from "../../context/AdminContext";
 import { usePageTitle } from "../../utils/usePageTitle";
 import AdminStepUpDialog from "../../components/AdminStepUpDialog";
 import {
-  PageHeader,
   Card,
+  DescriptionList,
   StatusBadge,
   Pill,
   Alert,
@@ -335,23 +335,17 @@ const ClientsPage = () => {
   const formOpen = creating || editing !== null;
 
   return (
-    <div className={styles.page}>
-      {/* 与兄弟列表页一致的吸附头部：标题与「新建」入口滚动时不随列表滑走。 */}
-      <div className={styles.stickyHead}>
-        <PageHeader
-          title={t("admin.clients.title")}
-          description={t("admin.clients.subtitle")}
-          actions={
-            canManage ? (
-              <Button variant="primary" size="sm" onClick={openCreate}>
-                {t("admin.clients.newClient")}
-              </Button>
-            ) : undefined
-          }
-        />
-        {/* 该接口一次性返回全量列表，可如实标注总数（非 SectionLabel 的语义误用）。 */}
-        {!loading && clients.length > 0 && (
-          <span className={styles.count}>{t("admin.clients.count", { count: clients.length })}</span>
+    <div className={admin.page}>
+      {/* 说明 + 总数(该接口一次性返回全量列表,可如实标注) / 右侧「新建」入口。不再吸附。 */}
+      <div className={admin.pageIntro}>
+        <p className={admin.pageIntroText}>
+          {t("admin.clients.subtitle")}
+          {!loading && clients.length > 0 && <> · {t("admin.clients.count", { count: clients.length })}</>}
+        </p>
+        {canManage && (
+          <Button variant="primary" size="sm" onClick={openCreate}>
+            {t("admin.clients.newClient")}
+          </Button>
         )}
       </div>
       {error && <Alert tone="error">{error}</Alert>}
@@ -374,37 +368,46 @@ const ClientsPage = () => {
                 </div>
               </div>
 
-              <div className={admin.kv}>
-                <span className={admin.kvLabel}>{t("admin.clients.clientId")}</span>
-                <span className={admin.kvValue}>
-                  <code className={styles.code}>{c.clientId}</code>
-                  <CopyButton text={c.clientId} />
-                </span>
-              </div>
-
-              <div className={admin.kv}>
-                <span className={admin.kvLabel}>{t("admin.clients.redirectUris")}</span>
-                {/* 回调地址需要精确核对：逐行完整展示、可断行，不再用 Pill 截断。 */}
-                <span className={admin.uriList}>
-                  {c.redirectUris.map((u) => (
-                    <code key={u} className={styles.code}>{u}</code>
-                  ))}
-                </span>
-              </div>
-
-              <div className={admin.kv}>
-                <span className={admin.kvLabel}>{t("admin.clients.scopes")}</span>
-                <span className={admin.chips}>
-                  {c.allowedScopes.map((s) => (
-                    <Pill key={s}>{s}</Pill>
-                  ))}
-                </span>
-              </div>
-
-              <div className={admin.kv}>
-                <span className={admin.kvLabel}>{t("admin.clients.grantTypes")}</span>
-                <span className={admin.kvValue}>{c.grantTypes.join(", ")}</span>
-              </div>
+              {/* 标签字段统一走共享 DescriptionList(columns=1 单列,适配回调地址等长值)。 */}
+              <DescriptionList
+                columns={1}
+                items={[
+                  {
+                    term: t("admin.clients.clientId"),
+                    value: (
+                      <span className={admin.copyRow}>
+                        <code className={styles.code}>{c.clientId}</code>
+                        <CopyButton text={c.clientId} />
+                      </span>
+                    ),
+                  },
+                  {
+                    term: t("admin.clients.redirectUris"),
+                    // 回调地址需要精确核对：逐行完整展示、可断行，不再用 Pill 截断。
+                    value: (
+                      <span className={admin.uriList}>
+                        {c.redirectUris.map((u) => (
+                          <code key={u} className={styles.code}>{u}</code>
+                        ))}
+                      </span>
+                    ),
+                  },
+                  {
+                    term: t("admin.clients.scopes"),
+                    value: (
+                      <span className={admin.chips}>
+                        {c.allowedScopes.map((s) => (
+                          <Pill key={s}>{s}</Pill>
+                        ))}
+                      </span>
+                    ),
+                  },
+                  {
+                    term: t("admin.clients.grantTypes"),
+                    value: c.grantTypes.join(", "),
+                  },
+                ]}
+              />
 
               {canManage && (
                 <div className={admin.cardActions}>
@@ -579,22 +582,29 @@ const ClientsPage = () => {
       >
         <Alert tone="info">{t("admin.clients.secretWarning")}</Alert>
         {secret && (
-          <>
-            <div className={admin.kv}>
-              <span className={admin.kvLabel}>{t("admin.clients.clientId")}</span>
-              <span className={admin.kvValue}>
-                <code className={styles.code}>{secret.clientId}</code>
-                <CopyButton text={secret.clientId} />
-              </span>
-            </div>
-            <div className={admin.kv}>
-              <span className={admin.kvLabel}>{t("admin.clients.secretValue")}</span>
-              <span className={admin.kvValue}>
-                <code className={styles.code}>{secret.secret}</code>
-                <CopyButton text={secret.secret} />
-              </span>
-            </div>
-          </>
+          <DescriptionList
+            columns={1}
+            items={[
+              {
+                term: t("admin.clients.clientId"),
+                value: (
+                  <span className={admin.copyRow}>
+                    <code className={styles.code}>{secret.clientId}</code>
+                    <CopyButton text={secret.clientId} />
+                  </span>
+                ),
+              },
+              {
+                term: t("admin.clients.secretValue"),
+                value: (
+                  <span className={admin.copyRow}>
+                    <code className={styles.code}>{secret.secret}</code>
+                    <CopyButton text={secret.secret} />
+                  </span>
+                ),
+              },
+            ]}
+          />
         )}
       </Modal>
 

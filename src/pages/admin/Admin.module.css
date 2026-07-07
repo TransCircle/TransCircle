@@ -1,90 +1,353 @@
-/* 管理后台专用补充样式（行级控件仍来自 components/ui 原语）。 */
+/* ══════════════════════════════════════════════════════════
+   管理后台:整体对齐账户中心的「安静文档风」——
+   居中单列 + 身份头 + 下划线标签导航 + 安静分区列表(卡内分隔行)。
+   无侧栏、无 sticky 头部(根除顶部标题被导航遮挡的截断)、无移动端网格选择栏。
+   行级控件统一来自 components/ui 原语。
+   ══════════════════════════════════════════════════════════ */
 
+/* ── 外壳:居中列 ─────────────────────────────────────────── */
+.wrap {
+  width: 100%;
+  max-width: 54rem;
+  margin-inline: auto;
+  padding: 2.25rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+/* ── 身份头(对齐账户中心 identity):头像 + eyebrow + 名称 + 次级信息 ── */
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+.identityText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.identityEyebrow {
+  font-size: 0.64rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+.identityName {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.identitySub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* ── 分区导航:下划线标签(Vercel / Stripe 式),横向、可滚动、无网格 ── */
+.nav {
+  display: flex;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--divider-color);
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* 让下划线贴住容器底边 */
+  margin-bottom: 0.2rem;
+}
+.nav::-webkit-scrollbar {
+  display: none;
+}
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.65rem;
+  margin-bottom: -1px; /* 2px 下划线压在容器 1px 边上 */
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s var(--ease-standard), border-color 0.15s var(--ease-standard);
+}
+.navItem:hover {
+  color: var(--text-main);
+}
+.navItem:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+.navItemActive,
+.navItemActive:hover {
+  color: var(--accent-pink);
+  border-bottom-color: var(--accent-pink);
+  font-weight: 600;
+}
+.navIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+@media (pointer: coarse) {
+  .navItem {
+    min-height: 44px;
+  }
+}
+
+/* ── 页面级:分区堆叠 ─────────────────────────────────────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* 页面顶部工具/说明行:左说明/计数,右主操作。 */
+.pageIntro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  flex-wrap: wrap;
+}
+.pageIntroText {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.grow {
+  flex: 1;
+  min-width: min(220px, 100%);
+}
+.count {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* ── 安静列表卡:一张卡,卡内以分隔线分行(对齐账户中心 .list) ── */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.listRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.85rem 1.1rem;
+}
+/* 行间分隔线画在相邻 li 上,兼容「整行 <Link>」与「静态 <li>」两种行结构。 */
+.list > li + li {
+  border-top: 1px solid var(--divider-color);
+}
+
+/* 可下钻的整行链接(用户列表):整行可点,hover 柔粉底。 */
+.rowLink {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s var(--ease-standard);
+}
+.rowLink:hover {
+  background-color: var(--hover-bg);
+  background-color: var(--hover-bg-mix, var(--hover-bg));
+}
+.rowLink:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: -2px;
+}
+
+.rowMain {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+  flex: 1;
+}
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.rowTitle {
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.rowMeta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+.rowMetaSep {
+  opacity: 0.5;
+}
+.rowRight {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.chevron {
+  display: inline-flex;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* 圆形图标底(审计条目 / 无头像实体):对齐账户中心 .providerIcon。 */
+.rowIcon {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--hover-bg);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* ── 详情页 ───────────────────────────────────────────────── */
+/* 详情外层:分组以 gap 分隔(对齐账户中心 .wrap,不用满屏描边)。 */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+/* 顶部:头像身份 + 返回。 */
+.detailHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.detailIdentity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+/* 包裹:返回文字在上，身份区在下。 */
+.detailIdentityWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+/* 文字返回链接:嵌在 detailIdentityWrap 顶部、头像上方。 */
+.backText {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.18s ease;
+}
+.backText:hover {
+  color: var(--accent-pink);
+}
+.backText:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* 分组(对齐账户中心 .group:小标题 + 内容,靠 gap 分隔) ── */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.groupTitle {
+  margin: 0;
+  padding-left: 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ── 客户端卡(安静卡:头 + DescriptionList + 操作行) ── */
+.clientCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
 .cardHead {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.4rem;
 }
-
 .cardName {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-main);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
-
 .cardTags {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   flex-wrap: wrap;
 }
-
-.kv {
-  display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: 0.5rem 1rem;
-  padding: 0.5rem 0;
-  border-top: 1px solid var(--divider-color);
-  align-items: baseline;
-}
-
-.kvLabel {
-  font-size: 0.74rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-}
-
-.kvValue {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  font-size: 0.88rem;
-  color: var(--text-body);
-  word-break: break-word;
-  min-width: 0;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  min-width: 0;
-}
-
-/* 回调地址列表：逐行完整展示、可断行（.code 已带 overflow-wrap:anywhere）。
-   回调地址需要精确核对，不能像 Pill 那样 nowrap 截断。 */
-.uriList {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.3rem;
-  min-width: 0;
-}
-
-.actionsRow {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.dangerRow {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px dashed var(--divider-color);
-}
-
-/* 卡片底部操作行（编辑 / 轮换密钥 / 启停）：与上方 .kv 行用实线分隔。 */
 .cardActions {
   display: flex;
   gap: 0.6rem;
@@ -95,18 +358,67 @@
   border-top: 1px solid var(--divider-color);
 }
 
-/* 641–768px：侧栏已收成横向标签条、内容轨整体变窄，
-   label 列与行距同步收紧，避免 140px 标签列挤压值列。 */
-@media (min-width: 641px) and (max-width: 768px) {
-  .kv {
-    grid-template-columns: 116px 1fr;
-    gap: 0.4rem 0.75rem;
+/* code + 复制按钮的行内值(供 DescriptionList 的 value 使用)。 */
+.copyRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
+}
+/* 回调地址列表:逐行完整展示、可断行(不像 Pill 那样 nowrap 截断)。 */
+.uriList {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+/* 详情页操作:常规行 + 危险行(虚线分隔)。 */
+.actionsRow {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.dangerRow {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--divider-color);
+}
+
+/* ── 窄屏:行内容与操作折行后,操作区满宽(对齐账户中心习惯) ── */
+@media (max-width: 640px) {
+  .listRow {
+    align-items: flex-start;
+  }
+  .rowLink {
+    align-items: center;
+  }
+  .cardActions > *,
+  .actionsRow > *,
+  .dangerRow > * {
+    flex: 1 1 auto;
   }
 }
 
-@media (max-width: 640px) {
-  .kv {
-    grid-template-columns: 1fr;
-    gap: 0.2rem;
+@media (max-width: 560px) {
+  .wrap {
+    padding: 1.5rem 1rem 3rem;
+    gap: 1.3rem;
+  }
+  .identityName {
+    font-size: 1.25rem;
   }
 }

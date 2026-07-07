@@ -129,7 +129,6 @@
 
 .option.selected {
   color: var(--accent-pink);
-  font-weight: 600;
 }
 
 .optionDisabled {

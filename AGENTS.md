@@ -333,17 +333,16 @@ audit:read                查看审计日志
 
 ### 8.1 主题模式
 
-- 支持三种主题：`light`、`dark`、`contrast`
-- 通过 `data-theme` 属性切换
+- 支持两种主题：`light`、`dark`（高对比度模式 `contrast` 已全面移除）
+- 通过 `data-theme` 属性切换；切换瞬时生效，禁止圆形揭示/涟漪等动画（详见 `DESIGN.md`）
 - 自动检测 `prefers-color-scheme`
 - 用户偏好存储于 `localStorage`（键名：`transcircle-theme`）
 
 ### 8.2 核心 Token
 
 - 颜色使用 CSS 变量（如 `var(--primary-pink)`），严禁硬编码
-- 高对比度模式使用橙色（`#ffaa00`）替代粉色，避免红绿色盲识别困难
 - `color-mix()` 实现悬停态，同时提供硬编码回退
-- 圆角：`sm(6px)`、`md(7-8px)`、`lg(10px)`、`xl(16px)`、`full(50px)`
+- 圆角：`xs(6px)`、`sm(10px)`、`md(12px)`、`lg(14px)`、`pill(999px)`；语义别名 `radius-control=10px`、`radius-pop=12px`
 
 ### 8.3 排版
 

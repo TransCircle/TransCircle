@@ -35,3 +35,9 @@ export type { CenteredCardProps } from './CenteredCard'
 
 export { StatusScreen } from './StatusScreen'
 export type { StatusScreenProps, StatusKind, StatusAction } from './StatusScreen'
+
+export { SegmentedControl } from './SegmentedControl'
+export type { SegmentedControlProps } from './SegmentedControl'
+
+export { Pagination } from './Pagination'
+export type { PaginationProps } from './Pagination'

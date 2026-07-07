@@ -41,4 +41,13 @@ i18n.use(initReactI18next).init({
   },
 });
 
+// 同步 <html lang>：初始化即写入，并随 languageChanged 更新，
+// 使 SEO、屏幕阅读器与断词规则正确识别当前语言（zh-CN / zh-TW）。
+if (typeof document !== "undefined") {
+  document.documentElement.lang = i18n.language;
+  i18n.on("languageChanged", (lng) => {
+    document.documentElement.lang = lng;
+  });
+}
+
 export default i18n;

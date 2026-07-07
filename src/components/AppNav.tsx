@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useSession } from "../context/SessionContext";
 import { useAdmin } from "../context/AdminContext";
 import ThemeToggle from "./ThemeToggle";
+import { LanguageToggle } from "./ui";
 import { Avatar } from "./Avatar";
 import { cx } from "./admin/cx";
 import styles from "./AppNav.module.css";
@@ -12,12 +13,12 @@ import styles from "./AppNav.module.css";
 const MOBILE_BREAKPOINT = 1100;
 
 const ExternalIcon = () => (
-  <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={styles.extIcon}>
+  <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className={styles.extIcon}>
     <path d="M6 2h8v8" /><path d="M14 2 4 12" />
   </svg>
 );
 const ChevronIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6" /></svg>
 );
 
 interface NavLinkDef {
@@ -89,8 +90,11 @@ function useMenuKeyboard(
  */
 export function AppNav() {
   const { t } = useTranslation();
-  const { user, logout } = useSession();
-  const { authed: adminAuthed } = useAdmin();
+  const { user, logout: sessionLogout } = useSession();
+  const { authed: adminAuthed, me: adminMe, logout: adminLogout } = useAdmin();
+  // 導航列身份：優先使用一般使用者，後備為管理員身份
+  const navUser = user ?? (adminAuthed && adminMe ? adminMe : null);
+  const isAdminOnly = !user && adminAuthed && !!adminMe;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -280,7 +284,11 @@ export function AppNav() {
     setLoggingOut(true);
     setLogoutFailed(false);
     try {
-      await logout();
+      if (isAdminOnly) {
+        adminLogout();
+      } else {
+        await sessionLogout();
+      }
       setAcctOpen(false);
       setDrawerOpen(false);
       navigate("/", { replace: true });
@@ -292,7 +300,8 @@ export function AppNav() {
     }
   };
 
-  const displayName = user ? user.displayName || user.username : "";
+  const displayName = navUser ? navUser.displayName || navUser.username || "" : "";
+  const avatarUrl = navUser ? navUser.avatarUrl : null;
   const logoutLabel = loggingOut ? t("nav.loggingOut") : t("nav.logout");
 
   // 触发器上按 ArrowDown/ArrowUp 也应打开菜单(菜单按钮键盘惯例);
@@ -364,8 +373,9 @@ export function AppNav() {
           </div>
 
           <div className={styles.right}>
+            <LanguageToggle variant="plain" />
             <ThemeToggle />
-            {user ? (
+            {navUser ? (
               <div
                 ref={acctRef}
                 className={styles.dropdown}
@@ -378,7 +388,7 @@ export function AppNav() {
                   className={styles.acctBtn}
                   aria-haspopup="menu"
                   aria-expanded={acctOpen}
-                  aria-label={`${displayName} · ${t("nav.account")}`}
+                  aria-label={adminAuthed ? `${displayName} · ${t("nav.admin")}` : `${displayName} · ${t("nav.account")}`}
                   onPointerDown={(e) => {
                     acctPointerType.current = e.pointerType;
                   }}
@@ -408,25 +418,41 @@ export function AppNav() {
                     }
                   }}
                 >
-                  <Avatar name={displayName} src={user.avatarUrl} size={34} />
+                  <Avatar name={displayName} src={avatarUrl} size={34} />
                 </button>
                 {acctOpen && (
                   <ul ref={acctMenuRef} className={cx(styles.menu, styles.menuRight)} role="menu">
-                    <li role="none"><Link role="menuitem" to="/account" className={styles.menuItem}>{t("nav.account")}</Link></li>
-                    {adminAuthed && (
-                      <li role="none"><Link role="menuitem" to="/admin" className={styles.menuItem}>{t("nav.admin")}</Link></li>
+                    {adminAuthed ? (
+                      <>
+                        <li role="none"><Link role="menuitem" to="/admin" className={styles.menuItem}>{t("nav.admin")}</Link></li>
+                        <li role="none">
+                          <button
+                            role="menuitem"
+                            type="button"
+                            className={styles.menuItem}
+                            aria-busy={loggingOut}
+                            onClick={() => void doLogout()}
+                          >
+                            {logoutLabel}
+                          </button>
+                        </li>
+                      </>
+                    ) : (
+                      <>
+                        <li role="none"><Link role="menuitem" to="/account" className={styles.menuItem}>{t("nav.account")}</Link></li>
+                        <li role="none">
+                          <button
+                            role="menuitem"
+                            type="button"
+                            className={styles.menuItem}
+                            aria-busy={loggingOut}
+                            onClick={() => void doLogout()}
+                          >
+                            {logoutLabel}
+                          </button>
+                        </li>
+                      </>
                     )}
-                    <li role="none">
-                      <button
-                        role="menuitem"
-                        type="button"
-                        className={styles.menuItem}
-                        aria-busy={loggingOut}
-                        onClick={() => void doLogout()}
-                      >
-                        {logoutLabel}
-                      </button>
-                    </li>
                     {logoutFailed && (
                       <li role="none">
                         <p className={styles.logoutError} role="alert">{t("nav.logoutFailed")}</p>
@@ -462,8 +488,29 @@ export function AppNav() {
           {externalLinks.map((l) => (
             <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className={styles.drawerLink}>{l.label}<ExternalIcon /></a>
           ))}
-          {/* 账户操作(账户中心/管理后台/退出/登录)统一收纳于顶栏:登录后走头像下拉菜单,
-              未登录走顶栏登录按钮。此处不再重复,避免抽屉冗余。 */}
+          <hr className={styles.drawerDivider} />
+          {navUser ? (
+            <>
+              {adminAuthed ? (
+                <Link to="/admin" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.admin")}</Link>
+              ) : (
+                <Link to="/account" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.account")}</Link>
+              )}
+              <button
+                type="button"
+                className={styles.drawerLink}
+                aria-busy={loggingOut}
+                onClick={() => void doLogout()}
+              >
+                {logoutLabel}
+              </button>
+              {logoutFailed && (
+                <p className={styles.logoutError} role="alert">{t("nav.logoutFailed")}</p>
+              )}
+            </>
+          ) : (
+            <Link to="/login" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.login")}</Link>
+          )}
         </div>
       </div>
       <button

@@ -6,7 +6,7 @@ import i18n from '../i18n/config'
  * Locale-aware timestamp formatter.
  *
  * Renders a stable `YYYY/MM/DD HH:mm` shape via `Intl.DateTimeFormat`, keyed off
- * the active UI language (zh-CN | zh-TW) so dates localize instead of being pinned
+ * the active UI language so dates localize instead of being pinned
  * to a hardcoded locale. Replaces the per-page `formatTs` copies that previously
  * hardcoded `zh-CN` or rendered raw UTC ISO strings.
  *
