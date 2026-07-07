@@ -205,6 +205,7 @@
   width: 38px; /* 对齐 story */
   height: 38px;
   padding: 9px 8px;
+  margin-top: 5px; /* 对齐 story */
   box-sizing: border-box;
   border: none;
   background: none;
