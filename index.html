@@ -187,7 +187,7 @@
       (function() {
         try {
           var theme = localStorage.getItem('transcircle-theme');
-          if (theme && ['light', 'dark', 'contrast'].includes(theme)) {
+          if (theme && ['light', 'dark'].includes(theme)) {
             document.documentElement.setAttribute('data-theme', theme);
           } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
             document.documentElement.setAttribute('data-theme', 'dark');

@@ -81,40 +81,7 @@
   }
 }
 
-/* Ripple effect for theme switching
-   背景色由 JS 在创建涟漪时从 --bg-color 快照(内联 style),避免此处硬编码亮/暗两份主题色。
-   放慢到 --dur-reveal(640ms) + emphasized 缓动,读起来是一次从容的圆形擦除而非闪烁。 */
-.ripple {
-  position: fixed;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 100;
-  transform: translate(-50%, -50%) scale(0);
-  animation: ripple-expand var(--dur-reveal) var(--ease-emphasized) forwards;
-}
-
-@keyframes ripple-expand {
-  0% {
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0;
-  }
-  8% {
-    opacity: 0.85;
-  }
-  70% {
-    opacity: 0.6;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .ripple {
-    animation: none;
-    opacity: 0;
-  }
   .icon {
     transition: none;
   }

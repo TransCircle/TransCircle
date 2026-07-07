@@ -168,6 +168,8 @@ export interface AdminUserListItem {
   username: string | null;
   displayName: string | null;
   email: string;
+  /** 头像 URL；后端若返回则列表加载真实头像,缺省时 Avatar 回退首字母。 */
+  avatarUrl?: string | null;
   emailVerified: boolean;
   status: AccountStatus;
   createdAt: number;

@@ -17,7 +17,12 @@
     color 0.18s ease,
     border-color 0.18s ease,
     box-shadow 0.18s ease,
-    transform 0.18s ease;
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn:not(:disabled):not([aria-disabled='true']):active {
+  transform: scale(0.92);
+  transition-duration: 0.06s;
 }
 
 .md {
@@ -27,7 +32,7 @@
 }
 
 .sm {
-  padding: 0.4rem 0.9rem;
+  padding: 0.25rem 0.7rem;
   font-size: 0.82rem;
 }
 
@@ -64,16 +69,28 @@
 
 /* ── Secondary ───────────────────────────────────────────── */
 
-/* 对齐主页 .ctaSecondary：粉描边 + 粉文字，hover 粉底加深描边。 */
+/* 对齐主页 .ctaSecondary：粉文字 + hover 粉底，无外框。 */
 .secondary {
   background-color: transparent;
   color: var(--accent-pink);
-  border-color: var(--primary-pink);
 }
 
 .secondary:not(:disabled):not([aria-disabled='true']):hover {
-  border-color: var(--accent-pink);
   background-color: var(--hover-bg);
+}
+
+/* ── Soft Error ─────────────────────────────────────────── */
+
+/* 与 danger 样式一致：红文字 + 红边框 + 浅红 hover 背景。 */
+.softError {
+  background-color: transparent;
+  color: var(--soft-error-text);
+  border-color: var(--soft-error-border);
+}
+
+.softError:not(:disabled):not([aria-disabled='true']):hover {
+  border-color: var(--soft-error-border);
+  background-color: var(--soft-error-bg);
 }
 
 /* ── Ghost ───────────────────────────────────────────────── */
@@ -89,17 +106,19 @@
 
 /* ── Danger ──────────────────────────────────────────────── */
 
-/* soft-error token 随主题取值（含系统暗色 :root:not([data-theme])），
+/* 与 softError 的区别：danger 用于不可逆/高影响的操作（封禁、删除），
+   使用填充背景以求更强烈的警示语义。
+   soft-error token 随主题取值（含系统暗色 :root:not([data-theme])），
    不再手工写 dark 覆盖——顺带修复系统暗色下旧覆盖不生效的问题。 */
 .danger {
-  background-color: transparent;
+  background-color: var(--soft-error-bg);
   color: var(--soft-error-text);
   border-color: var(--soft-error-border);
 }
 
 .danger:not(:disabled):not([aria-disabled='true']):hover {
-  border-color: var(--soft-error-border);
   background-color: var(--soft-error-bg);
+  filter: brightness(0.92);
 }
 
 /* Comfortable touch targets on touch devices.
