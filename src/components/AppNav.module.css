@@ -172,7 +172,7 @@
   display: inline-flex;
   align-items: center;
   height: var(--control-h);
-  padding: 0 1.2rem; /* 对齐 story 的横向内边距 */
+  padding: 0 1.1rem;
   border-radius: var(--radius-pill);
   background-color: var(--cta-bg);
   color: var(--cta-color);
