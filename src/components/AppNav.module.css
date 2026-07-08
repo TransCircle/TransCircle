@@ -161,7 +161,7 @@
   transition: box-shadow var(--dur-fast) var(--ease-standard),
     transform var(--dur-fast) var(--ease-standard);
 }
-.acctBtn:hover { box-shadow: 0 0 0 2px var(--primary-pink); }
+.acctBtn:hover { box-shadow: 0 0 0 2px var(--soft-pink); }
 .acctBtn[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--primary-pink); }
 .acctBtn:active { transform: scale(0.96); }
 .acctBtn:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 2px; }
