@@ -341,7 +341,7 @@ export function AppNav() {
               l.to ? (
                 <Link key={l.label} to={l.to} className={styles.link}>{l.label}</Link>
               ) : (
-                <a key={l.label} href={l.href} rel="noopener noreferrer" className={styles.link}>
+                <a key={l.label} href={l.href} rel="nofollow noopener noreferrer" className={styles.link}>
                   {l.label}<ExternalIcon />
                 </a>
               ),
@@ -362,7 +362,7 @@ export function AppNav() {
                 <ul ref={linksMenuRef} className={styles.menu} role="menu">
                   {externalLinks.map((l) => (
                     <li key={l.href} role="none">
-                      <a role="menuitem" href={l.href} target="_blank" rel="noopener noreferrer" className={styles.menuItem}>
+                      <a role="menuitem" href={l.href} target="_blank" rel="nofollow noopener noreferrer" className={styles.menuItem}>
                         {l.label}<ExternalIcon />
                       </a>
                     </li>
@@ -482,13 +482,13 @@ export function AppNav() {
             l.to ? (
               <Link key={l.label} to={l.to} className={styles.drawerLink}>{l.label}</Link>
             ) : (
-              <a key={l.label} href={l.href} rel="noopener noreferrer" className={styles.drawerLink}>
+              <a key={l.label} href={l.href} rel="nofollow noopener noreferrer" className={styles.drawerLink}>
                 {l.label}<ExternalIcon />
               </a>
             ),
           )}
           {externalLinks.map((l) => (
-            <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className={styles.drawerLink}>{l.label}<ExternalIcon /></a>
+            <a key={l.href} href={l.href} target="_blank" rel="nofollow noopener noreferrer" className={styles.drawerLink}>{l.label}<ExternalIcon /></a>
           ))}
           <hr className={styles.drawerDivider} />
           {navUser ? (

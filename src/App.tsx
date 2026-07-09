@@ -58,10 +58,10 @@ const App = () => {
         <section id="join" className={styles.actionSection}>
           <h2 className={styles.sectionHeading}>{t('landing.joinHeading')}</h2>
           <div className={styles.ctaRow}>
-            <a href="https://transcircle.org/s/join" className={styles.ctaPrimary} target="_blank" rel="noopener noreferrer">
+            <a href="https://transcircle.org/s/join" className={styles.ctaPrimary} target="_blank" rel="nofollow noopener noreferrer">
               {t('landing.joinForm')}
             </a>
-            <a href="https://transcircle.org/s/x-chat" className={styles.ctaSecondary} target="_blank" rel="noopener noreferrer">
+            <a href="https://transcircle.org/s/x-chat" className={styles.ctaSecondary} target="_blank" rel="nofollow noopener noreferrer">
               {t('landing.joinChat')}
             </a>
           </div>
@@ -71,21 +71,21 @@ const App = () => {
           <h2 className={styles.sectionHeading}>{t('landing.followHeading')}</h2>
           <ul className={styles.socialList}>
             <li>
-              <a href="https://github.com/TransCircle/TransCircle" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/TransCircle/TransCircle" className={styles.socialLink} target="_blank" rel="nofollow noopener noreferrer">
                 <span className={styles.socialIcon}><GitHubIcon /></span>
                 <span className={styles.socialName}>GitHub</span>
                 <span className={styles.socialHandle}>github.com/TransCircle/TransCircle</span>
               </a>
             </li>
             <li>
-              <a href="https://x.com/TransCircleOrg" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
+              <a href="https://x.com/TransCircleOrg" className={styles.socialLink} target="_blank" rel="nofollow noopener noreferrer">
                 <span className={styles.socialIcon}><XIcon /></span>
                 <span className={styles.socialName}>X (Twitter)</span>
                 <span className={styles.socialHandle}>@TransCircleOrg</span>
               </a>
             </li>
             <li>
-              <a href="https://bsky.app/profile/TransCircle.org" className={styles.socialLink} target="_blank" rel="noopener noreferrer">
+              <a href="https://bsky.app/profile/TransCircle.org" className={styles.socialLink} target="_blank" rel="nofollow noopener noreferrer">
                 <span className={styles.socialIcon}><BlueskyIcon /></span>
                 <span className={styles.socialName}>Bluesky</span>
                 <span className={styles.socialHandle}>TransCircle.org</span>
