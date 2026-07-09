@@ -12,6 +12,7 @@ import {
   Alert,
   StatusScreen,
 } from "../components/ui";
+import { TurnstileWidget } from "../components/ui/TurnstileWidget";
 import authStyles from "./Auth.module.css";
 
 /** 注册（修正缺失页）：POST /v1/auth/register { username, email, password, displayName }。
@@ -26,6 +27,8 @@ const RegisterPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState(false);
 
   usePageTitle(t("register.title"));
 
@@ -39,9 +42,15 @@ const RegisterPage = () => {
       // 不匹配提示由确认密码字段的 hintError 就近呈现（组件自带 aria-live）。
       return;
     }
+    if (import.meta.env.VITE_TURNSTILE_SITE_KEY && !turnstileToken) {
+      setCaptchaError(true);
+      return;
+    }
     setBusy(true);
     try {
-      const res = await api.post("/v1/auth/register", { username, email, password, displayName }, { noAuth: true });
+      const body: Record<string, unknown> = { username, email, password, displayName };
+      if (turnstileToken) body.turnstileToken = turnstileToken;
+      const res = await api.post("/v1/auth/register", body, { noAuth: true });
       if (!res.ok) {
         setError(res.error.message);
         return;
@@ -123,6 +132,18 @@ const RegisterPage = () => {
           onChange={(e) => setConfirm(e.target.value)}
           required
         />
+        {import.meta.env.VITE_TURNSTILE_SITE_KEY && (
+          <div className={authStyles.fieldGroup}>
+            {captchaError && <Alert tone="error">{t("register.captchaRequired")}</Alert>}
+            <TurnstileWidget
+              onToken={(token) => {
+                setTurnstileToken(token);
+                setCaptchaError(false);
+              }}
+              onError={() => setCaptchaError(true)}
+            />
+          </div>
+        )}
         <Button type="submit" variant="primary" fullWidth loading={busy}>
           {t("register.submit")}
         </Button>

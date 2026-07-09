@@ -14,6 +14,7 @@ import {
   AdminButton as Button,
   Alert,
 } from "../components/ui";
+import { TurnstileWidget } from "../components/ui/TurnstileWidget";
 import authStyles from "./Auth.module.css";
 
 const GithubIcon = () => (
@@ -66,6 +67,9 @@ const LoginPage = () => {
   const [mfaRecoveryMode, setMfaRecoveryMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
+  const [needCaptcha, setNeedCaptcha] = useState(false);
+  const [captchaError, setCaptchaError] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const busy = pending !== null;
 
   usePageTitle(oidcUid ? t("login.oidcTitle") : t("login.title"));
@@ -107,6 +111,8 @@ const LoginPage = () => {
   const onTokens = async (data: LoginResult) => {
     clearAdminAuth();
     if (data.accessToken) setUserToken(data.accessToken);
+    setNeedCaptcha(false);
+    setTurnstileToken(null);
     await refresh();
     await finish();
   };
@@ -124,10 +130,17 @@ const LoginPage = () => {
     setError(null);
     setPending("login");
     try {
-      const res = await api.post<LoginResult>("/v1/auth/login", { identifier, password }, { noAuth: true });
+      const body: Record<string, unknown> = { identifier, password };
+      if (turnstileToken) body.turnstileToken = turnstileToken;
+      const res = await api.post<LoginResult>("/v1/auth/login", body, { noAuth: true });
       if (!res.ok) {
         if (res.error.code === "EMAIL_NOT_VERIFIED") {
           goVerifyEmail(res.error.data?.email);
+          return;
+        }
+        if (res.error.code === "CAPTCHA_REQUIRED") {
+          setNeedCaptcha(true);
+          setCaptchaError(true);
           return;
         }
         setError(res.error.message);
@@ -324,6 +337,18 @@ const LoginPage = () => {
                 </Link>
               </div>
             </div>
+            {needCaptcha && import.meta.env.VITE_TURNSTILE_SITE_KEY && (
+              <div className={authStyles.fieldGroup}>
+                {captchaError && <Alert tone="error">{t("login.captchaRequired")}</Alert>}
+                <TurnstileWidget
+                  onToken={(token) => {
+                    setTurnstileToken(token);
+                    setCaptchaError(false);
+                  }}
+                  onError={() => setCaptchaError(true)}
+                />
+              </div>
+            )}
             <Button type="submit" variant="primary" fullWidth loading={pending === "login"} disabled={busy}>
               {t("login.submit")}
             </Button>
