@@ -109,7 +109,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   box-shadow: var(--shadow-card);
-  transition: background-color 0.2s ease, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  transition: background-color var(--dur-base) var(--ease-standard), transform var(--dur-fast) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard);
 }
 
 .ctaPrimary:active {
