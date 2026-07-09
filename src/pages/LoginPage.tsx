@@ -67,7 +67,6 @@ const LoginPage = () => {
   const [mfaRecoveryMode, setMfaRecoveryMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
-  const [needCaptcha, setNeedCaptcha] = useState(false);
   const [captchaError, setCaptchaError] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const busy = pending !== null;
@@ -111,7 +110,6 @@ const LoginPage = () => {
   const onTokens = async (data: LoginResult) => {
     clearAdminAuth();
     if (data.accessToken) setUserToken(data.accessToken);
-    setNeedCaptcha(false);
     setTurnstileToken(null);
     await refresh();
     await finish();
@@ -138,8 +136,7 @@ const LoginPage = () => {
           goVerifyEmail(res.error.data?.email);
           return;
         }
-        if (res.error.code === "CAPTCHA_REQUIRED") {
-          setNeedCaptcha(true);
+        if (res.error.code === "CAPTCHA_REQUIRED" || res.error.code === "CAPTCHA_FAILED") {
           setCaptchaError(true);
           return;
         }
@@ -337,7 +334,7 @@ const LoginPage = () => {
                 </Link>
               </div>
             </div>
-            {needCaptcha && import.meta.env.VITE_TURNSTILE_SITE_KEY && (
+            {import.meta.env.VITE_TURNSTILE_SITE_KEY && (
               <div className={authStyles.fieldGroup}>
                 {captchaError && <Alert tone="error">{t("login.captchaRequired")}</Alert>}
                 <TurnstileWidget
