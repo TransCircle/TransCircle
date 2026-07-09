@@ -136,7 +136,9 @@
     "mfaUseRecovery": "改用恢复码",
     "mfaBackToOther": "返回其他验证方式",
     "adminEntry": "管理员登录（IAM）",
-    "mfaChallengeMissing": "登录需要多因素验证，但服务器未返回验证挑战，请重试；若问题持续请联系管理员。"
+    "mfaChallengeMissing": "登录需要多因素验证，但服务器未返回验证挑战，请重试；若问题持续请联系管理员。",
+    "captchaRequired": "登录尝试过于频繁，请完成人机验证",
+    "captchaFailed": "人机验证失败，请重试"
   },
   "register": {
     "title": "创建账户",
@@ -146,7 +148,9 @@
     "submit": "注册",
     "haveAccount": "已有账户？",
     "doneTitle": "注册成功",
-    "doneDesc": "我们已向 {{email}} 发送验证邮件，请查收并完成邮箱验证。"
+    "doneDesc": "我们已向 {{email}} 发送验证邮件，请查收并完成邮箱验证。",
+    "captchaRequired": "请完成人机验证",
+    "captchaFailed": "人机验证失败，请重试"
   },
   "forgot": {
     "title": "找回密码",
