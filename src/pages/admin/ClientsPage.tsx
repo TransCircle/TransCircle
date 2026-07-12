@@ -150,14 +150,14 @@ const ClientsPage = () => {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    // 该端点返回 { data: { data: OAuthClient[] } }（额外包了一层 data，非分页）。
-    const res = await adminApi.get<{ data: OAuthClient[] }>("/v1/admin/clients");
+    // 该端点返回 OAuthClient[]（apiRequest 已内层拆包）。
+    const res = await adminApi.get<OAuthClient[]>("/v1/admin/clients");
     setLoading(false);
     if (!res.ok) {
       setError(res.error.message);
       return;
     }
-    setClients(res.data?.data ?? []);
+    setClients(res.data ?? []);
   }, []);
 
   useEffect(() => {
