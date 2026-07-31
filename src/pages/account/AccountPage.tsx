@@ -29,7 +29,7 @@ const PencilIcon = () => (
  */
 const AccountPage = () => {
   const { t } = useTranslation();
-  const { user, loading } = useSession();
+  const { user, loading, sessionExpired } = useSession();
   const location = useLocation();
   const [avatarOpen, setAvatarOpen] = useState(false);
 
@@ -39,7 +39,9 @@ const AccountPage = () => {
     return <StatusScreen kind="loading" title={t("account.verifying")} />;
   }
   if (!user) {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    const params = new URLSearchParams({ redirect: location.pathname });
+    if (sessionExpired) params.set("reason", "session_expired");
+    return <Navigate to={`/login?${params.toString()}`} replace />;
   }
 
   const displayName = user.displayName || user.username;

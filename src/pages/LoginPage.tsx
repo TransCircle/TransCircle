@@ -49,10 +49,11 @@ type PendingAction = "login" | "mfa" | "mfaPasskey" | "github" | "x" | "passkey"
 const LoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, refresh } = useSession();
+  const { user, refresh, sessionExpired, clearSessionExpired } = useSession();
   const [params] = useSearchParams();
 
   const oidcUid = params.get("oidc");
+  const showSessionExpired = params.get("reason") === "session_expired" && sessionExpired;
   // 来自 URL 的重定向目标必须净化，防开放重定向。
   const redirectTo = sanitizeRedirect(params.get("redirect"), "/account");
 
@@ -109,6 +110,7 @@ const LoginPage = () => {
 
   const onTokens = async (data: LoginResult) => {
     clearAdminAuth();
+    clearSessionExpired();
     if (data.accessToken) setUserToken(data.accessToken);
     setTurnstileToken(null);
     await refresh();
@@ -303,6 +305,7 @@ const LoginPage = () => {
     <CenteredCard>
       <PageHeader align="center" title={oidcUid ? t("login.oidcTitle") : t("login.title")} />
 
+      {showSessionExpired && <Alert tone="error">{t("login.sessionExpired")}</Alert>}
       {error && <Alert tone="error">{error}</Alert>}
 
       {!mfaToken ? (

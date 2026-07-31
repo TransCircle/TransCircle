@@ -138,7 +138,8 @@
     "adminEntry": "管理员登录（IAM）",
     "mfaChallengeMissing": "登录需要多因素验证，但服务器未返回验证挑战，请重试；若问题持续请联系管理员。",
     "captchaRequired": "登录尝试过于频繁，请完成人机验证",
-    "captchaFailed": "人机验证失败，请重试"
+    "captchaFailed": "人机验证失败，请重试",
+    "sessionExpired": "会话已结束，请重新登录。"
   },
   "register": {
     "title": "创建账户",

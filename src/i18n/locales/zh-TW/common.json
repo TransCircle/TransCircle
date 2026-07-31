@@ -138,7 +138,8 @@
     "adminEntry": "管理員登入（IAM）",
     "mfaChallengeMissing": "登入需要多因素驗證，但伺服器未返回驗證挑戰，請重試；若問題持續請聯絡管理員。",
     "captchaRequired": "登入嘗試過於頻繁，請完成人機驗證",
-    "captchaFailed": "人機驗證失敗，請重試"
+    "captchaFailed": "人機驗證失敗，請重試",
+    "sessionExpired": "工作階段已結束，請重新登入。"
   },
   "register": {
     "title": "建立賬戶",

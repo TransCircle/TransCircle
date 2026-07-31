@@ -237,7 +237,6 @@ async function handle401(
       }
     }
     _userToken = null;
-    clearAdminAuth();
     dispatchAuthEvent("pass:session-expired");
   } else {
     clearAdminAuth();
