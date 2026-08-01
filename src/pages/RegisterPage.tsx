@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { checkPasswordStrength } from "../utils/string";
 import { usePageTitle } from "../utils/usePageTitle";
+import { readOidcInteraction } from "../utils/oidcInteraction";
 import {
   CenteredCard,
   PageHeader,
@@ -19,6 +20,9 @@ import authStyles from "./Auth.module.css";
  *  成功后账户为 pending_verification，需查收验证邮件。 */
 const RegisterPage = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const oidcUid = readOidcInteraction(params.get("oidc"));
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -49,9 +53,16 @@ const RegisterPage = () => {
     setBusy(true);
     try {
       const body: Record<string, unknown> = { username, email, password, displayName };
+      if (oidcUid) body.oidcInteraction = oidcUid;
       if (turnstileToken) body.turnstileToken = turnstileToken;
       const res = await api.post("/v1/auth/register", body, { noAuth: true });
       if (!res.ok) {
+        if (res.error.code === "EMAIL_TAKEN" && res.error.data?.nextAction === "email_resend") {
+          const q = new URLSearchParams({ email, reason: "email_not_verified" });
+          if (oidcUid) q.set("oidc", oidcUid);
+          navigate(`/verify-email?${q.toString()}`, { replace: true });
+          return;
+        }
         setError(res.error.message);
         return;
       }
@@ -68,9 +79,18 @@ const RegisterPage = () => {
         title={t("register.doneTitle")}
         description={t("register.doneDesc", { email })}
         actions={[
-          { label: t("nav.login"), to: "/login" },
-          // 带上已填邮箱，重发页免去二次输入。
-          { label: t("verify.resendTitle"), to: `/verify-email?email=${encodeURIComponent(email)}` },
+          {
+            label: t("nav.login"),
+            to: oidcUid ? `/login?oidc=${encodeURIComponent(oidcUid)}` : "/login",
+          },
+          // 带上已填邮箱和交互标识，重发页免去二次输入并保持授权流程。
+          {
+            label: t("verify.resendTitle"),
+            to: `/verify-email?${new URLSearchParams({
+              email,
+              ...(oidcUid ? { oidc: oidcUid } : {}),
+            }).toString()}`,
+          },
         ]}
       />
     );
@@ -150,7 +170,10 @@ const RegisterPage = () => {
       </form>
       <p className={authStyles.aside}>
         {t("register.haveAccount")}{" "}
-        <Link to="/login" className={authStyles.link}>
+        <Link
+          to={oidcUid ? `/login?oidc=${encodeURIComponent(oidcUid)}` : "/login"}
+          className={authStyles.link}
+        >
           {t("nav.login")}
         </Link>
       </p>

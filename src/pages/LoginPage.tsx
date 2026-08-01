@@ -6,6 +6,10 @@ import { useSession } from "../context/SessionContext";
 import type { LoginResult, WebAuthnRequestOptions } from "../api/types";
 import { performAssertion, isWebAuthnSupported } from "../utils/webauthn";
 import { sanitizeRedirect } from "../utils/url";
+import {
+  clearOidcInteraction,
+  readOidcInteraction,
+} from "../utils/oidcInteraction";
 import { usePageTitle } from "../utils/usePageTitle";
 import {
   CenteredCard,
@@ -52,7 +56,7 @@ const LoginPage = () => {
   const { user, refresh, sessionExpired, clearSessionExpired } = useSession();
   const [params] = useSearchParams();
 
-  const oidcUid = params.get("oidc");
+  const oidcUid = readOidcInteraction(params.get("oidc"));
   const showSessionExpired = params.get("reason") === "session_expired" && sessionExpired;
   // 来自 URL 的重定向目标必须净化，防开放重定向。
   const redirectTo = sanitizeRedirect(params.get("redirect"), "/account");
@@ -88,10 +92,12 @@ const LoginPage = () => {
         `/oauth2/interaction/${encodeURIComponent(oidcUid)}/login`,
       );
       if (res.ok && res.data?.redirectTo) {
+        clearOidcInteraction();
         window.location.href = res.data.redirectTo;
         return;
       }
-      navigate(`/oauth/consent?oidc=${encodeURIComponent(oidcUid)}`, { replace: true });
+      clearOidcInteraction();
+      navigate("/login", { replace: true });
       return;
     }
     navigate(redirectTo, { replace: true });
@@ -121,6 +127,7 @@ const LoginPage = () => {
   const goVerifyEmail = (email?: unknown) => {
     const q = new URLSearchParams({ reason: "email_not_verified" });
     if (typeof email === "string" && email) q.set("email", email);
+    if (oidcUid) q.set("oidc", oidcUid);
     navigate(`/verify-email?${q.toString()}`, { replace: true });
   };
 
@@ -396,7 +403,10 @@ const LoginPage = () => {
 
           <p className={authStyles.aside}>
             {t("login.noAccount")}{" "}
-            <Link to="/register" className={authStyles.link}>
+            <Link
+              to={oidcUid ? `/register?oidc=${encodeURIComponent(oidcUid)}` : "/register"}
+              className={authStyles.link}
+            >
               {t("login.register")}
             </Link>
           </p>
