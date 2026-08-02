@@ -463,7 +463,11 @@ const LoginPage = () => {
             </Button>
           </form>
 
-          <div className={authStyles.divider}>{t("login.orContinueWith")}</div>
+          {/* 提供商由后端按配置下发，可能一个都没有（未配置 / 接口失败）；
+              此时连同 passkey 一起判空，否则会剩一条什么都没有的分隔线。 */}
+          {(providers.length > 0 || isWebAuthnSupported()) && (
+            <div className={authStyles.divider}>{t("login.orContinueWith")}</div>
+          )}
 
           <div className={authStyles.oauthRow}>
             {providers.map((p) => (
