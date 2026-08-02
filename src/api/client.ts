@@ -1,14 +1,17 @@
 // ============================================================================
 // TransCircle Pass 门户统一 API 客户端
 //
-// 设计要点（对齐故事站 client，并按 Pass 双身份平面扩展）：
-// - C 端 access token 仅存内存；401 自动 refresh（POST /v1/auth/refresh，refresh_token
+// 设计要点（对齐故事站 client）：
+// - access token 仅存内存；401 自动 refresh（POST /v1/auth/refresh，refresh_token
 //   走 HttpOnly Cookie 一次性轮换）后重试一次。
-// - 管理台 access token 独立存储（sessionStorage，跨刷新存活，关闭标签即失效）；
-//   无 refresh 机制，401 即清除并要求经 IAM 重新登录。
-// - 统一解析后端响应封装：成功 { data, requestId }（列表附 pagination），
+// - **只有一条身份平面**。管理控制台复用用户自己的 Pass 会话：管理员就是普通用户，
+//   「进入控制台」只是访问了一个需要 IAM 权限的页面，不再有独立的管理员令牌、
+//   不再有 sessionStorage、也不再有管理端登出。
+// - 统一解析后端响应封装：成功 { data, requestId }（游标列表附 pagination；
+//   管理端列表改为 offset，分页字段落在 data 里，见 OffsetPage），
 //   失败 { error: { code, message, details?, data? }, requestId }。
-// - 自动注入 Authorization / Content-Type / X-CSRF-Token / Idempotency-Key / X-Request-Id。
+// - 自动注入 Authorization / Content-Type / X-CSRF-Token / If-Match /
+//   Idempotency-Key / X-Request-Id。
 // ============================================================================
 
 // 非 React 环境的兜底文案:直接用 i18n 单例(config 不反向依赖本模块,无循环);
@@ -21,7 +24,6 @@ export const API_BASE: string = import.meta.env.VITE_PASS_API_BASE ?? "";
 // ─── Token 存储 ──────────────────────────────────────────────────
 
 let _userToken: string | null = null;
-const ADMIN_TOKEN_KEY = "pass_admin_token";
 
 export function setUserToken(token: string | null): void {
   _userToken = token;
@@ -30,31 +32,10 @@ export function getUserToken(): string | null {
   return _userToken;
 }
 
-export function setAdminToken(token: string | null): void {
-  try {
-    if (token) sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
-    else sessionStorage.removeItem(ADMIN_TOKEN_KEY);
-  } catch {
-    /* sessionStorage 不可用时忽略 */
-  }
-}
-export function getAdminToken(): string | null {
-  try {
-    return sessionStorage.getItem(ADMIN_TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-/** 清除 C 端登录态 */
+/** 清除登录态（全站唯一一条会话）。 */
 export function clearUserAuth(): void {
   _userToken = null;
   _refreshPromise = null;
-}
-/** 清除管理台登录态 */
-export function clearAdminAuth(): void {
-  setAdminToken(null);
-  dispatchAuthEvent("pass:admin-expired");
 }
 
 // ─── refresh token 轮换（C 端平面）──────────────────────────────
@@ -175,6 +156,33 @@ export interface Pagination {
   hasMore: boolean;
 }
 
+/**
+ * 管理平面列表的 offset 分页响应体（api-delta §二）。
+ *
+ * C 端仍是游标分页（上面的 `Pagination`，随响应顶层下发）；管理端为了「点页码直达第 N 页」
+ * 改成 offset —— 游标只知道下一段从哪开始，跳不到任意页。分页字段落在 `data` 里而非顶层，
+ * 因此用本接口作为 `apiRequest<OffsetPage<T>>` 的泛型参数。
+ *
+ * `total` 必须返回，否则前端算不出页数；越界统一返回空 `items` + 真实 `total`，
+ * 不报错也不自动夹到末页（夹页会让「粘贴一个页码链接」的结果和粘贴者看到的不一样）。
+ */
+export interface OffsetPage<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+/** 管理端列表允许的每页条数（后端白名单，其余值返回 400 INVALID_PAGE_SIZE）。 */
+export const PAGE_SIZES = [10, 20, 50] as const;
+export type PageSize = (typeof PAGE_SIZES)[number];
+
+/** 收窄任意输入到合法每页条数；非法值回落默认 10（与后端默认一致）。 */
+export function toPageSize(raw: string | number | null | undefined): PageSize {
+  const n = typeof raw === "string" ? Number(raw) : raw;
+  return PAGE_SIZES.find((s) => s === n) ?? 10;
+}
+
 type ApiResultBase = { requestId: string; status: number };
 
 export type ApiResult<T = unknown> = ApiResultBase &
@@ -183,20 +191,44 @@ export type ApiResult<T = unknown> = ApiResultBase &
     | { ok: false; error: ApiErrorBody }
   );
 
-export type ApiPlane = "user" | "admin";
+/**
+ * 身份平面只剩 `user` 一条。
+ *
+ * 保留这个字面量类型（而非直接删掉 `plane` 选项）是为了让调用点显式写出
+ * `plane: "user"`，读代码时一眼看到「管理端也走用户会话」，而不是靠默认值默会。
+ */
+export type ApiPlane = "user";
 
 export interface ApiRequestOptions {
-  /** 身份平面：user（默认，C 端）/ admin（管理台，独立 token）。 */
+  /** 身份平面：仅 user（管理端同样复用用户会话，没有第二条平面）。 */
   plane?: ApiPlane;
   /** 跳过自动注入 Authorization。 */
   noAuth?: boolean;
   /** 合并自定义请求头。 */
   headers?: Record<string, string>;
   /** 注入 Idempotency-Key。 */
-  idempotent?: boolean;
+  /**
+   * 幂等键。
+   *
+   * `true` = 本次调用自动生成一个新键，只保护「同一次调用内部的自动重试」
+   *（如 401 后刷新令牌再发一次）。
+   *
+   * 传**字符串**则用调用方给的键。**用户可能手动重试的危险操作应当传字符串**：
+   * 键在一次「用户意图」内保持不变，服务端才认得出「这是同一个请求」。
+   * 否则「请求已提交、响应在网关丢了 → 用户点第二次」会被当成全新请求再执行一遍 ——
+   * 轮换签名密钥连做两次会把仍在签发令牌的那把推进 retired，是线上事故。
+   * 用 `newIdempotencyKey()` 生成，随对话框/表单的生命周期保存。
+   */
+  idempotent?: boolean | string;
   /** 注入 X-CSRF-Token（OAuth 注册/绑定流）。 */
   csrf?: boolean;
-  /** 不在 401 时尝试 refresh（C 端平面）。 */
+  /**
+   * 乐观并发控制：注入 `If-Match: <updatedAt>`。
+   * 不一致时后端返回 409 STALE_WRITE 并附当前值 —— 没有这条，
+   * 两个管理员同时编辑会静默互相覆盖。
+   */
+  ifMatch?: string | number;
+  /** 不在 401 时尝试 refresh。 */
   skipRefresh?: boolean;
   signal?: AbortSignal;
 }
@@ -211,38 +243,27 @@ function newRequestId(): string {
   return `req_fe_${rand}`;
 }
 
-function planeToken(plane: ApiPlane): string | null {
-  return plane === "admin" ? getAdminToken() : _userToken;
-}
-
-/** 401 自动处理：C 端尝试 refresh+重试；管理台清除 token 并广播失效事件。 */
+/** 401 自动处理：尝试 refresh + 重试；续期失败才清登录态并广播。 */
 async function handle401(
   res: Response,
-  plane: ApiPlane,
   url: string,
   init: RequestInit,
   headers: Headers,
   skipRefresh: boolean,
 ): Promise<Response> {
   if (res.status !== 401) return res;
-  if (plane === "user") {
-    if (!skipRefresh) {
-      const newToken = await doRefresh();
-      if (newToken) {
-        // ReadableStream 请求体只能消费一次,已被首次请求耗尽,无法透明重放;
-        // 会话已续期,把 401 交回调用方自行决定是否重发(不误清登录态)。
-        if (init.body instanceof ReadableStream) return res;
-        headers.set("Authorization", `Bearer ${newToken}`);
-        return fetch(url, { ...init, headers });
-      }
+  if (!skipRefresh) {
+    const newToken = await doRefresh();
+    if (newToken) {
+      // ReadableStream 请求体只能消费一次,已被首次请求耗尽,无法透明重放;
+      // 会话已续期,把 401 交回调用方自行决定是否重发(不误清登录态)。
+      if (init.body instanceof ReadableStream) return res;
+      headers.set("Authorization", `Bearer ${newToken}`);
+      return fetch(url, { ...init, headers });
     }
-    _userToken = null;
-    clearAdminAuth();
-    dispatchAuthEvent("pass:session-expired");
-  } else {
-    clearAdminAuth();
-    dispatchAuthEvent("pass:admin-expired");
   }
+  _userToken = null;
+  dispatchAuthEvent("pass:session-expired");
   return res;
 }
 
@@ -262,7 +283,6 @@ export async function apiRequest<T = unknown>(
   body?: unknown,
   options: ApiRequestOptions = {},
 ): Promise<ApiResult<T>> {
-  const plane: ApiPlane = options.plane ?? "user";
   const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
   const headers = new Headers(options.headers ?? {});
 
@@ -277,9 +297,8 @@ export async function apiRequest<T = unknown>(
     headers.set("Content-Type", "application/json; charset=utf-8");
   }
 
-  if (!options.noAuth) {
-    const tk = planeToken(plane);
-    if (tk) headers.set("Authorization", `Bearer ${tk}`);
+  if (!options.noAuth && _userToken) {
+    headers.set("Authorization", `Bearer ${_userToken}`);
   }
 
   if (options.csrf) {
@@ -287,10 +306,17 @@ export async function apiRequest<T = unknown>(
     if (csrf) headers.set("X-CSRF-Token", csrf);
   }
 
-  // 每次请求生成独立幂等键，写入本次 headers；401 自动重试复用同一 headers 对象，
-  // 因此键在重试间保持一致，且并发的不同幂等操作不会相互串用同一键。
+  if (options.ifMatch !== undefined) {
+    headers.set("If-Match", String(options.ifMatch));
+  }
+
+  // 调用方给了键就用它（跨用户重试保持同一个）；给 true 则本次生成一个。
+  // 401 自动重试复用同一 headers 对象，因此键在自动重试之间也保持一致。
   if (options.idempotent) {
-    headers.set("Idempotency-Key", newIdempotencyKey());
+    headers.set(
+      "Idempotency-Key",
+      typeof options.idempotent === "string" ? options.idempotent : newIdempotencyKey(),
+    );
   }
 
   if (!headers.has("X-Request-Id")) headers.set("X-Request-Id", newRequestId());
@@ -320,7 +346,7 @@ export async function apiRequest<T = unknown>(
     };
   }
 
-  res = await handle401(res, plane, url, init, headers, options.skipRefresh ?? false);
+  res = await handle401(res, url, init, headers, options.skipRefresh ?? false);
 
   const status = res.status;
   const contentType = res.headers.get("content-type") ?? "";
@@ -382,7 +408,7 @@ export async function apiRequest<T = unknown>(
   };
 }
 
-// ─── C 端（user 平面）便捷方法 ───────────────────────────────────
+// ─── 便捷方法（全站唯一一条平面）─────────────────────────────────
 
 export function get<T = unknown>(path: string, options?: ApiRequestOptions) {
   return apiRequest<T>("GET", path, undefined, options);
@@ -397,21 +423,5 @@ export function del<T = unknown>(path: string, body?: unknown, options?: ApiRequ
   return apiRequest<T>("DELETE", path, body, options);
 }
 
-// ─── 管理台（admin 平面）便捷方法 ────────────────────────────────
-
-export function adminGet<T = unknown>(path: string, options?: ApiRequestOptions) {
-  return apiRequest<T>("GET", path, undefined, { ...options, plane: "admin" });
-}
-export function adminPost<T = unknown>(path: string, body?: unknown, options?: ApiRequestOptions) {
-  return apiRequest<T>("POST", path, body, { ...options, plane: "admin" });
-}
-export function adminPatch<T = unknown>(path: string, body?: unknown, options?: ApiRequestOptions) {
-  return apiRequest<T>("PATCH", path, body, { ...options, plane: "admin" });
-}
-export function adminDel<T = unknown>(path: string, body?: unknown, options?: ApiRequestOptions) {
-  return apiRequest<T>("DELETE", path, body, { ...options, plane: "admin" });
-}
-
 /** 便捷命名空间（与故事站 api.* 风格一致）。 */
 export const api = { get, post, patch, del };
-export const adminApi = { get: adminGet, post: adminPost, patch: adminPatch, del: adminDel };

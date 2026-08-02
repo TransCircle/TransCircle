@@ -91,10 +91,11 @@ function useMenuKeyboard(
 export function AppNav() {
   const { t } = useTranslation();
   const { user, logout: sessionLogout } = useSession();
-  const { authed: adminAuthed, me: adminMe, logout: adminLogout } = useAdmin();
-  // 導航列身份：優先使用一般使用者，後備為管理員身份
-  const navUser = user ?? (adminAuthed && adminMe ? adminMe : null);
-  const isAdminOnly = !user && adminAuthed && !!adminMe;
+  // 管理员就是普通用户：控制台复用同一条会话，因此导航身份只有 user 一个来源，
+  // 「有没有管理权限」只决定要不要多显示一个入口，不再是第二种登录态。
+  const { state: adminState } = useAdmin();
+  const adminAuthed = adminState === "ready";
+  const navUser = user;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -284,11 +285,7 @@ export function AppNav() {
     setLoggingOut(true);
     setLogoutFailed(false);
     try {
-      if (isAdminOnly) {
-        adminLogout();
-      } else {
-        await sessionLogout();
-      }
+      await sessionLogout();
       setAcctOpen(false);
       setDrawerOpen(false);
       navigate("/", { replace: true });

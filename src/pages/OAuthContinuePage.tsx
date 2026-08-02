@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, setUserToken, saveCsrfToken, clearCsrfToken, clearAdminAuth } from "../api/client";
+import { api, setUserToken, saveCsrfToken, clearCsrfToken } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { sanitizeRedirect } from "../utils/url";
 import { usePageTitle } from "../utils/usePageTitle";
@@ -28,6 +28,21 @@ const OAuthContinuePage = () => {
   const { refresh } = useSession();
   const [params] = useSearchParams();
   const provider = params.get("provider") ?? "";
+  /**
+   * 该提供商绑定后是否不可自行解除（统一身份如此）。
+   * 经它首次登录 = 建号并**永久**绑定，所以要在提交前把话说在前面，
+   * 后端也会要求 acknowledgedPermanent，两边一致。
+   */
+  const [permanent, setPermanent] = useState(false);
+  useEffect(() => {
+    void (async () => {
+      const res = await api.get<{ providers: Array<{ provider: string; permanent: boolean }> }>(
+        "/v1/auth/oauth/providers",
+        { noAuth: true },
+      );
+      if (res.ok) setPermanent(res.data.providers.some((p) => p.provider === provider && p.permanent));
+    })();
+  }, [provider]);
   // 来自 URL 的重定向目标必须净化，防开放重定向。
   const redirectAfter = sanitizeRedirect(params.get("redirectAfter"), "/account");
 
@@ -82,7 +97,9 @@ const OAuthContinuePage = () => {
       // 否则返回 requiresEmailVerification，需先完成邮箱验证再登录。
       const res = await api.post<{ loginCode: string | null; requiresEmailVerification?: boolean }>(
         `/v1/auth/oauth/complete-registration?provider=${encodeURIComponent(provider)}`,
-        { username, email, password, displayName },
+        // 不可解绑的提供商（统一身份）：后端要求先拿到不可逆确认。
+        // 这一页上面已经把「绑定后无法自行解除」摆出来了，用户点提交即视为确认。
+        { username, email, password, displayName, ...(permanent ? { acknowledgedPermanent: true } : {}) },
         { noAuth: true, csrf: true },
       );
       if (!res.ok) {
@@ -108,7 +125,6 @@ const OAuthContinuePage = () => {
         setError(ex.error.message);
         return;
       }
-      clearAdminAuth();
       setUserToken(ex.data.accessToken);
       await refresh();
       // 续跑目标：OIDC 登录经首次注册时为 /login?oidc=...，否则回账户中心。
@@ -127,6 +143,13 @@ const OAuthContinuePage = () => {
         title={t("continue.title")}
         description={t("continue.subtitle")}
       />
+      {permanent && (
+        // 统一身份绑定不可自行解除，这一步就是在建立它 —— 提交前必须让人看见。
+        <Alert tone="info">
+          <strong>{t("continue.permanentTitle", { provider: providerLabel })}</strong>
+          <div>{t("continue.permanentDesc")}</div>
+        </Alert>
+      )}
       {error && (
         <div ref={errorRef} tabIndex={-1}>
           <Alert tone="error">{error}</Alert>

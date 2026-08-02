@@ -1,221 +1,221 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { adminApi } from "../../api/client";
-import type { AdminUserListItem, AccountStatus } from "../../api/types";
+import { api, type OffsetPage } from "../../api/client";
+import type { AdminUserListItem } from "../../api/types";
 import { Avatar } from "../../components/Avatar";
-import { cx } from "../../components/admin/cx";
+import { Alert, Pill, SearchField, Spinner, StatusBadge } from "../../components/ui";
 import { useFormatTs } from "../../utils/datetime";
-import { usePageTitle } from "../../utils/usePageTitle";
-import {
-  Card,
-  SearchField,
-  Select,
-  StatusBadge,
-  Alert,
-  Spinner,
-  EmptyState,
-  Pagination,
-  type BadgeTone,
-} from "../../components/ui";
-import admin from "./Admin.module.css";
-import page from "../Page.module.css";
+import { useAdmin } from "../../context/AdminContext";
+import { accountStatusTone } from "./shared/constants";
+import { ChipSet } from "./shared/ChipSet";
+import { DataTable, type Column } from "./shared/DataTable";
+import { Pager } from "./shared/Pager";
+import { adminErrorText } from "./shared/errors";
+import { useAdminPageHeader } from "./shared/header";
+import { useListQuery } from "./shared/useListQuery";
+import { IconChevron } from "./shared/icons";
+import styles from "./Admin.module.css";
 
-const statusTone = (s: AccountStatus): BadgeTone => {
-  switch (s) {
-    case "active":
-      return "green";
-    case "banned":
-      return "red";
-    case "suspended":
-    case "pending_verification":
-    case "pending_deletion":
-      return "amber";
-    default:
-      return "muted";
-  }
-};
-
-/** 状态筛选项：与 i18n `status.*` 已收录的账户状态全集保持一致。 */
-const STATUS_FILTERS: readonly string[] = [
-  "active",
-  "pending_verification",
-  "suspended",
-  "banned",
-  "pending_deletion",
-  "deleted",
-  "merged",
-];
-
-const ChevronRight = () => (
-  <svg className={admin.chevron} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="m9 18 6-6-6-6" />
-  </svg>
-);
-
-type NavMode = "reset" | "next" | "prev";
+const SORT_KEYS = ["last", "name", "status", "sessions"] as const;
+const STATUS_FILTERS = ["active", "suspended", "banned", "pending_deletion"] as const;
 
 const UsersPage = () => {
   const { t } = useTranslation();
   const fmt = useFormatTs();
-  usePageTitle(t("admin.users.title"));
+  const navigate = useNavigate();
+  const { me } = useAdmin();
+  useAdminPageHeader({ title: t("admin.head.users.title"), subtitle: t("admin.head.users.sub") });
 
-  // 筛选条件从地址栏恢复：从详情页返回时不丢搜索/筛选上下文。
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [keyword, setKeyword] = useState(() => searchParams.get("keyword") ?? "");
-  const [status, setStatus] = useState<string>(() => searchParams.get("status") ?? "");
-  const [items, setItems] = useState<AdminUserListItem[]>([]);
-  const [pageNum, setPageNum] = useState(1);
-  const [hasNext, setHasNext] = useState(false);
+  const { query, setPage, setPageSize, setFilter, toggleSort, requestSearch } = useListQuery({
+    defaultSort: "last:desc",
+    filterKeys: ["q", "status"],
+    sortKeys: SORT_KEYS,
+  });
+
+  const [page, setPageData] = useState<OffsetPage<AdminUserListItem> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 游标历史(离散翻页,同审计页):prevCursors 栈 + currentCursor + nextCursor;
-  // committed = 当前查询已提交的筛选,翻页延续它,而非输入框里改了但尚未回车的草稿。
-  const prevCursorsRef = useRef<(string | null)[]>([]);
-  const currentCursorRef = useRef<string | null>(null);
-  const nextCursorRef = useRef<string | null>(null);
-  const committedRef = useRef<{ keyword: string; status: string }>({ keyword: "", status: "" });
+  // 搜索框保留本地草稿，防抖后再写地址栏 —— 每敲一个字都推一条 URL + 一次请求，
+  // 既刷屏历史记录也打后端。
+  const urlKeyword = query.filters.q ?? "";
+  const [keyword, setKeyword] = useState(urlKeyword);
+  useEffect(() => setKeyword(urlKeyword), [urlKeyword]);
+  useEffect(() => {
+    if (keyword === urlKeyword) return;
+    const id = window.setTimeout(() => setFilter("q", keyword), 350);
+    return () => window.clearTimeout(id);
+  }, [keyword, urlKeyword, setFilter]);
 
-  // 条件写回地址栏；replace 避免每敲一次筛选就多一条历史记录。
-  const syncParams = useCallback(
-    (kw: string, st: string) => {
-      const next = new URLSearchParams();
-      if (kw) next.set("keyword", kw);
-      if (st) next.set("status", st);
-      setSearchParams(next, { replace: true });
-    },
-    [setSearchParams],
-  );
-
-  // 统一翻页:reset(回第 1 页 / 换筛选)/ next / prev。筛选经显式参数传入、不读闭包状态。
-  // 仅成功后提交页码与游标(失败不改页码,顶部 Alert 报错,可原地重试)。
-  const navigate = useCallback(async (mode: NavMode, kw: string, st: string) => {
-    const target =
-      mode === "reset"
-        ? null
-        : mode === "next"
-          ? nextCursorRef.current
-          : prevCursorsRef.current[prevCursorsRef.current.length - 1] ?? null;
+  useEffect(() => {
+    let alive = true;
     setLoading(true);
     setError(null);
-    const qs = new URLSearchParams({ limit: "20" });
-    if (kw) qs.set("keyword", kw);
-    if (st) qs.set("status", st);
-    if (target) qs.set("cursor", target);
-    const res = await adminApi.get<AdminUserListItem[]>(`/v1/admin/users?${qs.toString()}`);
-    setLoading(false);
-    if (!res.ok) {
-      setError(res.error.message);
-      return;
-    }
-    if (mode === "reset") {
-      prevCursorsRef.current = [];
-      currentCursorRef.current = null;
-      committedRef.current = { keyword: kw, status: st };
-      setPageNum(1);
-    } else if (mode === "next") {
-      prevCursorsRef.current.push(currentCursorRef.current);
-      currentCursorRef.current = target;
-      setPageNum((p) => p + 1);
-    } else {
-      prevCursorsRef.current.pop();
-      currentCursorRef.current = target;
-      setPageNum((p) => Math.max(1, p - 1));
-    }
-    setItems(res.data);
-    nextCursorRef.current = res.pagination?.nextCursor ?? null;
-    setHasNext(res.pagination?.hasMore ?? false);
-  }, []);
-
-  // 仅挂载时加载：初始条件来自地址栏,后续加载均由交互显式触发。
-  useEffect(() => {
-    void navigate("reset", keyword, status);
+    void (async () => {
+      const res = await api.get<OffsetPage<AdminUserListItem>>(
+        `/v1/admin/users?${requestSearch}`,
+        { plane: "user" },
+      );
+      if (!alive) return;
+      setLoading(false);
+      if (res.ok) setPageData(res.data);
+      else setError(adminErrorText(t, res.error));
+    })();
+    return () => {
+      alive = false;
+    };
+    // t 只影响错误文案，不该触发重新取数。
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [requestSearch]);
 
-  const search = () => {
-    syncParams(keyword, status);
-    void navigate("reset", keyword, status);
-  };
-  const clearSearch = () => {
-    // SearchField 已把输入清为空串,这里显式传空、不依赖尚未提交的 state。
-    syncParams("", status);
-    void navigate("reset", "", status);
-  };
-  const changeStatus = (v: string) => {
-    setStatus(v);
-    syncParams(keyword, v);
-    void navigate("reset", keyword, v);
+  // 三者都可能为空（纯 Passkey 账户可以没有邮箱），兜一个可读占位。
+  const nameOf = (u: AdminUserListItem) =>
+    u.displayName || u.username || u.email || t("admin.users.unnamed");
+
+  const mfaText = (u: AdminUserListItem) => {
+    if (u.passkeyCount > 0) return t("admin.users.mfaPasskeys", { count: u.passkeyCount });
+    if (u.totpEnabled) return t("admin.users.mfaTotp");
+    return t("admin.users.mfaNone");
   };
 
-  const statusOptions = [
-    { value: "", label: t("admin.users.filterStatusAll") },
-    ...STATUS_FILTERS.map((s) => ({ value: s, label: t(`status.${s}`) })),
-  ];
+  const columns = useMemo<ReadonlyArray<Column<AdminUserListItem>>>(
+    () => [
+      {
+        key: "name",
+        label: t("admin.users.col.account"),
+        primary: true,
+        sortKey: "name",
+        render: (u) => (
+          <span className={styles.cellPrimary}>
+            <Avatar name={nameOf(u)} src={u.avatarUrl} size={30} />
+            <span className={styles.cellText}>
+              <span className={styles.cellName}>
+                {nameOf(u)}
+                {u.id === me?.userId && <span className={styles.tagSelf}>{t("admin.users.tagSelf")}</span>}
+                {u.id !== me?.userId && u.hasIamBinding && (
+                  <span className={styles.tagStaff}>{t("admin.users.tagStaff")}</span>
+                )}
+              </span>
+              <span className={styles.cellSub}>
+                {u.email ?? t("admin.users.noEmail")}
+                {u.email && !u.emailVerified && ` · ${t("admin.users.emailUnverified")}`}
+              </span>
+            </span>
+          </span>
+        ),
+      },
+      {
+        key: "status",
+        label: t("admin.users.col.status"),
+        sortKey: "status",
+        render: (u) => (
+          <StatusBadge tone={accountStatusTone(u.status)} label={t(`status.${u.status}`)} size="sm" />
+        ),
+      },
+      {
+        key: "mfa",
+        label: t("admin.users.col.mfa"),
+        render: (u) => <span className={styles.num}>{mfaText(u)}</span>,
+      },
+      {
+        key: "bindings",
+        label: t("admin.users.col.bindings"),
+        hideAt: 2,
+        render: (u) =>
+          u.oauthProviders.length > 0 ? (
+            <span className={styles.cellChips}>
+              {u.oauthProviders.map((p) => (
+                <Pill key={p} tone={p === "iam" ? "accent" : "neutral"}>
+                  {t(`admin.provider.${p}`, { defaultValue: p })}
+                </Pill>
+              ))}
+            </span>
+          ) : (
+            <span className={styles.num}>—</span>
+          ),
+      },
+      {
+        key: "sessions",
+        label: t("admin.users.col.sessions"),
+        align: "right",
+        hideAt: 1,
+        sortKey: "sessions",
+        render: (u) => <span className={styles.num}>{u.activeSessions}</span>,
+      },
+      {
+        key: "last",
+        label: t("admin.users.col.last"),
+        sortKey: "last",
+        render: (u) => <span className={styles.num}>{fmt(u.lastActiveAt ?? u.lastLoginAt) || "—"}</span>,
+      },
+      {
+        key: "go",
+        label: "",
+        width: 40,
+        render: () => (
+          <span className={styles.chevron} aria-hidden="true">
+            <IconChevron />
+          </span>
+        ),
+      },
+    ],
+    [t, fmt, me],
+  );
 
   return (
-    <div className={admin.page}>
-      <div className={admin.toolbar}>
-        <SearchField
-          value={keyword}
-          onValueChange={setKeyword}
-          onSearch={search}
-          onClear={clearSearch}
-          searchAriaLabel={t("admin.users.search")}
-          clearAriaLabel={t("common.close")}
-          placeholder={t("admin.users.search")}
-          fieldClassName={admin.grow}
+    <div className={styles.stack}>
+      <div className={styles.filters}>
+        <div className={styles.filtersSearch}>
+          <SearchField
+            value={keyword}
+            onValueChange={setKeyword}
+            onSearch={() => setFilter("q", keyword)}
+            onClear={() => setFilter("q", "")}
+            placeholder={t("admin.users.searchPlaceholder")}
+            searchAriaLabel={t("admin.users.searchLabel")}
+            clearAriaLabel={t("common.close")}
+          />
+        </div>
+        <ChipSet
+          label={t("admin.users.filterStatus")}
+          value={query.filters.status ?? ""}
+          onChange={(v) => setFilter("status", v)}
+          options={[
+            { value: "", label: t("admin.filterAll") },
+            ...STATUS_FILTERS.map((s) => ({ value: s, label: t(`status.${s}`) })),
+          ]}
         />
-        <Select ariaLabel={t("admin.users.status")} value={status} onChange={changeStatus} options={statusOptions} inline />
       </div>
 
       {error && <Alert tone="error">{error}</Alert>}
 
-      {loading && items.length === 0 ? (
+      {loading && !page ? (
         <Spinner size="lg" label={t("common.loading")} />
-      ) : items.length === 0 ? (
-        <EmptyState title={t("admin.users.empty")} />
       ) : (
         <>
-          <Card padding="none">
-            <ul className={admin.list}>
-              {items.map((u) => (
-                <li key={u.id}>
-                  <Link to={`/admin/users/${u.id}`} className={cx(admin.listRow, admin.rowLink)}>
-                    <span className={admin.rowMain}>
-                      <Avatar name={u.displayName || u.username || u.email} src={u.avatarUrl} size={38} />
-                      <span className={admin.rowText}>
-                        <span className={admin.rowTitle}>{u.displayName || u.username || u.email}</span>
-                        <span className={admin.rowMeta}>
-                          <code className={page.code}>{u.email}</code>
-                          <span className={admin.rowMetaSep}>·</span>
-                          {fmt(u.createdAt)}
-                        </span>
-                      </span>
-                    </span>
-                    <span className={admin.rowRight}>
-                      <StatusBadge tone={statusTone(u.status)} label={t(`status.${u.status}`)} size="sm" />
-                      <ChevronRight />
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </Card>
-          {(hasNext || pageNum > 1) && (
-            <Pagination
-              hasPrev={pageNum > 1}
-              hasNext={hasNext}
-              onPrev={() => void navigate("prev", committedRef.current.keyword, committedRef.current.status)}
-              onNext={() => void navigate("next", committedRef.current.keyword, committedRef.current.status)}
-              loading={loading}
-              prevLabel={t("common.prevPage")}
-              nextLabel={t("common.nextPage")}
-              label={t("common.pageN", { page: pageNum })}
-              ariaLabel={t("admin.users.title")}
-            />
-          )}
+          <DataTable
+            columns={columns}
+            rows={page?.items ?? []}
+            rowKey={(u) => u.id}
+            sort={query.sort}
+            onSort={toggleSort}
+            onRowClick={(u) => navigate(`/admin/users/${u.id}`)}
+            rowLabel={(u) => t("admin.users.openRow", { name: nameOf(u) })}
+            ariaLabel={t("admin.head.users.title")}
+            emptyTitle={t("admin.users.emptyTitle")}
+            emptyDesc={t("admin.users.emptyDesc")}
+            sortAscLabel={t("admin.table.sortedAsc")}
+            sortDescLabel={t("admin.table.sortedDesc")}
+          />
+          <Pager
+            total={page?.total ?? 0}
+            page={query.page}
+            pageSize={query.pageSize}
+            onPage={setPage}
+            onPageSize={setPageSize}
+            ariaLabel={t("admin.users.pagerLabel")}
+          />
         </>
       )}
     </div>

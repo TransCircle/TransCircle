@@ -20,6 +20,7 @@ import {
 } from "../../components/ui";
 import { Dialog, ConfirmDialog } from "../../components/ui/Dialog";
 import { RecoveryCodesDialog } from "./RecoveryCodesDialog";
+import { useIamMfa } from "./IamMfaContext";
 import s from "./Account.module.css";
 
 const FingerIcon = () => (
@@ -32,6 +33,9 @@ const FingerIcon = () => (
 export function PasskeysSection() {
   const { t } = useTranslation();
   const { refresh } = useSession();
+  // 接管开启时通行密钥在登录路径上不生效（含免密直登）——写明白，别让用户以为设备坏了。
+  const { state: iamMfa } = useIamMfa();
+  const delegatedToIam = iamMfa?.delegated === true;
   const fmt = useFormatTs();
   const supported = isWebAuthnSupported();
   const [items, setItems] = useState<Passkey[]>([]);
@@ -149,11 +153,12 @@ export function PasskeysSection() {
     <section className={s.group}>
       <h2 className={s.groupTitle}>{t("account.nav.passkeys")}</h2>
 
-      {(!supported || error || notice) && (
+      {(!supported || error || notice || delegatedToIam) && (
         <div className={s.groupFeedback}>
           {!supported && <Alert tone="info">{t("account.passkeys.unsupported")}</Alert>}
           {error && <Alert tone="error">{error}</Alert>}
           {notice && <Alert tone="success">{notice}</Alert>}
+          {delegatedToIam && <Alert tone="info">{t("mfa.iam.localInactivePasskey")}</Alert>}
         </div>
       )}
 

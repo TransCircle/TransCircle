@@ -16,6 +16,12 @@ import { RecoveryCodesDialog } from "./RecoveryCodesDialog";
 import s from "./Account.module.css";
 
 /**
+ * 锚点 id：统一身份接管分区在「无可用恢复码」时要把用户送到这里，
+ * 常量化避免两处各写一份字符串后失联。
+ */
+export const RECOVERY_CODES_SECTION_ID = "account-recovery-codes";
+
+/**
  * 恢复码分区（TOTP / Passkey 共享的账户级备份因素，独立成框）。
  * 仅在已启用任一 2FA 方式时展示：
  *   · GET  /v1/me/mfa/recovery-codes            查剩余数量与是否已启用 2FA。
@@ -106,7 +112,7 @@ export function RecoveryCodesSection() {
   const canVerify = !!status?.totpEnabled || !!user?.passwordSet || remaining > 0;
 
   return (
-    <section className={s.group}>
+    <section className={s.group} id={RECOVERY_CODES_SECTION_ID}>
       <h2 className={s.groupTitle}>{t("account.nav.recoveryCodes")}</h2>
       {notice && (
         <div className={s.groupFeedback}>

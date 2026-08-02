@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api, setUserToken } from "../../api/client";
 import { useSession } from "../../context/SessionContext";
@@ -21,8 +21,18 @@ interface ChangeResult {
 /** 与注册页一致的客户端最短长度规则(api.md §1.1:至少 8 位)。 */
 const MIN_PASSWORD_LENGTH = 8;
 
+export interface PasswordSectionProps {
+  /**
+   * 强制改密引导的开门信号:计数器每递增一次就打开修改密码弹窗。
+   * 用计数器而不是布尔量,是为了让「关掉弹窗后再点一次顶部提示」仍然能开。
+   */
+  openRequest?: number;
+  /** 账户被管理员置了新密码(mustChangePassword):弹窗内追加一句缘由说明。 */
+  mustChange?: boolean;
+}
+
 /** 登录密码分区:一行状态 + 弹窗内修改/设置密码;成功后用轮换的 accessToken 续期会话。 */
-export function PasswordSection() {
+export function PasswordSection({ openRequest = 0, mustChange = false }: PasswordSectionProps = {}) {
   const { t } = useTranslation();
   const { user, refresh } = useSession();
   const hasPassword = user?.passwordSet ?? true;
@@ -59,6 +69,14 @@ export function PasswordSection() {
     setError(null);
     setEditOpen(true);
   };
+
+  // 顶部强制改密提示点「立即修改」时开门。首挂载(openRequest=0)不触发,
+  // 否则每次进账户中心都会自动弹窗。
+  useEffect(() => {
+    if (openRequest > 0) openEdit();
+    // openEdit 只读常量 setter,不入依赖以免每次渲染重跑。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openRequest]);
 
   const send = async (body: Record<string, unknown>) => {
     setBusy(true);
@@ -158,6 +176,8 @@ export function PasswordSection() {
       >
         <form id={formId} className={s.form} onSubmit={onFormSubmit}>
           {error && <Alert tone="error">{error}</Alert>}
+          {/* 管理员置了新密码:说明为什么此刻被要求改密,改完后端自动清零。 */}
+          {mustChange && <Alert tone="info">{t("account.password.mustChangeInDialog")}</Alert>}
           {hasPassword && (
             <TextField
               ref={currentRef}

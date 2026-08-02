@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api, clearCsrfToken } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { usePageTitle } from "../utils/usePageTitle";
 import { StepUpDialog } from "../components/StepUpDialog";
+import { consumePermanentBindAck } from "./account/permanentBindAck";
 import { CenteredCard, PageHeader, StatusScreen } from "../components/ui";
 
 /**
@@ -16,7 +17,17 @@ import { CenteredCard, PageHeader, StatusScreen } from "../components/ui";
 const OAuthBindConfirmPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { user, loading } = useSession();
+  /**
+   * 不可自行解除的绑定（统一身份）要求显式确认，后端缺了就返 400 ACK_REQUIRED。
+   * 确认是在账户中心发起绑定时做的，经 sessionStorage 传到这里。
+   * **只能消费一次**：step-up 之后 complete() 会重跑，若每次都去读，第二次就读空了。
+   */
+  const [ackPermanent] = useState(() => {
+    const provider = params.get("provider");
+    return provider ? consumePermanentBindAck(provider) : false;
+  });
   const [error, setError] = useState<string | null>(null);
   const [stepUpOpen, setStepUpOpen] = useState(false);
   const [done, setDone] = useState(false);
@@ -26,10 +37,11 @@ const OAuthBindConfirmPage = () => {
   usePageTitle(t("account.oauth.bindConfirmTitle"));
 
   const complete = async () => {
-    const res = await api.post("/v1/auth/oauth/complete-binding", undefined, {
-      csrf: true,
-      idempotent: true,
-    });
+    const res = await api.post(
+      "/v1/auth/oauth/complete-binding",
+      ackPermanent ? { acknowledgedPermanent: true } : undefined,
+      { csrf: true, idempotent: true },
+    );
     if (res.ok) {
       clearCsrfToken();
       setDone(true);

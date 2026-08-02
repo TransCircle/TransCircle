@@ -1,376 +1,342 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useCallback, useMemo, useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { adminApi } from "../../api/client";
-import type { AdminUserDetail, AccountStatus } from "../../api/types";
+import { api, toPageSize, type PageSize } from "../../api/client";
+import type { AdminIamStatus, AdminUserDetail, IamVerdict } from "../../api/types";
+import { useAdmin } from "../../context/AdminContext";
 import { Avatar } from "../../components/Avatar";
-import { useFormatTs } from "../../utils/datetime";
-import { usePageTitle } from "../../utils/usePageTitle";
-import AdminStepUpDialog from "../../components/AdminStepUpDialog";
-import admin from "./Admin.module.css";
-import {
-  DescriptionList,
-  StatusBadge,
-  Pill,
-  Alert,
-  Spinner,
-  AdminButton as Button,
-  ConfirmDialog,
-  ReasonPromptDialog,
-  type BadgeTone,
-} from "../../components/ui";
-import page from "../Page.module.css";
+import { Alert, Spinner, StatusBadge, Tabs, type TabItem } from "../../components/ui";
+import { PERM, accountStatusTone } from "./shared/constants";
+import { DiffDialog } from "./shared/DiffDialog";
+import { useAdminPageHeader } from "./shared/header";
+import { StaffGuardContext, useAdminAction } from "./shared/useAdminAction";
+import { useAdminResource } from "./shared/useAdminResource";
+import { useCardEdit, type EditField } from "./shared/useCardEdit";
+import { AuditTab } from "./user/AuditTab";
+import { BindingsTab } from "./user/BindingsTab";
+import { DangerTab } from "./user/DangerTab";
+import { GrantsTab } from "./user/GrantsTab";
+import { ProfileTab } from "./user/ProfileTab";
+import { SecurityTab } from "./user/SecurityTab";
+import { SessionsTab } from "./user/SessionsTab";
+import styles from "./Admin.module.css";
 
-const statusTone = (s: AccountStatus): BadgeTone => {
-  switch (s) {
-    case "active":
-      return "green";
-    case "banned":
-      return "red";
-    case "suspended":
-    case "pending_verification":
-    case "pending_deletion":
-      return "amber";
-    default:
-      return "muted";
-  }
-};
+type TabKey = "profile" | "security" | "sessions" | "bindings" | "grants" | "audit" | "danger";
+const TAB_KEYS: readonly TabKey[] = [
+  "profile",
+  "security",
+  "sessions",
+  "bindings",
+  "grants",
+  "audit",
+  "danger",
+];
 
-type ActionKey = "force-logout" | "reset-2fa" | "suspend" | "unsuspend" | "ban" | "unban" | "delete";
-
-/** 需要填写原因的操作（其余走纯确认框）。 */
-const REASON_ACTIONS: ReadonlyArray<ActionKey> = ["suspend", "ban", "unban", "delete"];
-
-interface PendingAction {
-  key: ActionKey;
-  path: string;
-  body?: Record<string, unknown>;
-}
-
+/** 用户详情：7 个分区。写操作的门控在这里统一算好再往下传，避免每个分区各判一套。 */
 const UserDetailPage = () => {
   const { t } = useTranslation();
-  const fmt = useFormatTs();
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const { id = "" } = useParams();
+  const { me, hasPermission } = useAdmin();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [user, setUser] = useState<AdminUserDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  // 操作后的重拉用独立的 refreshing：保留现有内容，不整页 Spinner 重挂载（焦点/滚动不丢）。
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const user = useAdminResource<AdminUserDetail>(id ? `/v1/admin/users/${id}` : null);
+  // 工作人员判定必须**实时查 IAM**，不能读登录时的快照 —— 那是操作者的缓存，与目标无关。
+  const iam = useAdminResource<AdminIamStatus>(id ? `/v1/admin/users/${id}/iam-status` : null);
+  const save = useAdminAction();
+  const unlockAction = useAdminAction();
+
   const [notice, setNotice] = useState<string | null>(null);
-  const [busyKey, setBusyKey] = useState<ActionKey | null>(null);
+  const [reviewKeys, setReviewKeys] = useState<readonly string[] | null>(null);
 
-  // 对话框状态
-  const [confirmKey, setConfirmKey] = useState<ActionKey | null>(null);
-  // 确认框内的接口错误：就近显示在弹窗里、保持弹窗开启可重试，而非关框后在页面顶部展示。
-  const [confirmError, setConfirmError] = useState<string | null>(null);
-  const [reasonKey, setReasonKey] = useState<ActionKey | null>(null);
-  const [reasonText, setReasonText] = useState("");
-  const [reasonError, setReasonError] = useState<string | undefined>(undefined);
-  // 原因弹窗内的接口错误：就近显示在弹窗里，而非被遮罩挡住的页面顶部。
-  const [reasonApiError, setReasonApiError] = useState<string | null>(null);
-  const [stepUpOpen, setStepUpOpen] = useState(false);
-  const pendingRef = useRef<PendingAction | null>(null);
+  const rawTab = searchParams.get("tab") as TabKey | null;
+  const tab: TabKey = rawTab && TAB_KEYS.includes(rawTab) ? rawTab : "profile";
+  const auditPage = Math.max(1, Number(searchParams.get("page")) || 1);
+  const auditPageSize = toPageSize(searchParams.get("pageSize"));
 
-  usePageTitle(user ? user.displayName || user.username || user.email : t("admin.users.detailTitle"));
-
-  const load = useCallback(
-    async (mode: "initial" | "refresh" = "initial") => {
-      if (!id) return;
-      if (mode === "initial") setLoading(true);
-      else setRefreshing(true);
-      setError(null);
-      const res = await adminApi.get<AdminUserDetail>(`/v1/admin/users/${id}`);
-      if (mode === "initial") setLoading(false);
-      else setRefreshing(false);
-      if (!res.ok) {
-        setError(res.error.message);
-        return;
-      }
-      setUser(res.data);
+  const writeParams = useCallback(
+    (patch: Record<string, string>) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          for (const [k, v] of Object.entries(patch)) {
+            if (v) next.set(k, v);
+            else next.delete(k);
+          }
+          return next;
+        },
+        { replace: true },
+      );
     },
-    [id],
+    [setSearchParams],
   );
 
-  useEffect(() => {
-    void load("initial");
-  }, [load]);
+  const entity = user.data;
+  // 三个都可能为空（纯 Passkey 账户可以没有邮箱，用户名也允许为空），
+  // 最后兜一个可读占位，别让界面出现空白的人名。
+  const displayName = entity
+    ? entity.displayName || entity.username || entity.email || t("admin.users.unnamed")
+    : "";
+  const isSelf = !!entity && entity.id === me?.userId;
+  /**
+   * 四值 verdict 直接消费后端给的，**不从权限数组的形状自行推断** ——
+   * 「数组缺失 / 为空 / 查询失败」是三件不同的事。
+   * 判定还没回来（null）时同样按锁定处理：前端也 fail-closed，
+   * 否则加载中的那一瞬间会把一个工作人员账户渲染成可操作的。
+   */
+  const verdict: IamVerdict | null = iam.data?.verdict ?? (iam.error ? "staff_assumed" : null);
+  const lockedStaff =
+    !isSelf && (verdict === null || verdict === "staff" || verdict === "staff_assumed");
+  const exStaff = verdict === "ex_staff";
 
-  const runAction = useCallback(
-    async (p: PendingAction) => {
-      if (!id) return;
-      setBusyKey(p.key);
-      setError(null);
-      setNotice(null);
-      setReasonApiError(null);
-      setConfirmError(null);
-      const res = await adminApi.post(p.path, p.body);
-      if (!res.ok) {
-        if (res.status === 403 && res.error.code === "STEP_UP_REQUIRED") {
-          pendingRef.current = p;
-          setBusyKey(null);
-          // 确认/原因弹窗保持挂载，仅在 step-up 期间隐藏（对齐 ClientsPage）：
-          // 取消 step-up 后自动恢复（原因文本不丢），验证后重放若失败也能在弹窗内就近报错。
-          setStepUpOpen(true);
-          return;
-        }
-        setBusyKey(null);
-        if (REASON_ACTIONS.includes(p.key)) {
-          // 原因弹窗仍开着：错误显示在弹窗内，用户可直接修改后重试。
-          setReasonApiError(res.error.message);
-        } else {
-          // 确认框保持开启：错误就近显示在框内，可直接重试。
-          setConfirmError(res.error.message);
-        }
-        return;
-      }
-      setBusyKey(null);
-      setConfirmKey(null);
-      setReasonKey(null);
-      setReasonText("");
-      if (p.key === "delete") {
-        // 用户已删除：重拉详情只会 404，回到列表页；replace 防止「后退」又落回已删页面。
-        navigate("/admin/users", { replace: true });
-        return;
-      }
-      setNotice(t("admin.users.actionOk"));
-      await load("refresh");
-    },
-    [id, load, t, navigate],
+  useAdminPageHeader({
+    title: displayName || t("admin.head.userDetail.title"),
+    back: { to: "/admin/users", label: t("admin.nav.users") },
+  });
+
+  const fields = useMemo<ReadonlyArray<EditField<AdminUserDetail>>>(
+    () => [
+      { key: "displayName", label: t("admin.userDetail.field.displayName") },
+      { key: "username", label: t("admin.userDetail.field.username"), risky: true },
+      { key: "email", label: t("admin.userDetail.field.email"), risky: true },
+      {
+        key: "emailVerified",
+        label: t("admin.userDetail.field.emailVerified"),
+        risky: true,
+        format: (v) => (v ? t("common.yes") : t("common.no")),
+      },
+      { key: "adminNote", label: t("admin.userDetail.field.adminNote") },
+    ],
+    [t],
   );
+  const edit = useCardEdit<AdminUserDetail>(entity, fields);
 
-  const onStepUpVerified = () => {
-    const p = pendingRef.current;
-    pendingRef.current = null;
-    if (p) void runAction(p);
-  };
-
-  // 取消 step-up：同时丢弃待重放的操作（对齐 ClientsPage.closeStepUp），
-  // 否则下次验证通过会重放早已被用户放弃的旧操作。
-  const closeStepUp = () => {
-    pendingRef.current = null;
-    setStepUpOpen(false);
-  };
-
-  const openConfirm = (key: ActionKey) => {
-    setConfirmError(null);
-    setConfirmKey(key);
-  };
-  const closeConfirm = () => {
-    setConfirmKey(null);
-    setConfirmError(null);
-  };
-
-  const openReason = (key: ActionKey) => {
-    setReasonText("");
-    setReasonError(undefined);
-    setReasonApiError(null);
-    setReasonKey(key);
-  };
-  const closeReason = () => setReasonKey(null);
-
-  const path = (a: string) => `/v1/admin/users/${id}/${a}`;
-
-  const submitReason = () => {
-    const trimmed = reasonText.trim();
-    if (trimmed.length < 1) {
-      // 聚焦回输入框由 ReasonPromptDialog 在 fieldError 出现时统一处理。
-      setReasonError(t("admin.users.reasonRequired"));
-      return;
-    }
-    if (reasonKey) void runAction({ key: reasonKey, path: path(reasonKey), body: { reason: trimmed } });
-  };
-
-  if (loading) return <div className={admin.page}><Spinner size="lg" label={t("common.loading")} /></div>;
-  if (!user) {
-    return (
-      <div className={admin.detail}>
-        <div className={admin.detailHead}>
-          <div className={admin.detailIdentityWrap}>
-            <button type="button" className={admin.backText} onClick={() => navigate("/admin/users")}>
-              ← {t("admin.users.back")}
-            </button>
-            <div className={admin.detailIdentity}>
-              <h1 className={admin.identityName}>{t("admin.users.detailTitle")}</h1>
-            </div>
-          </div>
-        </div>
-        {error && <Alert tone="error">{error}</Alert>}
-      </div>
+  const commitSave = async () => {
+    if (!entity || !reviewKeys) return;
+    const data = await save.run<AdminUserDetail>("save", () =>
+      api.patch<AdminUserDetail>(`/v1/admin/users/${entity.id}`, edit.patchFor(reviewKeys), {
+        plane: "user",
+        // 乐观并发：不带 If-Match 就等于允许两个管理员静默互相覆盖。
+        ifMatch: entity.updatedAt,
+      }),
     );
-  }
-
-  const reasonTitleKey: Record<string, string> = {
-    suspend: "admin.users.suspendTitle",
-    ban: "admin.users.banTitle",
-    unban: "admin.users.unbanTitle",
-    delete: "admin.users.deleteTitle",
+    if (data) {
+      // 新基线来自服务端返回的完整实体，不用本地草稿顶替（后端会做规范化）。
+      user.set(data);
+      setNotice(t("admin.save.savedN", { count: reviewKeys.length }));
+      setReviewKeys(null);
+      save.reset();
+    }
   };
 
-  const isActive = user.status === "active";
-  const isSuspended = user.status === "suspended";
-  const isBanned = user.status === "banned";
-  const reasonDanger = reasonKey === "ban" || reasonKey === "delete";
-  const name = user.displayName || user.username || user.email;
+  if (user.loading && !entity) return <Spinner size="lg" label={t("common.loading")} />;
+  if (!entity) return <Alert tone="error">{user.error ?? t("error.generic")}</Alert>;
+
+  // **自指一律挡住。** 后端所有 `/users/:id/*` 写路径都过 `requireNotSelf`，
+  // 前端放开只会摆出一堆点了必然 403 SELF_TARGET_FORBIDDEN 的按钮 ——
+  // 那不是「更自由」，是让人以为系统坏了。
+  const canEdit = hasPermission(PERM.userWrite) && !lockedStaff && !isSelf;
+  // 二次验证因子的操作对自己也要挡住，否则只挡住了危险区那个总按钮、逐项入口却敞开。
+  const canReset = hasPermission(PERM.userReset2fa) && !lockedStaff && !isSelf;
+  const canRevokeSessions = hasPermission(PERM.userForceLogout) && !lockedStaff && !isSelf;
+
+  const lockHint =
+    verdict === null ? t("admin.userDetail.iamPending") : t("admin.userDetail.staffReadOnlyHint");
+  const disabledHint = lockedStaff
+    ? lockHint
+    : isSelf
+      ? t("admin.userDetail.selfBlockedHint")
+      : t("admin.perm.needed", { perm: PERM.userWrite });
+  const resetBlockedHint = lockedStaff
+    ? lockHint
+    : isSelf
+      ? t("admin.userDetail.selfBlockedHint")
+      : t("admin.perm.needed", { perm: PERM.userReset2fa });
+
+  const tabs: ReadonlyArray<TabItem<TabKey>> = TAB_KEYS.map((k) => ({
+    key: k,
+    label: t(`admin.userDetail.tabs.${k}`),
+  }));
+
+  const reviewChanges = reviewKeys ? edit.changesFor(reviewKeys) : [];
+  // 409 STALE_WRITE：把服务端当前值原样摆出来，让人自己判断要不要覆盖。
+  const saveError = save.staleValues ? (
+    <span className={styles.stackSm}>
+      <span>{save.error}</span>
+      <pre className={styles.code}>{JSON.stringify(save.staleValues, null, 2)}</pre>
+    </span>
+  ) : (
+    save.error
+  );
+
+  const onSectionDone = (message: string) => {
+    setNotice(message);
+    user.reload();
+  };
+
+  /**
+   * 解除登录失败锁定。锁定由连续失败自动加上（持久化在用户行上），
+   * 只能等它自然到期的话，「用户打电话说进不去」时管理员什么也做不了。
+   */
+  const unlock = async () => {
+    if (!id || !entity) return;
+    const done = await unlockAction.run("unlock", (idem) =>
+      api.post(`/v1/admin/users/${id}/unlock`, undefined, { plane: "user", idempotent: idem }),
+    );
+    if (done !== null) {
+      onSectionDone(t("admin.userDetail.account.unlockDone", { name: displayName }));
+      unlockAction.reset();
+    }
+  };
 
   return (
-    <div className={admin.detail}>
-      <div className={admin.detailHead}>
-        <div className={admin.detailIdentityWrap}>
-          <button type="button" className={admin.backText} onClick={() => navigate("/admin/users")}>
-            ← {t("admin.users.back")}
-          </button>
-          <div className={admin.detailIdentity}>
-            <Avatar name={name} src={user.avatarUrl} size={56} label={name} />
-            <div className={admin.identityText}>
-              <span className={admin.identityEyebrow}>{t("admin.users.detailTitle")}</span>
-              <h1 className={admin.identityName}>{name}</h1>
-              <span className={admin.identitySub}>{user.email}</span>
-            </div>
+    <div className={styles.stack}>
+      {notice && <Alert tone="success">{notice}</Alert>}
+
+      <div className={styles.detailHead}>
+        <Avatar name={displayName} src={entity.avatarUrl} size={56} label={displayName} />
+        <div>
+          <div className={styles.row}>
+            <h2 className={styles.detailName}>{displayName}</h2>
+            <StatusBadge
+              tone={accountStatusTone(entity.status)}
+              label={t(`status.${entity.status}`)}
+              size="sm"
+            />
+            {isSelf && <span className={styles.tagSelf}>{t("admin.users.tagSelf")}</span>}
           </div>
+          {entity.username && <p className={styles.detailId}>@{entity.username}</p>}
         </div>
       </div>
 
-      {error && <Alert tone="error">{error}</Alert>}
-      {notice && <Alert tone="success">{notice}</Alert>}
+      {isSelf && (
+        <Alert tone="info">
+          <strong>{t("admin.userDetail.selfTitle")}</strong>
+          <div>{t("admin.userDetail.selfDesc")}</div>
+        </Alert>
+      )}
 
-      <section className={admin.group}>
-        <DescriptionList
-          items={[
-            { term: t("admin.users.username"), value: user.username ?? "—" },
-            { term: t("admin.users.email"), value: <span><code className={page.code}>{user.email}</code>{" "}<StatusBadge size="sm" tone={user.emailVerified ? "green" : "amber"} label={user.emailVerified ? t("account.profile.emailVerified") : t("account.profile.emailUnverified")} /></span> },
-            { term: t("admin.users.status"), value: <StatusBadge size="sm" tone={statusTone(user.status)} label={t(`status.${user.status}`)} /> },
-            { term: t("admin.users.createdAt"), value: fmt(user.createdAt) || "—" },
-            { term: t("admin.users.lastLoginAt"), value: fmt(user.lastLoginAt) || t("common.never") },
-          ]}
-        />
-      </section>
-
-      <section className={admin.group}>
-        <h2 className={admin.groupTitle}>{t("admin.users.security")}</h2>
-        <DescriptionList
-          items={[
-            { term: t("admin.users.hasPassword"), value: user.security.hasPassword ? t("common.yes") : t("common.no") },
-            { term: t("admin.users.totp"), value: user.security.totpEnabled ? t("common.enabled") : t("common.disabled") },
-            { term: t("admin.users.passkeys"), value: String(user.security.passkeyCount) },
-            { term: t("admin.users.activeSessions"), value: String(user.security.activeSessions) },
-          ]}
-        />
-      </section>
-
-      <section className={admin.group}>
-        <h2 className={admin.groupTitle}>{t("admin.users.oauthProviders")}</h2>
-        {user.oauthProviders.length === 0 ? (
-          <p className={page.subtleNote}>{t("common.none")}</p>
-        ) : (
-          <div className={admin.chips}>
-            {user.oauthProviders.map((o) => (
-              <Pill key={o.provider}>{o.provider}{o.providerUsername ? ` · ${o.providerUsername}` : ""}</Pill>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className={admin.group}>
-        <h2 className={admin.groupTitle}>{t("admin.users.actions")}</h2>
-        {/* refreshing 期间禁用操作入口：详情还是旧数据，防止对过期状态叠加操作。 */}
-        <div className={admin.actionsRow}>
-          <Button variant="secondary" disabled={refreshing} loading={busyKey === "force-logout"} onClick={() => openConfirm("force-logout")}>
-            {t("admin.users.forceLogout")}
-          </Button>
-          {isSuspended ? (
-            <Button variant="secondary" disabled={refreshing} loading={busyKey === "unsuspend"} onClick={() => openConfirm("unsuspend")}>
-              {t("admin.users.unsuspend")}
-            </Button>
-          ) : isActive ? (
-            <Button variant="secondary" disabled={refreshing} loading={busyKey === "suspend"} onClick={() => openReason("suspend")}>
-              {t("admin.users.suspend")}
-            </Button>
-          ) : null}
-        </div>
-        <div className={admin.dangerRow}>
-          <Button variant="danger" disabled={refreshing} loading={busyKey === "reset-2fa"} onClick={() => openConfirm("reset-2fa")}>
-            {t("admin.users.reset2fa")}
-          </Button>
-          {isBanned ? (
-            <Button variant="danger" disabled={refreshing} loading={busyKey === "unban"} onClick={() => openReason("unban")}>
-              {t("admin.users.unban")}
-            </Button>
+      {/* 判定还没回来时不摆横幅（会误报），但写操作已按 lockedStaff 锁住。 */}
+      {lockedStaff && verdict !== null && (
+        <Alert tone="error">
+          {verdict === "staff_assumed" ? (
+            <>
+              <strong>{t("admin.userDetail.staffAssumedTitle")}</strong>
+              <div>{t("admin.userDetail.staffAssumedDesc")}</div>
+              <div>{t("admin.userDetail.staffAssumedNext")}</div>
+            </>
           ) : (
-            <Button variant="danger" disabled={refreshing} loading={busyKey === "ban"} onClick={() => openReason("ban")}>
-              {t("admin.users.ban")}
-            </Button>
+            <>
+              <strong>{t("admin.userDetail.staffTitle")}</strong>
+              <div>
+                {t("admin.userDetail.staffDesc", {
+                  role: iam.data?.roles?.[0] ?? t("admin.access.directGrant"),
+                })}
+              </div>
+              <div>{t("admin.userDetail.staffUnlock")}</div>
+            </>
           )}
-          <Button variant="danger" disabled={refreshing} loading={busyKey === "delete"} onClick={() => openReason("delete")}>
-            {t("admin.users.deleteUser")}
-          </Button>
+        </Alert>
+      )}
+
+      {exStaff && !isSelf && (
+        <Alert tone="info">
+          <strong>{t("admin.userDetail.exStaffTitle")}</strong>
+          <div>{t("admin.userDetail.exStaffDesc")}</div>
+        </Alert>
+      )}
+
+      {iam.error && <Alert tone="error">{iam.error}</Alert>}
+
+      <Tabs
+        items={tabs}
+        value={tab}
+        onChange={(k) => writeParams({ tab: k, page: "" })}
+        ariaLabel={t("admin.userDetail.tabsLabel")}
+        panelId="admin-user-panel"
+      />
+
+      <StaffGuardContext.Provider value={iam.reload}>
+        <div id="admin-user-panel">
+          {tab === "profile" && (
+            <ProfileTab
+              user={entity}
+              iam={iam.data}
+              canEdit={canEdit}
+              disabledHint={disabledHint}
+              edit={edit}
+              onSave={setReviewKeys}
+              onUnlock={() => void unlock()}
+              unlocking={unlockAction.pending === "unlock"}
+            />
+          )}
+          {tab === "security" && (
+            <SecurityTab
+              userId={entity.id}
+              subject={displayName}
+              totpEnabled={entity.security.totpEnabled}
+              passkeyCount={entity.security.passkeyCount}
+              canReset={canReset}
+              blockedHint={resetBlockedHint}
+              onDone={onSectionDone}
+            />
+          )}
+          {tab === "sessions" && (
+            <SessionsTab
+              userId={entity.id}
+              subject={displayName}
+              canRevoke={canRevokeSessions}
+              onDone={onSectionDone}
+            />
+          )}
+          {tab === "bindings" && <BindingsTab userId={entity.id} />}
+          {tab === "grants" && (
+            <GrantsTab
+              userId={entity.id}
+              subject={displayName}
+              canRevoke={canRevokeSessions}
+              onDone={onSectionDone}
+            />
+          )}
+          {tab === "audit" && (
+            <AuditTab
+              userId={entity.id}
+              page={auditPage}
+              pageSize={auditPageSize}
+              onPage={(p) => writeParams({ page: p > 1 ? String(p) : "" })}
+              onPageSize={(s: PageSize) => writeParams({ pageSize: s === 10 ? "" : String(s), page: "" })}
+            />
+          )}
+          {tab === "danger" && (
+            <DangerTab
+              user={entity}
+              subject={displayName}
+              isSelf={isSelf}
+              lockedStaff={lockedStaff}
+              hasPermission={hasPermission}
+              onDone={setNotice}
+              onChanged={() => {
+                user.reload();
+                iam.reload();
+              }}
+            />
+          )}
         </div>
-      </section>
+      </StaffGuardContext.Provider>
 
-      {/* 确认类操作（无需原因）。step-up 期间隐藏，取消后自动恢复；
-          失败时错误经 error 插槽就近显示在框内，保持开启可重试。 */}
-      <ConfirmDialog
-        open={confirmKey === "force-logout" && !stepUpOpen}
-        title={t("admin.users.forceLogoutTitle")}
-        message={t("admin.users.forceLogoutMessage")}
-        confirmText={t("common.confirm")}
-        cancelText={t("common.cancel")}
-        confirmLoading={busyKey === "force-logout"}
-        error={confirmError}
-        onCancel={closeConfirm}
-        onConfirm={() => void runAction({ key: "force-logout", path: path("force-logout") })}
-      />
-      <ConfirmDialog
-        open={confirmKey === "unsuspend" && !stepUpOpen}
-        title={t("admin.users.unsuspendTitle")}
-        message={t("admin.users.unsuspendMessage")}
-        confirmText={t("common.confirm")}
-        cancelText={t("common.cancel")}
-        confirmLoading={busyKey === "unsuspend"}
-        error={confirmError}
-        onCancel={closeConfirm}
-        onConfirm={() => void runAction({ key: "unsuspend", path: path("unsuspend") })}
-      />
-      <ConfirmDialog
-        open={confirmKey === "reset-2fa" && !stepUpOpen}
-        variant="danger"
-        title={t("admin.users.reset2faTitle")}
-        message={t("admin.users.reset2faMessage")}
-        confirmText={t("common.confirm")}
-        cancelText={t("common.cancel")}
-        confirmLoading={busyKey === "reset-2fa"}
-        error={confirmError}
-        onCancel={closeConfirm}
-        onConfirm={() => void runAction({ key: "reset-2fa", path: path("reset-2fa") })}
-      />
-
-      {/* 需要原因的操作：多行 500 字计数、独立校验文案与弹窗内接口错误均由
-          共享 ReasonPromptDialog 承载。step-up 期间隐藏，取消后自动恢复（原因文本不丢）。 */}
-      <ReasonPromptDialog
-        open={reasonKey !== null && !stepUpOpen}
-        multiline
-        variant={reasonDanger ? "danger" : "default"}
-        title={reasonKey ? t(reasonTitleKey[reasonKey] ?? "admin.users.actions") : ""}
-        label={t("admin.users.reasonLabel")}
-        required
-        placeholder={t("admin.users.reasonPlaceholder")}
-        value={reasonText}
-        maxLength={500}
-        fieldError={reasonError}
-        error={reasonApiError}
-        submitting={reasonKey !== null && busyKey === reasonKey}
-        submitText={t("common.confirm")}
-        cancelText={t("common.cancel")}
-        onChange={(v) => {
-          setReasonText(v);
-          if (reasonError) setReasonError(undefined);
-        }}
-        onSubmit={submitReason}
-        onCancel={closeReason}
-      />
-
-      <AdminStepUpDialog open={stepUpOpen} onClose={closeStepUp} onVerified={onStepUpVerified} />
+      {reviewKeys && reviewChanges.length > 0 && (
+        <DiffDialog
+          subject={displayName}
+          changes={reviewChanges}
+          busy={save.pending === "save"}
+          error={saveError}
+          forceStepUp={save.stepUpRequired}
+          onCancel={() => {
+            setReviewKeys(null);
+            save.reset();
+          }}
+          onCommit={() => void commitSave()}
+        />
+      )}
     </div>
   );
 };

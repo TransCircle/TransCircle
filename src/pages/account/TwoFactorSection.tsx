@@ -15,6 +15,7 @@ import { Dialog } from "../../components/ui/Dialog";
 import { CodeInput } from "../../components/ui/CodeInput";
 import { cx } from "../../components/admin/cx";
 import { RecoveryCodesDialog } from "./RecoveryCodesDialog";
+import { useIamMfa } from "./IamMfaContext";
 import s from "./Account.module.css";
 import sec from "./Security.module.css";
 
@@ -34,6 +35,9 @@ const CheckIcon = () => (
 export function TwoFactorSection() {
   const { t } = useTranslation();
   const { user, refresh } = useSession();
+  // 接管开启时动态口令在登录路径上不生效——必须写出来，否则用户会以为它坏了。
+  const { state: iamMfa } = useIamMfa();
+  const delegatedToIam = iamMfa?.delegated === true;
   const [status, setStatus] = useState<TotpStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -187,10 +191,11 @@ export function TwoFactorSection() {
   return (
     <section className={s.group}>
       <h2 className={s.groupTitle}>{t("account.nav.twoFactor")}</h2>
-      {(error || notice) && (
+      {(error || notice || delegatedToIam) && (
         <div className={s.groupFeedback}>
           {error && <Alert tone="error">{error}</Alert>}
           {notice && <Alert tone="success">{notice}</Alert>}
+          {delegatedToIam && <Alert tone="info">{t("mfa.iam.localInactiveTotp")}</Alert>}
         </div>
       )}
 

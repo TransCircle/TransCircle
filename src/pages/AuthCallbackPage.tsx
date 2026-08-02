@@ -1,17 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, setUserToken, tryRefreshToken, clearAdminAuth } from "../api/client";
+import { api, setUserToken, tryRefreshToken } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { sanitizeRedirect } from "../utils/url";
 import { usePageTitle } from "../utils/usePageTitle";
 import type { OAuthExchangeResult } from "../api/types";
 import { StatusScreen } from "../components/ui";
+import { saveMfaHandoff } from "./mfaHandoff";
 
 /**
  * OAuth 浏览器回调落地（修正协议）：
- * 后端 302 → /auth/callback?status=login_ok&loginCode=...&redirectAfter=...
- * 用 loginCode 兑换 access token（refresh_token 已在回调时写入 HttpOnly Cookie）。
+ *
+ * - `status=login_ok`     → 后端已建会话，用片段里的 loginCode 兑换 access token
+ *                           （refresh_token 已在回调时写入 HttpOnly Cookie）。
+ * - `status=mfa_required` → 第三方登录只是**第一因素**，该账户还开着 TOTP / 通行密钥 /
+ *                           统一身份接管。片段里带的是一次性挑战令牌，交接给登录页
+ *                           复用那一整套二次验证界面，不在这里另做一套。
  */
 const AuthCallbackPage = () => {
   const { t } = useTranslation();
@@ -22,8 +27,10 @@ const AuthCallbackPage = () => {
   const ran = useRef(false);
 
   const status = params.get("status");
-  // loginCode 经 URL 片段（#）传递，不进访问日志/Referer。
-  const loginCode = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("loginCode");
+  // 一次性凭据经 URL 片段（#）传递，不进访问日志/Referer。
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const loginCode = hash.get("loginCode");
+  const mfaChallengeToken = hash.get("mfaChallengeToken");
   // 来自 URL 的重定向目标必须净化，防开放重定向。
   const redirectAfter = sanitizeRedirect(params.get("redirectAfter"), "/account");
 
@@ -33,12 +40,26 @@ const AuthCallbackPage = () => {
     if (ran.current) return;
     ran.current = true;
 
+    // 第三方登录通过了第一因素，但账户还需要第二因素。
+    // 无论后面走哪条分支，片段里都可能带着一次性凭据（loginCode / mfaChallengeToken）。
+    // **先无条件清掉**，再判断 —— 之前只在成功路径上清，缺令牌的失败分支会把它
+    // 留在地址栏与浏览器历史里。
+    window.history.replaceState(null, "", window.location.pathname);
+
+    if (status === "mfa_required") {
+      if (!mfaChallengeToken) {
+        setError(t("callback.invalid"));
+        return;
+      }
+      saveMfaHandoff({ mfaChallengeToken, redirectAfter });
+      navigate("/login", { replace: true });
+      return;
+    }
+
     if (status !== "login_ok" || !loginCode) {
       setError(t("callback.invalid"));
       return;
     }
-    // 立即从地址栏抹去一次性 loginCode（已捕获到闭包），避免经浏览器历史/Referer 泄露。
-    window.history.replaceState(null, "", window.location.pathname);
     void (async () => {
       const res = await api.post<OAuthExchangeResult>(
         "/v1/auth/oauth/exchange",
@@ -50,7 +71,6 @@ const AuthCallbackPage = () => {
         // 探测一次静默续期，成功即按登录成功处理，避免「实际已登录却显示失败」。
         const token = await tryRefreshToken();
         if (token) {
-          clearAdminAuth();
           setUserToken(token);
           const me = await refresh();
           if (me) {
@@ -64,7 +84,6 @@ const AuthCallbackPage = () => {
         setError(localized === key ? res.error.message : localized);
         return;
       }
-      clearAdminAuth();
       setUserToken(res.data.accessToken);
       await refresh();
       navigate(redirectAfter, { replace: true });

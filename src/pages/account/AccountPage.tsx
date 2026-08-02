@@ -4,13 +4,15 @@ import { useTranslation } from "react-i18next";
 import { useSession } from "../../context/SessionContext";
 import { usePageTitle } from "../../utils/usePageTitle";
 import { Avatar } from "../../components/Avatar";
-import { StatusScreen } from "../../components/ui";
+import { StatusScreen, Alert, AdminButton as Button } from "../../components/ui";
 import { AvatarDialog } from "./AvatarDialog";
+import { IamMfaProvider } from "./IamMfaContext";
 import { ProfileSection } from "./ProfileSection";
 import { PasswordSection } from "./PasswordSection";
 import { TwoFactorSection } from "./TwoFactorSection";
 import { PasskeysSection } from "./PasskeysSection";
 import { RecoveryCodesSection } from "./RecoveryCodesSection";
+import { IamMfaSection } from "./IamMfaSection";
 import { OAuthSection } from "./OAuthSection";
 import { SessionsSection } from "./SessionsSection";
 import { DangerSection } from "./DangerSection";
@@ -24,6 +26,11 @@ const PencilIcon = () => (
 );
 
 /**
+ * GET /v1/me 已回传 mustChangePassword（管理员置新密码后为真，改完后端自动清零）。
+ * api/types.ts 归另一位实施者，这里就地扩展；类型补齐后可直接改回 MeProfile。
+ */
+
+/**
  * 单页账户中心:身份头(可点击头像 → 更换弹窗)+ 分组卡片,所有编辑均走弹窗。
  * Pass 会话门控(loading → 加载屏;未登录 → 跳转登录)在此收口。
  */
@@ -32,6 +39,8 @@ const AccountPage = () => {
   const { user, loading } = useSession();
   const location = useLocation();
   const [avatarOpen, setAvatarOpen] = useState(false);
+  /** 递增即让「登录密码」分区打开修改弹窗（供强制改密提示调用）。 */
+  const [passwordOpenRequest, setPasswordOpenRequest] = useState(0);
 
   usePageTitle(t("account.title"));
 
@@ -43,6 +52,7 @@ const AccountPage = () => {
   }
 
   const displayName = user.displayName || user.username;
+  const mustChangePassword = user.mustChangePassword === true;
 
   return (
     <div className={s.wrap}>
@@ -65,14 +75,39 @@ const AccountPage = () => {
         </div>
       </header>
 
-      <ProfileSection />
-      <PasswordSection />
-      <TwoFactorSection />
-      <PasskeysSection />
-      <RecoveryCodesSection />
-      <OAuthSection />
-      <SessionsSection />
-      <DangerSection />
+      {/* 强制改密:管理员置了新密码,把提示放在最顶上并直接给到修改入口,
+          不让用户自己在页面里找「登录密码」那一栏。 */}
+      {mustChangePassword && (
+        <Alert tone="error">
+          <div className={s.noticeBody}>
+            <span className={s.noticeText}>
+              <strong className={s.noticeTitle}>{t("account.password.mustChangeTitle")}</strong>
+              <span>{t("account.password.mustChangeDesc")}</span>
+            </span>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setPasswordOpenRequest((n) => n + 1)}
+            >
+              {t("account.password.mustChangeAction")}
+            </Button>
+          </div>
+        </Alert>
+      )}
+
+      {/* 统一身份接管状态由 Provider 统一读取:接管开关、通行密钥、动态口令三处共用一份，
+          避免各拉各的、互相显示矛盾状态。 */}
+      <IamMfaProvider>
+        <ProfileSection />
+        <PasswordSection openRequest={passwordOpenRequest} mustChange={mustChangePassword} />
+        <TwoFactorSection />
+        <PasskeysSection />
+        <RecoveryCodesSection />
+        <IamMfaSection />
+        <OAuthSection />
+        <SessionsSection />
+        <DangerSection />
+      </IamMfaProvider>
 
       <AvatarDialog open={avatarOpen} onClose={() => setAvatarOpen(false)} />
     </div>

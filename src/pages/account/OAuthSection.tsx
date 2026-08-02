@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../api/client";
 import type { OAuthBinding } from "../../api/types";
@@ -11,7 +11,8 @@ import {
   Spinner,
   StatusBadge,
 } from "../../components/ui";
-import { ConfirmDialog } from "../../components/ui/Dialog";
+import { Dialog, ConfirmDialog } from "../../components/ui/Dialog";
+import { markPermanentBindAck, clearPermanentBindAck } from "./permanentBindAck";
 import s from "./Account.module.css";
 
 const GithubIcon = () => (
@@ -24,21 +25,47 @@ const XIcon = () => (
     <path d="M18.24 2.25h3.31l-7.23 8.26L23.04 21.75h-6.66l-4.71-6.23-5.4 6.23H2.96l7.73-8.84L1.25 2.25h6.83l4.71 6.23 5.45-6.23Zm-1.16 17.52h1.83L7.08 4.13H5.12L17.08 19.77Z" />
   </svg>
 );
+/** 统一身份：盾牌 + 对钩，与「工作人员身份」的语义对上，且不与第三方品牌图标混淆。 */
+const IamIcon = () => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 3l7 3v5.5c0 4.2-2.9 7.6-7 8.5-4.1-.9-7-4.3-7-8.5V6l7-3Z" />
+    <path d="m9 12 2 2 4-4" />
+  </svg>
+);
 
-const PROVIDERS = [
-  { id: "github", label: "GitHub", icon: <GithubIcon /> },
-  { id: "x", label: "X", icon: <XIcon /> },
-] as const;
+/** 门户已知的提供商与图标；展示名一律以后端 label 为准，此处只作未绑定时的兜底。 */
+const PROVIDERS: Array<{ id: string; icon: ReactNode; labelKey: string }> = [
+  { id: "github", icon: <GithubIcon />, labelKey: "account.oauth.provider.github" },
+  { id: "x", icon: <XIcon />, labelKey: "account.oauth.provider.x" },
+  { id: "iam", icon: <IamIcon />, labelKey: "account.oauth.provider.iam" },
+];
 
-/** 从 PROVIDERS 查表取展示名，未知 provider 回退原始 id。 */
-const providerLabel = (id: string | null) =>
-  PROVIDERS.find((p) => p.id === id)?.label ?? id ?? "";
+/**
+ * label 与 unbindable 已进入公共 `OAuthBinding` 类型（design/api-delta.md §5b.1/§5b.2），
+ * 不再需要本地扩展别名。
+ */
+type OAuthBindingItem = OAuthBinding;
 
-/** 第三方账号绑定：绑定 / 解绑（解绑需 step-up）。 */
+/** GET /v1/me/oauth/:provider/bind/start */
+interface BindStart {
+  authorizationUrl: string;
+  /** 该 provider 绑定后是否不可自行解除；为真时必须先让用户确认再跳转。 */
+  permanent?: boolean;
+  label?: string;
+}
+
+/** 待确认的不可逆绑定：拿到授权地址后先压住，等用户在确认框里点了「继续」再跳。 */
+interface PendingPermanentBind {
+  provider: string;
+  label: string;
+  authorizationUrl: string;
+}
+
+/** 第三方与统一身份的账号绑定：绑定 / 解绑（解绑需 step-up；统一身份不可自行解绑）。 */
 export function OAuthSection() {
   const { t } = useTranslation();
   const fmt = useFormatTs();
-  const [bindings, setBindings] = useState<OAuthBinding[]>([]);
+  const [bindings, setBindings] = useState<OAuthBindingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -48,10 +75,11 @@ export function OAuthSection() {
   const [unbindTarget, setUnbindTarget] = useState<string | null>(null);
   const [stepUpOpen, setStepUpOpen] = useState(false);
   const [pendingUnbind, setPendingUnbind] = useState<string | null>(null);
+  const [permanentBind, setPermanentBind] = useState<PendingPermanentBind | null>(null);
 
   const load = async () => {
     setLoading(true);
-    const res = await api.get<OAuthBinding[]>("/v1/me/oauth");
+    const res = await api.get<OAuthBindingItem[]>("/v1/me/oauth");
     if (res.ok) setBindings(res.data);
     else setError(res.error.message);
     setLoading(false);
@@ -61,11 +89,32 @@ export function OAuthSection() {
     void load();
   }, []);
 
+  /** 未绑定时的兜底展示名（已绑定一律用后端 label）。 */
+  const fallbackLabel = (id: string) => {
+    const known = PROVIDERS.find((p) => p.id === id);
+    const key = known?.labelKey;
+    if (!key) return id;
+    const text = t(key);
+    return text === key ? id : text;
+  };
+
   const bind = async (provider: string) => {
     setError(null);
+    setNotice(null);
     setBindingId(provider);
-    const res = await api.get<{ authorizationUrl: string }>(`/v1/me/oauth/${provider}/bind/start`);
+    const res = await api.get<BindStart>(`/v1/me/oauth/${encodeURIComponent(provider)}/bind/start`);
     if (res.ok && res.data.authorizationUrl) {
+      if (res.data.permanent === true) {
+        // 不可逆绑定：先把授权地址压在本地，弹确认框讲清后果，用户点「继续」才跳。
+        // 判定来自后端而不是前端硬编码 provider —— 哪些 provider 不可解绑是后端的事。
+        setPermanentBind({
+          provider,
+          label: res.data.label || fallbackLabel(provider),
+          authorizationUrl: res.data.authorizationUrl,
+        });
+        setBindingId(null);
+        return;
+      }
       // 保持 busy 态直到浏览器完成跳转，避免等待期间重复点击。
       window.location.href = res.data.authorizationUrl;
       return;
@@ -74,12 +123,29 @@ export function OAuthSection() {
     setBindingId(null);
   };
 
+  /** 用户在不可逆确认框里点了「继续绑定」：留下 ack 供落地页消费，然后跳转。 */
+  const confirmPermanentBind = () => {
+    if (!permanentBind) return;
+    markPermanentBindAck(permanentBind.provider);
+    setBindingId(permanentBind.provider);
+    window.location.href = permanentBind.authorizationUrl;
+  };
+
+  const cancelPermanentBind = () => {
+    if (permanentBind) clearPermanentBindAck(permanentBind.provider);
+    setPermanentBind(null);
+  };
+
   const doUnbind = async (provider: string) => {
     setBusy(true);
     setError(null);
-    const res = await api.del(`/v1/me/oauth/${provider}`);
+    const res = await api.del(`/v1/me/oauth/${encodeURIComponent(provider)}`);
     if (res.ok) {
       setNotice(t("account.oauth.unboundOk"));
+      await load();
+    } else if (res.error.code === "IAM_BINDING_PERMANENT") {
+      // 界面本就不该渲染这个按钮；真走到这里说明列表数据过期，重新拉一次让界面自洽。
+      setError(t("account.oauth.permanentRejected"));
       await load();
     } else if (res.error.code === "STEP_UP_REQUIRED" || res.status === 403) {
       // 需要二次验证：弹出 step-up，验证通过后重试
@@ -92,13 +158,35 @@ export function OAuthSection() {
     setUnbindTarget(null);
   };
 
+  // 已知提供商在前、后端返回的历史/未知 provider 在后：列表按 label 展示，
+  // 不认识的 provider 也要看得见，否则用户会以为绑定丢了。
+  const knownIds = new Set(PROVIDERS.map((p) => p.id));
+  const rows = [
+    ...PROVIDERS.map((p) => ({
+      id: p.id,
+      icon: p.icon,
+      bound: bindings.find((b) => b.provider === p.id) ?? null,
+    })),
+    ...bindings
+      .filter((b) => !knownIds.has(b.provider))
+      .map((b) => ({ id: b.provider, icon: null as ReactNode, bound: b })),
+  ];
+
+  const unbindTargetLabel =
+    bindings.find((b) => b.provider === unbindTarget)?.label ??
+    (unbindTarget ? fallbackLabel(unbindTarget) : "");
+
+  // 已绑统一身份:把「权限怎么生效」写在这里 —— 用户绑完最常问的就是「然后呢」。
+  const iamBound = !loading && bindings.some((b) => b.provider === "iam");
+
   return (
     <section className={s.group}>
       <h2 className={s.groupTitle}>{t("account.nav.oauth")}</h2>
-      {(error || notice) && (
+      {(error || notice || iamBound) && (
         <div className={s.groupFeedback}>
           {error && <Alert tone="error">{error}</Alert>}
           {notice && <Alert tone="success">{notice}</Alert>}
+          {iamBound && <Alert tone="info">{t("account.oauth.iamBoundHint")}</Alert>}
         </div>
       )}
 
@@ -107,16 +195,27 @@ export function OAuthSection() {
       ) : (
         <Card padding="none">
           <ul className={s.list}>
-            {PROVIDERS.map((p) => {
-              const bound = bindings.find((b) => b.provider === p.id);
+            {rows.map((row) => {
+              const bound = row.bound;
+              const label = bound?.label || fallbackLabel(row.id);
+              // unbindable 缺省按「可解绑」处理，与后端注册表外的历史 provider 降级口径一致。
+              const unbindable = bound ? bound.unbindable !== false : true;
               return (
-                <li key={p.id} className={s.listRow}>
+                <li key={row.id} className={s.listRow}>
                   <div className={s.rowMain}>
-                    <span className={s.providerIcon} aria-hidden="true">{p.icon}</span>
+                    {row.icon && (
+                      <span className={s.providerIcon} aria-hidden="true">
+                        {row.icon}
+                      </span>
+                    )}
                     <div className={s.rowText}>
                       <span className={s.rowTitle}>
-                        {p.label}
-                        <StatusBadge size="sm" tone={bound ? "green" : "neutral"} label={bound ? t("account.oauth.bound") : t("account.oauth.notBound")} />
+                        {label}
+                        <StatusBadge
+                          size="sm"
+                          tone={bound ? "green" : "neutral"}
+                          label={bound ? t("account.oauth.bound") : t("account.oauth.notBound")}
+                        />
                       </span>
                       {bound && (
                         <span className={s.rowMeta}>
@@ -124,25 +223,38 @@ export function OAuthSection() {
                           <span>{`${t("account.oauth.boundAt")}: ${fmt(bound.boundAt) || "—"}`}</span>
                         </span>
                       )}
+                      {/* 不可解绑：不渲染一个必然失败的按钮，直接把原因写在行内。 */}
+                      {bound && !unbindable && (
+                        <span className={s.rowNote}>{t("account.oauth.permanentNote")}</span>
+                      )}
                     </div>
                   </div>
-                  <div className={s.rowActions}>
-                    {bound ? (
-                      <Button variant="danger" size="sm" disabled={busy || bindingId !== null} onClick={() => setUnbindTarget(p.id)}>
-                        {t("account.oauth.unbind")}
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        loading={bindingId === p.id}
-                        disabled={bindingId !== null && bindingId !== p.id}
-                        onClick={() => void bind(p.id)}
-                      >
-                        {t("account.oauth.bind")}
-                      </Button>
-                    )}
-                  </div>
+                  {/* 不可解绑的已绑定项没有任何操作:整个操作区都不渲染,
+                      免得在窄屏留下一条满宽的空行。 */}
+                  {(!bound || unbindable) && (
+                    <div className={s.rowActions}>
+                      {bound ? (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          disabled={busy || bindingId !== null}
+                          onClick={() => setUnbindTarget(row.id)}
+                        >
+                          {t("account.oauth.unbind")}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          loading={bindingId === row.id}
+                          disabled={bindingId !== null && bindingId !== row.id}
+                          onClick={() => void bind(row.id)}
+                        >
+                          {t("account.oauth.bind")}
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </li>
               );
             })}
@@ -150,9 +262,37 @@ export function OAuthSection() {
         </Card>
       )}
 
+      {/* 不可逆绑定的事前确认：必须在跳转授权页之前，且必须把「其他工作人员将无法修改此账户」讲明白。 */}
+      <Dialog
+        open={!!permanentBind}
+        onClose={cancelPermanentBind}
+        tone="danger"
+        title={t("account.oauth.permanentTitle", { provider: permanentBind?.label ?? "" })}
+        footer={
+          <>
+            <Button variant="secondary" onClick={cancelPermanentBind}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="danger" onClick={confirmPermanentBind}>
+              {t("account.oauth.permanentConfirm")}
+            </Button>
+          </>
+        }
+      >
+        <div className={s.stackSm}>
+          <Alert tone="error">{t("account.oauth.permanentLead")}</Alert>
+          <ul className={s.bulletList}>
+            <li>{t("account.oauth.permanentPoint1")}</li>
+            <li>{t("account.oauth.permanentPoint2")}</li>
+            <li>{t("account.oauth.permanentPoint3")}</li>
+          </ul>
+          <p className={s.muted}>{t("account.oauth.permanentAdminHint")}</p>
+        </div>
+      </Dialog>
+
       <ConfirmDialog
         open={!!unbindTarget}
-        title={t("account.oauth.unbindTitle", { provider: providerLabel(unbindTarget) })}
+        title={t("account.oauth.unbindTitle", { provider: unbindTargetLabel })}
         message={t("account.oauth.unbindMessage")}
         confirmText={t("account.oauth.unbind")}
         cancelText={t("common.cancel")}

@@ -1,0 +1,2450 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-density="comfortable">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pass 管理控制台 · 重设计原型</title>
+<link rel="stylesheet" href="../ds-bundle/styles.css">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   布局胶水。只引用 _ds_bundle.css 已有的 token —— 无新造色值。
+   自适应用容器查询而非视口断点：左栏折叠后工作区宽度会变，
+   按视口判断会判断错。
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px;
+  --sp-6:24px; --sp-8:32px; --sp-10:40px; --sp-12:48px;
+  --rail-w: 232px; --rail-w-mini: 60px;
+  --row-h: 48px;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+:root[data-density="compact"] { --row-h: 38px; }
+
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg-color); color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px; line-height: var(--lh-body); -webkit-font-smoothing: antialiased;
+}
+* { box-sizing: border-box; }
+:focus-visible { outline: 2px solid var(--primary-pink); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+
+/* ── 外壳 ───────────────────────────────────────────────────── */
+.c-shell { display: grid; grid-template-columns: var(--rail-w) 1fr; min-height: 100vh; }
+.c-shell[data-rail="mini"] { grid-template-columns: var(--rail-w-mini) 1fr; }
+
+.c-rail {
+  display: flex; flex-direction: column; gap: var(--sp-5);
+  border-right: 1px solid var(--divider-color);
+  padding: var(--sp-5) var(--sp-3) var(--sp-3);
+  position: sticky; top: 0; height: 100vh; overflow-y: auto; overflow-x: hidden;
+}
+.c-brand { display: flex; align-items: center; gap: var(--sp-2); padding: 0 var(--sp-2); min-width: 0; }
+.c-brand-mark { width:26px; height:26px; border-radius: var(--radius-xs); flex:none;
+  background: var(--accent-pink); color: var(--on-accent); display:grid; place-items:center;
+  font-weight:800; font-size:13px; letter-spacing:-.02em; }
+.c-brand-text { display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+.c-brand-name { font-weight:700; font-size:14px; letter-spacing:-.01em; }
+.c-brand-sub { font-size:11px; color: var(--text-muted); white-space:nowrap; }
+
+.c-nav { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+.c-nav-group { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+  color: var(--text-muted); padding: var(--sp-3) var(--sp-2) var(--sp-1); white-space:nowrap; }
+.c-nav-item {
+  display:flex; align-items:center; gap: var(--sp-3);
+  padding: var(--sp-2); min-height:36px; width:100%; text-align:left;
+  border:none; background:none; border-radius: var(--radius-control); cursor:pointer;
+  color: var(--text-secondary); font: inherit; font-size:14px; white-space:nowrap;
+  transition: background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+}
+.c-nav-item:hover { background: var(--hover-bg-mix, var(--hover-bg)); color: var(--text-main); }
+.c-nav-item[aria-current="page"] { background: var(--soft-pink); color: var(--accent-pink); font-weight:600; }
+:root[data-theme="dark"] .c-nav-item[aria-current="page"] { color: var(--text-main); }
+.c-nav-icon { display:inline-flex; flex:none; }
+
+.c-shell[data-rail="mini"] .c-brand-text,
+.c-shell[data-rail="mini"] .c-nav-group,
+.c-shell[data-rail="mini"] .c-nav-item > span:not(.c-nav-icon),
+.c-shell[data-rail="mini"] .c-me-text { display:none; }
+.c-shell[data-rail="mini"] .c-nav-item { justify-content:center; }
+
+.c-rail-foot { border-top: 1px solid var(--divider-color); padding-top: var(--sp-3); }
+.c-me { display:flex; align-items:center; gap: var(--sp-3); padding: var(--sp-2); width:100%;
+  border:none; background:none; border-radius: var(--radius-control); cursor:pointer; font:inherit; text-align:left;
+  transition: background-color var(--dur-fast) var(--ease-standard); }
+.c-me:hover { background: var(--hover-bg-mix, var(--hover-bg)); }
+.c-me-text { min-width:0; display:flex; flex-direction:column; line-height:1.3; }
+.c-me-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.c-me-role { font-size:11px; color: var(--text-muted); white-space:nowrap; }
+
+/* ── 主区：容器查询的锚点 ──────────────────────────────────── */
+.c-main {
+  background: var(--surface-card); min-width:0; display:flex; flex-direction:column;
+  container-type: inline-size; container-name: work;
+}
+.c-topbar { display:flex; align-items:flex-start; gap: var(--sp-4);
+  padding: var(--sp-5) var(--sp-8) var(--sp-4); border-bottom:1px solid var(--divider-color);
+  position:sticky; top:0; z-index:5; background: var(--surface-card); flex-wrap:wrap; }
+.c-crumb { display:flex; align-items:flex-start; gap: var(--sp-2); min-width:0; }
+.c-title { margin:0; font-size:20px; font-weight:700; letter-spacing:-.02em; overflow-wrap:anywhere; }
+.c-subtitle { font-size:13px; color: var(--text-muted); margin-top:2px; }
+.c-body { padding: var(--sp-6) var(--sp-8) var(--sp-12); flex:1; min-width:0; }
+/* 超宽屏：内容设上限并居中，避免一行拉太长没法读 */
+.c-body > .c-wide { max-width: 1440px; margin-inline: auto; }
+
+.c-stack { display:flex; flex-direction:column; gap: var(--sp-6); }
+.c-stack-sm { display:flex; flex-direction:column; gap: var(--sp-3); }
+.c-row { display:flex; align-items:center; gap: var(--sp-3); flex-wrap:wrap; }
+.c-spread { display:flex; align-items:center; justify-content:space-between; gap: var(--sp-3); flex-wrap:wrap; }
+.c-note { font-size:12.5px; color: var(--text-muted); }
+.c-mono { font-family: var(--mono); font-size:12.5px; }
+.c-num { font-variant-numeric: tabular-nums; color: var(--text-secondary); font-size:13px; white-space:nowrap; }
+
+/* ── 筛选 ───────────────────────────────────────────────────── */
+.c-filters { display:flex; align-items:center; gap: var(--sp-3); flex-wrap:wrap; }
+.c-filters-search { flex:1; min-width:220px; max-width:420px; }
+.c-chipset { display:inline-flex; gap: var(--sp-1); padding:3px; border-radius: var(--radius-pop);
+  background: var(--hover-bg-mix, var(--hover-bg)); flex-wrap:wrap; }
+.c-chip { border:none; background:none; cursor:pointer; font:inherit; font-size:13px;
+  padding:5px var(--sp-3); border-radius: var(--radius-control); color: var(--text-secondary);
+  transition: background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard); }
+.c-chip:hover { color: var(--text-main); }
+.c-chip[aria-pressed="true"] { background: var(--surface-card); color: var(--text-main); font-weight:600; box-shadow: var(--shadow-card); }
+.c-urlbar { display:flex; align-items:center; gap: var(--sp-2); font-family: var(--mono); font-size:11.5px;
+  color: var(--text-muted); background: var(--hover-bg-mix, var(--hover-bg));
+  border:1px dashed var(--divider-color); border-radius: var(--radius-control);
+  padding: var(--sp-2) var(--sp-3); overflow-x:auto; white-space:nowrap; }
+
+/* ── 分页条 ─────────────────────────────────────────────────── */
+.c-pager { display:flex; align-items:center; gap: var(--sp-4); flex-wrap:wrap; }
+.c-pager-range { font-size:12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.c-pager-size { display:inline-flex; align-items:center; gap: var(--sp-2); font-size:12.5px;
+  color: var(--text-muted); }
+.c-pager-size select { font:inherit; font-size:12.5px; border:1px solid var(--divider-color);
+  border-radius: var(--radius-control); padding:3px var(--sp-2);
+  background: var(--surface-card); color: var(--text-main); cursor:pointer; }
+.c-pager-nav { margin-left:auto; display:flex; align-items:center; gap: var(--sp-1); flex-wrap:wrap; }
+.c-page-btn {
+  min-width:32px; height:32px; padding:0 var(--sp-2);
+  border:1px solid var(--divider-color); background: var(--surface-card);
+  border-radius: var(--radius-control); cursor:pointer;
+  font: inherit; font-size:13px; font-variant-numeric: tabular-nums; color: var(--text-secondary);
+  display:inline-flex; align-items:center; justify-content:center;
+  transition: background-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+}
+.c-page-btn:hover:not(:disabled) { background: var(--hover-bg-mix, var(--hover-bg)); color: var(--text-main); }
+.c-page-btn:disabled { opacity:.45; cursor:not-allowed; }
+.c-page-btn[aria-current="page"] {
+  background: var(--accent-pink); border-color: transparent; color: var(--on-accent); font-weight:700;
+}
+.c-page-gap { min-width:24px; text-align:center; color: var(--text-muted); font-size:13px; user-select:none; }
+@media (pointer: coarse) { .c-page-btn { min-width:40px; height:40px; } }
+@container work (max-width: 700px) {
+  .c-pager-nav { margin-left:0; width:100%; justify-content:center; }
+  .c-pager { justify-content:space-between; }
+}
+
+/* ── 表格（容器查询下变卡片） ──────────────────────────────── */
+.c-table-wrap { border:1px solid var(--divider-color); border-radius: var(--radius-lg); overflow:hidden; }
+.c-table-scroll { overflow-x:auto; }
+table.c-table { width:100%; border-collapse:collapse; font-size:14px; }
+.c-table thead th { text-align:left; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+  color: var(--text-muted); padding: var(--sp-3) var(--sp-4); white-space:nowrap;
+  border-bottom:1px solid var(--divider-color); background: var(--surface-card); position:sticky; top:0; z-index:1; }
+.c-th-sort { background:none; border:none; font:inherit; color:inherit; cursor:pointer; padding:0;
+  display:inline-flex; align-items:center; gap: var(--sp-1); text-transform:inherit; letter-spacing:inherit; }
+.c-th-sort:hover { color: var(--text-main); }
+.c-table tbody tr { border-bottom:1px solid var(--divider-color); }
+.c-table tbody tr:last-child { border-bottom:none; }
+.c-table tbody tr.c-clickable { cursor:pointer; transition: background-color var(--dur-fast) var(--ease-standard); }
+.c-table tbody tr.c-clickable:hover { background: var(--hover-bg-mix, var(--hover-bg)); }
+.c-table tbody tr.c-clickable:focus-visible { outline:2px solid var(--primary-pink); outline-offset:-2px; }
+.c-table td { padding:0 var(--sp-4); height: var(--row-h); vertical-align:middle; }
+.c-table td.c-td-tight { padding-top: var(--sp-2); padding-bottom: var(--sp-2); }
+.c-cell-primary { display:flex; align-items:center; gap: var(--sp-3); min-width:0; }
+.c-cell-text { min-width:0; display:flex; flex-direction:column; line-height:1.35; }
+.c-cell-name { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.c-cell-sub { font-size:12px; color: var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.c-self-tag { font-size:10.5px; font-weight:700; color: var(--accent-pink); border:1px solid var(--primary-pink);
+  border-radius: var(--radius-xs); padding:1px 5px; letter-spacing:.04em; white-space:nowrap; }
+.c-staff-tag { font-size:10.5px; font-weight:700; color: var(--soft-info-text); border:1px solid var(--soft-info-border);
+  background: var(--soft-info-bg); border-radius: var(--radius-xs); padding:1px 5px;
+  letter-spacing:.04em; white-space:nowrap; }
+
+/* 中等宽度：次要列先走 */
+@container work (max-width: 1040px) { .c-col-2 { display:none; } }
+@container work (max-width: 860px)  { .c-col-1 { display:none; } }
+/* 窄：整表变卡片。保留 table 语义，仅改显示。 */
+@container work (max-width: 700px) {
+  .c-table-wrap { border:none; border-radius:0; }
+  .c-table thead { display:none; }
+  .c-table, .c-table tbody, .c-table tr, .c-table td { display:block; width:100%; }
+  .c-table tbody tr { border:1px solid var(--divider-color); border-radius: var(--radius-md);
+    margin-bottom: var(--sp-3); padding: var(--sp-2) var(--sp-3); background: var(--surface-card); }
+  .c-table td { height:auto; padding: var(--sp-2) 0; display:flex; align-items:center;
+    justify-content:space-between; gap: var(--sp-4); text-align:right; }
+  .c-table td::before { content: attr(data-label); color: var(--text-muted); font-size:11.5px;
+    font-weight:600; text-transform:uppercase; letter-spacing:.05em; flex:none; text-align:left; }
+  .c-table td[data-primary]::before { display:none; }
+  .c-table td[data-primary] { justify-content:flex-start; text-align:left;
+    padding-bottom: var(--sp-3); border-bottom:1px solid var(--divider-color); margin-bottom: var(--sp-1); }
+  .c-table td[data-label=""]::before { display:none; }
+  .c-col-1, .c-col-2 { display:flex; }
+}
+
+/* ── 状态数字块（无图表：8 个账户画比例条是数据浮夸） ──────── */
+.c-kpis { display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--sp-3); }
+.c-kpi { border:1px solid var(--divider-color); border-radius: var(--radius-md);
+  padding: var(--sp-4); display:flex; flex-direction:column; gap:2px; min-width:0; }
+.c-kpi-label { font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.06em;
+  color: var(--text-muted); }
+.c-kpi-value { font-size:30px; font-weight:700; letter-spacing:-.03em; line-height:1.15;
+  font-variant-numeric: tabular-nums; color: var(--text-main); }
+.c-kpi-unit { font-size:14px; font-weight:600; color: var(--text-secondary); margin-left:2px; }
+.c-kpi-sub { font-size:12px; color: var(--text-muted); }
+.c-breakdown { display:flex; flex-direction:column; }
+.c-breakdown-row { display:flex; align-items:center; justify-content:space-between; gap: var(--sp-4);
+  padding: var(--sp-3) 0; }
+.c-breakdown-row + .c-breakdown-row { border-top:1px solid var(--divider-color); }
+.c-breakdown-n { font-variant-numeric: tabular-nums; font-weight:600; font-size:15px; color: var(--text-main); }
+
+/* ── 分区保存条 ─────────────────────────────────────────────── */
+.c-savebar { display:flex; align-items:center; justify-content:flex-end; gap: var(--sp-3);
+  margin-top: var(--sp-4); padding-top: var(--sp-4); border-top:1px solid var(--divider-color); }
+.c-savebar-hint { margin-right:auto; font-size:12.5px; color: var(--text-muted); }
+
+/* ── 详情 ───────────────────────────────────────────────────── */
+.c-detail-head { display:flex; align-items:flex-start; gap: var(--sp-4); flex-wrap:wrap; }
+.c-detail-id { font-family: var(--mono); font-size:12px; color: var(--text-muted); overflow-wrap:anywhere; }
+.c-grid-2 { display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--sp-4); align-items:start; }
+@container work (max-width: 700px) { .c-grid-2 { grid-template-columns: 1fr; } }
+.c-danger-zone { border-top:1px dashed var(--divider-color); margin-top: var(--sp-4); padding-top: var(--sp-4); }
+.c-impact { background: var(--soft-amber-bg); border:1px solid var(--soft-amber-border);
+  border-radius: var(--radius-control); padding: var(--sp-3); font-size:13px; color: var(--soft-amber-text); }
+
+/* ── 代码 / 复制 ────────────────────────────────────────────── */
+.c-code { font-family: var(--mono); font-size:12.5px; line-height:1.75;
+  background: var(--hover-bg-mix, var(--hover-bg)); border:1px solid var(--divider-color);
+  border-radius: var(--radius-md); padding: var(--sp-4); margin:0; overflow-x:auto;
+  color: var(--text-body); white-space:pre; }
+.c-copyfield { display:flex; align-items:center; gap: var(--sp-2); border:1px solid var(--divider-color);
+  border-radius: var(--radius-control); padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);
+  background: var(--surface-card); min-width:0; }
+.c-copyfield code { font-family: var(--mono); font-size:12.5px; flex:1; min-width:0; overflow-x:auto; white-space:nowrap; }
+
+/* ── 变更缓冲区 / diff ─────────────────────────────────────── */
+.c-diff { display:grid; grid-template-columns: minmax(90px, auto) 1fr; gap: var(--sp-2) var(--sp-4); font-size:13px; }
+.c-diff-k { color: var(--text-muted); }
+.c-diff-v { min-width:0; }
+.c-diff-old { color: var(--soft-error-text); text-decoration: line-through; overflow-wrap:anywhere; }
+.c-diff-new { color: var(--soft-success-text); overflow-wrap:anywhere; }
+
+/* ── 向导 ───────────────────────────────────────────────────── */
+.c-wizard { display:grid; grid-template-columns: minmax(0,1fr) 300px; gap: var(--sp-8); align-items:start; }
+@container work (max-width: 1000px) { .c-wizard { grid-template-columns: 1fr; } .c-derived { position:static !important; } }
+.c-steps { display:flex; gap: var(--sp-2); margin-bottom: var(--sp-6); flex-wrap:wrap; }
+.c-step { display:flex; align-items:center; gap: var(--sp-2); font-size:12.5px; color: var(--text-muted); }
+.c-step-dot { width:22px; height:22px; border-radius:50%; display:grid; place-items:center; flex:none;
+  border:1px solid var(--divider-color); font-size:11px; font-weight:700; }
+.c-step[data-state="current"] { color: var(--text-main); font-weight:600; }
+.c-step[data-state="current"] .c-step-dot { background: var(--accent-pink); color: var(--on-accent); border-color:transparent; }
+.c-step[data-state="done"] .c-step-dot { background: var(--soft-success-bg); color: var(--soft-success-text); border-color: var(--soft-success-border); }
+.c-step-line { flex:1; height:1px; background: var(--divider-color); min-width: var(--sp-4); align-self:center; }
+.c-derived { position:sticky; top:96px; }
+.c-derived-row { display:flex; justify-content:space-between; gap: var(--sp-3); padding: var(--sp-2) 0;
+  border-bottom:1px solid var(--divider-color); font-size:12.5px; }
+.c-derived-row:last-child { border-bottom:none; }
+.c-derived-k { color: var(--text-muted); white-space:nowrap; }
+.c-derived-v { font-family: var(--mono); text-align:right; color: var(--text-body); overflow-wrap:anywhere; }
+.c-uri-check { display:flex; align-items:flex-start; gap: var(--sp-2); font-size:12.5px; padding: var(--sp-1) 0; }
+.c-uri-ok { color: var(--soft-success-text); }
+.c-uri-bad { color: var(--soft-error-text); }
+.c-uri-warn { color: var(--soft-amber-text); }
+
+/* ── step-up ────────────────────────────────────────────────── */
+.c-stepup { border:1px solid var(--soft-amber-border); background: var(--soft-amber-bg);
+  border-radius: var(--radius-md); padding: var(--sp-4); }
+.c-stepup-what { font-size:12.5px; color: var(--soft-amber-text); margin-bottom: var(--sp-3); }
+
+/* ── 同意屏预览 ─────────────────────────────────────────────── */
+.c-preview { border:1px solid var(--divider-color); border-radius: var(--radius-md);
+  background: var(--bg-color); padding: var(--sp-5); }
+.c-preview-frame { max-width: 22rem; margin-inline:auto; }
+.c-preview-chrome { display:flex; align-items:center; gap: var(--sp-2); font-size:11px;
+  color: var(--text-muted); margin-bottom: var(--sp-3); font-family: var(--mono); }
+
+/* ── 场景 ───────────────────────────────────────────────────── */
+.c-scene { min-height:100vh; display:grid; place-items:center; padding: var(--sp-8); background: var(--bg-color); }
+.c-scene-card { width:100%; max-width:26rem; }
+
+/* ── 授权中间页 ─────────────────────────────────────────────── */
+.c-consent-shell { width:100%; max-width:24rem; }
+.c-consent-heads { display:flex; align-items:center; justify-content:center; gap: var(--sp-4);
+  margin-bottom: var(--sp-5); }
+.c-consent-arrow { display:inline-flex; color: var(--text-muted); }
+.c-consent-title { margin:0 0 var(--sp-2); font-size:18px; font-weight:700; line-height:1.45;
+  letter-spacing:-.01em; text-align:center; text-wrap:pretty; }
+.c-consent-as { margin:0 0 var(--sp-5); text-align:center; font-size:13px; color: var(--text-secondary);
+  display:flex; flex-direction:column; gap:2px; }
+.c-consent-mail { font-size:12.5px; color: var(--text-muted); overflow-wrap:anywhere; }
+.c-consent-scopes { border:1px solid var(--divider-color); border-radius: var(--radius-md);
+  padding: var(--sp-4); margin-bottom: var(--sp-5); }
+.c-consent-scopes-h { display:block; font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.08em; color: var(--text-muted); margin-bottom: var(--sp-3); }
+.c-consent-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap: var(--sp-3); }
+.c-consent-list li { display:flex; align-items:flex-start; gap: var(--sp-3); font-size:14px;
+  color: var(--text-body); line-height:1.5; text-wrap:pretty; }
+.c-consent-tick { display:inline-flex; flex:none; margin-top:3px; color: var(--soft-success-text); }
+.c-consent-actions { display:flex; gap: var(--sp-3); }
+.c-consent-actions > * { flex:1; }
+.c-consent-foot { margin: var(--sp-5) 0 0; text-align:center; font-size:12px; color: var(--text-muted);
+  display:flex; flex-direction:column; gap:2px; }
+@media (max-width: 420px) { .c-consent-actions { flex-direction:column-reverse; } }
+
+/* ── 原型控制条 ─────────────────────────────────────────────── */
+.c-devbar { position:fixed; right: var(--sp-4); bottom: var(--sp-4); z-index:60;
+  display:flex; align-items:center; gap: var(--sp-2); flex-wrap:wrap; max-width: calc(100vw - var(--sp-8));
+  background: var(--surface-card); border:1px solid var(--divider-color); border-radius: var(--radius-pop);
+  padding: var(--sp-2) var(--sp-3); box-shadow: var(--shadow-pop); font-size:12.5px; }
+.c-devbar-label { color: var(--text-muted); }
+.c-devbar select { font:inherit; font-size:12.5px; border:1px solid var(--divider-color);
+  border-radius: var(--radius-control); padding:3px var(--sp-2);
+  background: var(--surface-card); color: var(--text-main); cursor:pointer; }
+
+/* ── 视口级：窄屏把左栏放到顶部 ────────────────────────────── */
+@media (max-width: 640px) {
+  .c-shell, .c-shell[data-rail="mini"] { grid-template-columns: 1fr; }
+  .c-rail { position:static; height:auto; flex-direction:row; align-items:center; gap: var(--sp-3);
+    overflow-x:auto; border-right:none; border-bottom:1px solid var(--divider-color); padding: var(--sp-3); }
+  .c-nav { flex-direction:row; flex:none; }
+  .c-nav-group { display:none; }
+  .c-nav-item > span:not(.c-nav-icon) { display:none; }
+  .c-nav-item { justify-content:center; }
+  .c-rail-foot { border-top:none; padding-top:0; margin-left:auto; }
+  .c-me-text { display:none; }
+  .c-topbar, .c-body { padding-left: var(--sp-4); padding-right: var(--sp-4); }
+  .c-body { padding-bottom: 96px; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+/* 以 file:// 打开时页面是不透明源，读 localStorage 会抛 SecurityError。
+   设计系统的 i18n 在模块顶层只用 `typeof localStorage !== "undefined"` 判断 —— 属性存在但一读就抛，
+   于是整个 bundle 加载期失败、window.TransCircle 永不定义。先探测，必要时装内存垫片。 */
+(function () {
+  try { window.localStorage.getItem("probe"); return; } catch (e) {}
+  var mem = Object.create(null);
+  var shim = {
+    getItem: function (k) { return k in mem ? mem[k] : null; },
+    setItem: function (k, v) { mem[k] = String(v); },
+    removeItem: function (k) { delete mem[k]; },
+    clear: function () { mem = Object.create(null); },
+    key: function (i) { return Object.keys(mem)[i] || null; }
+  };
+  Object.defineProperty(shim, "length", { get: function () { return Object.keys(mem).length; } });
+  try { Object.defineProperty(window, "localStorage", { value: shim, configurable: true }); } catch (e) {}
+})();
+</script>
+<script src="../ds-bundle/_vendor/react.js"></script>
+<script src="../ds-bundle/_ds_bundle.js"></script>
+<script>
+(function () {
+"use strict";
+var h = React.createElement, Fragment = React.Fragment;
+var useState = React.useState, useMemo = React.useMemo, useCallback = React.useCallback,
+    useEffect = React.useEffect, useRef = React.useRef;
+
+var T = window.TransCircle;
+var Btn = T.AdminButton, Card = T.Card, Alert = T.Alert, Pill = T.Pill, Badge = T.StatusBadge,
+    Modal = T.Modal, ConfirmDialog = T.ConfirmDialog, TextField = T.TextField, TextArea = T.TextArea,
+    SearchField = T.SearchField, Checkbox = T.Checkbox, RadioGroup = T.RadioGroup, TagInput = T.TagInput,
+    Avatar = T.Avatar, Select = T.Select, DescriptionList = T.DescriptionList, SectionLabel = T.SectionLabel,
+    EmptyState = T.EmptyState, Spinner = T.Spinner, Tabs = T.Tabs, Provider = T.DsPreviewProvider || Fragment;
+
+function val(x) { return x && x.target ? x.target.value : x; }
+function chk(x) { return x && x.target ? x.target.checked : !!x; }
+
+/* ── 图标 ───────────────────────────────────────────────────── */
+function ic(paths, size) {
+  return h('svg', { width: size || 17, height: size || 17, viewBox: '0 0 24 24', fill: 'none',
+    stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
+    'aria-hidden': 'true', focusable: 'false' }, paths);
+}
+var P = function (d, k) { return h('path', { key: k, d: d }); };
+var IconHome  = function () { return ic([P('M3 11l9-8 9 8', 1), P('M5 10v10h14V10', 2)]); };
+var IconUsers = function () { return ic([P('M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2', 1),
+  h('circle', { key: 2, cx: 9, cy: 7, r: 4 }), P('M22 21v-2a4 4 0 0 0-3-3.87', 3)]); };
+var IconApps  = function () { return ic([h('rect', { key: 1, x: 3, y: 4, width: 18, height: 14, rx: 2 }),
+  P('M3 9h18', 2), P('M8 14h.01', 3), P('M12 14h4', 4)]); };
+var IconAudit = function () { return ic([P('M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z', 1),
+  P('M14 2v6h6', 2), P('M9 13h6', 3), P('M9 17h4', 4)]); };
+var IconStaff = function () { return ic([h('circle', { key: 1, cx: 12, cy: 8, r: 4 }),
+  P('M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1', 2)]); };
+var IconShield= function () { return ic([P('M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', 1)]); };
+var IconBack  = function () { return ic([P('M15 18l-6-6 6-6', 1)], 15); };
+var IconChev  = function () { return ic([P('M9 18l6-6-6-6', 1)], 15); };
+var IconCheck = function () { return ic([P('M20 6L9 17l-5-5', 1)], 14); };
+var IconX     = function () { return ic([P('M18 6L6 18', 1), P('M6 6l12 12', 2)], 14); };
+var IconWarn  = function () { return ic([P('M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z', 1),
+  P('M12 9v4', 2), P('M12 17h.01', 3)], 14); };
+
+/* ═══════════════════════════════════════════════════════════════
+   权限（取自 docs/iam-main-api.md §4.1 的真实 key）
+   ═══════════════════════════════════════════════════════════════ */
+var ROLES = {
+  'pass-admin':   { label: '管理员', perms: ['*'] },
+  'pass-ops':     { label: '站点运营', perms: ['pass.user:read','pass.user:write','pass.audit:read',
+                     'pass.client:read','pass.user:force-logout','pass.user:reset-2fa','pass.user:suspend'] },
+  'pass-support': { label: '客服支持', perms: ['pass.user:read','pass.audit:read','pass.client:read',
+                     'pass.user:force-logout','pass.user:reset-2fa'] }
+};
+function can(role, p) { var a = ROLES[role].perms; return a.indexOf('*') >= 0 || a.indexOf(p) >= 0; }
+
+/* ═══════════════════════════════════════════════════════════════
+   数据（形状取自真实 schema.sql）
+   ═══════════════════════════════════════════════════════════════ */
+var ME_ID = 'usr_01JQK7X2ND4';
+
+function mkSessions(list) { return list; }
+
+var USERS = [
+  { id:'usr_01JQ8F3M2A7', name:'林晚晴', username:'linwanqing', email:'linwanqing@example.com', verified:true,
+    status:'active', totp:false, passkeys:[
+      { id:'pk_a1', name:'MacBook Pro · Touch ID', created:'2025-04-02', last:'2 小时前', aaguid:'adce0002' },
+      { id:'pk_a2', name:'iPhone 15', created:'2025-11-20', last:'昨天', aaguid:'fbfc3007' }],
+    recovery:{ total:10, used:1 }, created:'2025-03-18', last:'2 小时前', lockedUntil:null, note:'',
+    sessions:mkSessions([
+      { id:'sess_1', device:'Chrome · macOS', ip:'203.0.113.0/24', created:'2026-08-01 12:10', last:'2 小时前', current:false },
+      { id:'sess_2', device:'Safari · iOS', ip:'198.51.100.0/24', created:'2026-07-30 08:44', last:'昨天', current:false },
+      { id:'sess_3', device:'Firefox · Windows', ip:'203.0.113.0/24', created:'2026-07-21 19:02', last:'5 天前', current:false }]),
+    bindings:[{ provider:'github', sub:'gh|18422', bound:'2025-03-18', email:'linwanqing@users.noreply.github.com' }],
+    grants:[
+      { client:'pass_story', scopes:['openid','profile','email','offline_access'], at:'2026-06-25', tokens:2 },
+      { client:'pass_archive', scopes:['openid','profile','email'], at:'2026-07-16', tokens:1 }] },
+
+  { id:'usr_01JQK7X2ND4', name:'翅膀', username:'mycbxzd', email:'mycbxzd@transcircle.org', verified:true,
+    status:'active', totp:true, passkeys:[{ id:'pk_b1', name:'YubiKey 5C', created:'2024-11-02', last:'刚刚', aaguid:'cb69481e' }],
+    recovery:{ total:10, used:0 }, created:'2024-11-02', last:'刚刚', lockedUntil:null, note:'',
+    sessions:mkSessions([
+      { id:'sess_4', device:'Chrome · Windows', ip:'203.0.113.0/24', created:'2026-08-01 14:02', last:'刚刚', current:true },
+      { id:'sess_5', device:'Chrome · Android', ip:'192.0.2.0/24', created:'2026-07-28 21:30', last:'3 天前', current:false }]),
+    bindings:[{ provider:'github', sub:'gh|9911', bound:'2024-11-02', email:'mycbxzd@users.noreply.github.com' },
+              { provider:'iam', sub:'6f21e9c4-…', bound:'2026-06-24', email:'mycbxzd@transcircle.org' }],
+    iam:{ verdict:'staff', role:'pass-admin', from:'身份组 pass-core', perms:['*'], checkedAt:'刚刚' },
+    grants:[{ client:'pass_story', scopes:['openid','profile','email','offline_access'], at:'2026-06-24', tokens:1 }] },
+
+  { id:'usr_01JV1A2B3C4', name:'赶月喵', username:'lxgy1024', email:'lxgy@transcircle.org', verified:true,
+    status:'active', totp:true, passkeys:[{ id:'pk_e1', name:'ThinkPad · Windows Hello', created:'2026-02-11', last:'5 小时前', aaguid:'08987058' }],
+    recovery:{ total:10, used:0 }, created:'2025-05-20', last:'5 小时前', lockedUntil:null, note:'',
+    sessions:[{ id:'sess_13', device:'Edge · Windows', ip:'203.0.113.0/24', created:'2026-08-01 09:30', last:'5 小时前', current:false }],
+    bindings:[{ provider:'iam', sub:'b0d7f118-…', bound:'2026-06-25', email:'lxgy@transcircle.org' }],
+    iam:{ verdict:'staff', role:'pass-ops', from:'身份组 pass-ops', perms:ROLES['pass-ops'].perms, checkedAt:'刚刚' },
+    grants:[] },
+
+  { id:'usr_01JV5E6F7G8', name:'幻兮纱', username:'huantim', email:'huantim@transcircle.org', verified:true,
+    status:'active', totp:false, passkeys:[], recovery:{ total:10, used:2 },
+    created:'2025-07-03', last:'21 天前', lockedUntil:null, note:'',
+    sessions:[],
+    bindings:[{ provider:'iam', sub:'27ac6512-…', bound:'2026-06-25', email:'huantim@transcircle.org' }],
+    iam:{ verdict:'ex_staff', role:null, from:null, perms:[], checkedAt:'刚刚' },
+    grants:[] },
+
+  { id:'usr_01JR2P9Q4C1', name:'陈昭', username:'chenzhao', email:'chenzhao@example.com', verified:true,
+    status:'suspended', totp:true, passkeys:[], recovery:{ total:10, used:3 },
+    created:'2025-06-01', last:'3 天前', lockedUntil:null, note:'反复在故事站发布垃圾内容，2026-08-01 由赶月喵暂停。',
+    sessions:[], bindings:[], grants:[] },
+
+  { id:'usr_01JR5T1W8E6', name:'Sofia Alvarez', username:'sofia_a', email:'sofia@example.net', verified:false,
+    status:'active', totp:false, passkeys:[], recovery:{ total:0, used:0 },
+    created:'2026-07-28', last:'12 天前', lockedUntil:null, note:'',
+    sessions:[{ id:'sess_6', device:'Chrome · macOS', ip:'198.51.100.0/24', created:'2026-07-28 10:02', last:'12 天前', current:false }],
+    bindings:[{ provider:'x', sub:'x|77213', bound:'2026-07-28', email:null }], grants:[] },
+
+  { id:'usr_01JS0B6H3K9', name:'周牧', username:'zhoumu', email:'zhoumu@example.com', verified:true,
+    status:'banned', totp:true, passkeys:[], recovery:{ total:10, used:10 },
+    created:'2025-01-14', last:'2 个月前', lockedUntil:'2026-07-30 17:09',
+    note:'连续 5 次密码错误触发锁定；随后因盗号申诉不实被封禁。',
+    sessions:[], bindings:[{ provider:'github', sub:'gh|3320', bound:'2025-01-14', email:null }], grants:[] },
+
+  { id:'usr_01JS4D2L7M5', name:'苏念', username:'sunian', email:'sunian@example.com', verified:true,
+    status:'active', totp:true, passkeys:[{ id:'pk_c1', name:'Pixel 8', created:'2025-10-01', last:'1 天前', aaguid:'ea9b8d66' }],
+    recovery:{ total:10, used:0 }, created:'2025-09-09', last:'1 天前', lockedUntil:null, note:'',
+    sessions:[{ id:'sess_7', device:'Chrome · Android', ip:'192.0.2.0/24', created:'2026-07-31 09:00', last:'1 天前', current:false },
+              { id:'sess_8', device:'Edge · Windows', ip:'203.0.113.0/24', created:'2026-07-25 14:20', last:'6 天前', current:false }],
+    bindings:[], grants:[{ client:'pass_story', scopes:['openid','profile','email'], at:'2026-07-01', tokens:1 }] },
+
+  { id:'usr_01JT8G5R1N2', name:'Kaito Mori', username:'kaito', email:'kaito@example.jp', verified:true,
+    status:'pending_deletion', totp:false, passkeys:[], recovery:{ total:0, used:0 },
+    created:'2024-08-22', last:'30 天前', lockedUntil:null, note:'用户自助发起注销，保留期至 2026-08-08。',
+    sessions:[], bindings:[{ provider:'github', sub:'gh|1201', bound:'2024-08-22', email:null }], grants:[] },
+
+  { id:'usr_01JT9Z7V6P8', name:'许清和', username:'xuqinghe', email:'xuqinghe@example.com', verified:true,
+    status:'active', totp:false, passkeys:[
+      { id:'pk_d1', name:'MacBook Air', created:'2026-01-04', last:'5 小时前', aaguid:'adce0002' },
+      { id:'pk_d2', name:'iPad Pro', created:'2026-03-11', last:'2 天前', aaguid:'fbfc3007' },
+      { id:'pk_d3', name:'YubiKey 5 NFC', created:'2026-05-30', last:'1 个月前', aaguid:'cb69481e' }],
+    recovery:{ total:10, used:0 }, created:'2025-12-30', last:'5 小时前', lockedUntil:null, note:'',
+    sessions:[{ id:'sess_9', device:'Safari · macOS', ip:'203.0.113.0/24', created:'2026-08-01 09:11', last:'5 小时前', current:false },
+              { id:'sess_10', device:'Safari · iPadOS', ip:'203.0.113.0/24', created:'2026-07-30 20:00', last:'2 天前', current:false },
+              { id:'sess_11', device:'Chrome · Windows', ip:'192.0.2.0/24', created:'2026-07-29 11:45', last:'3 天前', current:false },
+              { id:'sess_12', device:'Firefox · Linux', ip:'198.51.100.0/24', created:'2026-07-20 16:30', last:'11 天前', current:false }],
+    bindings:[{ provider:'github', sub:'gh|5567', bound:'2025-12-30', email:null },
+              { provider:'x', sub:'x|8890', bound:'2026-02-14', email:null }],
+    grants:[{ client:'pass_story', scopes:['openid','profile','email','offline_access'], at:'2026-01-02', tokens:3 },
+            { client:'pass_archive', scopes:['openid','profile','email'], at:'2026-07-16', tokens:1 }] }
+];
+
+/* 列表体量要足够到分页有意义。下面是轻量样本：按确定性规则生成会话/通行密钥，
+   不用随机数 —— 每次打开看到的都一样，截图和复现才有意义。 */
+var EXTRA_SEED = [
+  ['苏芷','suzhi','suzhi@example.com','active',1,['github'],'2025-02-11','4 小时前'],
+  ['何斯年','hesinian','hesinian@example.com','active',0,[],'2025-04-02','2 天前'],
+  ['Mika Laine','mika_l','mika@example.fi','active',2,['github','x'],'2025-05-19','1 小时前'],
+  ['温野','wenye','wenye@example.com','suspended',0,[],'2025-06-30','9 天前'],
+  ['陆见微','lujianwei','lujianwei@example.com','active',1,['x'],'2025-08-08','3 小时前'],
+  ['Nadia Hassan','nadia_h','nadia@example.eg','active',0,['github'],'2025-08-27','6 天前'],
+  ['白十一','baishiyi','baishiyi@example.com','active',3,[],'2025-09-15','20 分钟前'],
+  ['沈云开','shenyunkai','shen@example.com','banned',0,['github'],'2025-10-04','3 个月前'],
+  ['Tomas Rehak','tomas_r','tomas@example.cz','active',1,[],'2025-11-11','1 天前'],
+  ['祁夏','qixia','qixia@example.com','active',0,['x'],'2025-12-01','7 小时前'],
+  ['林折','linzhe','linzhe@example.com','pending_deletion',0,[],'2026-01-09','45 天前'],
+  ['Yuki Sato','yuki_s','yuki@example.jp','active',2,['github'],'2026-02-14','30 分钟前'],
+  ['邹微','zouwei','zouwei@example.com','active',0,[],'2026-03-22','4 天前'],
+  ['程澈','chengche','chengche@example.com','active',1,['github','x'],'2026-04-30','2 小时前'],
+  ['Aria Bennett','aria_b','aria@example.uk','suspended',0,['x'],'2026-05-18','12 天前'],
+  ['顾南枝','gunanzhi','gunanzhi@example.com','active',1,[],'2026-06-26','50 分钟前']
+];
+
+var DEVICES = ['Chrome · macOS','Safari · iOS','Firefox · Windows','Edge · Windows','Chrome · Android'];
+var IP_BLOCKS = ['203.0.113.0/24','198.51.100.0/24','192.0.2.0/24'];
+
+EXTRA_SEED.forEach(function (row, i) {
+  var name = row[0], username = row[1], email = row[2], status = row[3];
+  var pkCount = row[4], providers = row[5], created = row[6], last = row[7];
+  var alive = status === 'active' || status === 'suspended';
+  var sessionCount = alive ? (i % 3) : 0;
+  USERS.push({
+    id: 'usr_seed_' + String(i + 1).padStart(2, '0'),
+    name: name, username: username, email: email, verified: i % 7 !== 3,
+    status: status, totp: pkCount === 0 && i % 2 === 0,
+    passkeys: Array.from({ length: pkCount }, function (_, k) {
+      return { id: 'pk_s' + i + '_' + k, name: DEVICES[(i + k) % DEVICES.length],
+        created: created, last: last, aaguid: 'adce0002' };
+    }),
+    /* 写成显式两步：`a || b ? x : y` 靠的是 || 优先级高于 ?:，读的人得停下来想。
+       另外 used 必须夹在 total 内，否则会算出「剩余 -1 个」这种自相矛盾的数据。 */
+    recovery: (function () {
+      var total = (pkCount > 0 || i % 2 === 0) ? 10 : 0;
+      return { total: total, used: Math.min(i % 4, total) };
+    })(),
+    created: created, last: last, lockedUntil: null, note: '',
+    sessions: Array.from({ length: sessionCount }, function (_, k) {
+      return { id: 'sess_s' + i + '_' + k, device: DEVICES[(i + k) % DEVICES.length],
+        ip: IP_BLOCKS[(i + k) % IP_BLOCKS.length], created: created + ' 10:0' + k,
+        last: last, current: false };
+    }),
+    bindings: providers.map(function (pv) {
+      return { provider: pv, sub: pv + '|' + (10000 + i), bound: created, email: null };
+    }),
+    grants: i % 3 === 0
+      ? [{ client: 'pass_story', scopes: ['openid', 'profile', 'email'], at: created, tokens: 1 }]
+      : []
+  });
+});
+
+/* 「2 小时前」这种展示串没法比较大小。排序要一个可比较的量，就地解析成分钟数。
+   真实实现里后端直接给时间戳，这里只是让原型的排序是真排序，而不是摆个箭头。 */
+function relMinutes(text) {
+  if (!text) return Number.MAX_SAFE_INTEGER;
+  if (text.indexOf('刚刚') >= 0) return 0;
+  var m = text.match(/(\d+)/);
+  var n = m ? Number(m[1]) : 0;
+  if (text.indexOf('分钟') >= 0) return n;
+  if (text.indexOf('小时') >= 0) return n * 60;
+  if (text.indexOf('个月') >= 0) return n * 60 * 24 * 30;
+  if (text.indexOf('天') >= 0) return n * 60 * 24;
+  return Number.MAX_SAFE_INTEGER;
+}
+
+var STATUS_ORDER = { active:0, suspended:1, banned:2, pending_deletion:3, deleted:4 };
+
+/**
+ * 排序：取出可比较的键，再按方向比。
+ * 末尾一律以 id 作稳定次键 —— 否则同值行会在翻页之间抖动，
+ * 这也是 api-delta.md §二 对后端提的同一条要求。
+ */
+function sortUsers(list, sort) {
+  var key = sort.key, dir = sort.dir === 'asc' ? 1 : -1;
+  function valueOf(u) {
+    if (key === 'name') return u.name;
+    if (key === 'status') return STATUS_ORDER[u.status];
+    if (key === 'sessions') return u.sessions.length;
+    /* 越近发生 → 值越大，于是「降序」= 最近的在前，符合直觉 */
+    if (key === 'last') return -relMinutes(u.last);
+    return 0;
+  }
+  return list.slice().sort(function (a, b) {
+    var va = valueOf(a), vb = valueOf(b), c;
+    if (typeof va === 'string') c = va.localeCompare(vb, 'zh-Hans-CN');
+    else c = va < vb ? -1 : va > vb ? 1 : 0;
+    if (c !== 0) return c * dir;
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  });
+}
+
+var STATUS_TONE  = { active:'green', suspended:'amber', banned:'red', pending_deletion:'muted', deleted:'muted' };
+var STATUS_LABEL = { active:'活跃', suspended:'已暂停', banned:'已封禁', pending_deletion:'待注销', deleted:'已注销' };
+var PROVIDER_LABEL = { github:'GitHub', x:'X', iam:'TransCircle 统一身份' };
+
+var APP_TYPES = {
+  web_backend: { label:'后端 Web 站点', hint:'有自己的服务器，能安全保管密钥。故事征集站、人物归档都属于这类。',
+    derived:{ '客户端类型':'机密客户端', '认证方式':'client_secret_basic', '授权流程':'authorization_code + PKCE',
+      '签发密钥':'是 · 仅显示一次', '刷新令牌':'开启 · 一次性轮换' },
+    why:'你有服务器，密钥不会落到浏览器里，所以用机密客户端 —— 这是安全性最高的一档。' },
+  spa: { label:'纯前端 SPA', hint:'代码全部跑在浏览器里，没有能藏住密钥的地方。',
+    derived:{ '客户端类型':'公开客户端', '认证方式':'none（不发密钥）', '授权流程':'authorization_code + PKCE（强制）',
+      '签发密钥':'否', '刷新令牌':'开启 · 一次性轮换' },
+    why:'前端代码人人可读，任何密钥都等于公开。因此不发密钥，改由 PKCE 保证「换码的人就是发起的人」。' },
+  native: { label:'移动 / 桌面原生应用', hint:'安装在用户设备上，用自定义 scheme 或系统浏览器回跳。',
+    derived:{ '客户端类型':'公开客户端', '认证方式':'none（不发密钥）', '授权流程':'authorization_code + PKCE（强制）',
+      '签发密钥':'否', '回调协议':'允许自定义 scheme' },
+    why:'与 SPA 同理不发密钥；额外放行自定义 scheme 回调，因为原生应用无法承接 https 回跳。' },
+  m2m: { label:'服务间调用', hint:'后台任务、数据同步等，没有用户在场。',
+    derived:{ '客户端类型':'机密客户端', '认证方式':'client_secret_basic', '授权流程':'client_credentials',
+      '签发密钥':'是 · 仅显示一次', '回调地址':'不需要' },
+    why:'没有用户，就没有登录跳转，自然也不需要回调地址 —— 这一步会跳过。' }
+};
+
+var SCOPES = [
+  { key:'openid', desc:'必选。签发 id_token，用于确认「这是谁」。', locked:true },
+  { key:'profile', desc:'昵称、头像、用户名。' },
+  { key:'email', desc:'邮箱及其验证状态。' },
+  { key:'offline_access', desc:'签发刷新令牌，用户无需反复登录。' },
+  { key:'pass.profile.full', desc:'完整账户态（注册时间、绑定的第三方、2FA 状态）。仅第一方，且只在 UserInfo 返回。', firstParty:true }
+];
+
+var CLIENTS = [
+  { id:'pass_story', name:'故事征集站', type:'web_backend', env:'prod', status:'active', trusted:true,
+    desc:'接收并展示社群投稿的故事。', logoUri:'', clientUri:'https://story.transcircle.org',
+    contacts:['ops@transcircle.org'],
+    redirects:['https://api-story.transcircle.org/v1/auth/oauth/pass/callback'],
+    postLogout:['https://story.transcircle.org/'],
+    scopes:['openid','profile','email','offline_access'],
+    tokenPolicy:{ accessTtl:900, refreshTtl:2592000, rotate:true, absoluteTtl:7776000 },
+    created:'2026-06-24', rotated:'2026-06-24', secretAge:38, users:2 },
+  { id:'pass_story_dev', name:'故事征集站（本地开发）', type:'web_backend', env:'dev', status:'active', trusted:true,
+    desc:'本地联调用，勿在生产引用。', logoUri:'', clientUri:'', contacts:[],
+    redirects:['http://localhost:1145/v1/auth/oauth/pass/callback'], postLogout:[],
+    scopes:['openid','profile','email'],
+    tokenPolicy:{ accessTtl:900, refreshTtl:604800, rotate:true, absoluteTtl:2592000 },
+    created:'2026-06-24', rotated:'2026-06-24', secretAge:38, users:0 },
+  { id:'pass_archive', name:'人物归档', type:'spa', env:'prod', status:'active', trusted:true,
+    desc:'社群人物资料归档，纯前端应用。', logoUri:'', clientUri:'https://archive.transcircle.org',
+    contacts:['ops@transcircle.org'],
+    redirects:['https://archive.transcircle.org/auth/callback'], postLogout:['https://archive.transcircle.org/'],
+    scopes:['openid','profile','email'],
+    tokenPolicy:{ accessTtl:900, refreshTtl:1209600, rotate:true, absoluteTtl:2592000 },
+    created:'2026-07-15', rotated:null, secretAge:null, users:2 },
+  { id:'pass_helpdesk', name:'社群互助工单', type:'web_backend', env:'prod', status:'disabled', trusted:false,
+    desc:'互助工单系统，尚未上线。', logoUri:'', clientUri:'https://help.transcircle.org', contacts:[],
+    redirects:['https://help.transcircle.org/oauth/pass/callback'], postLogout:[],
+    scopes:['openid','profile','email'],
+    tokenPolicy:{ accessTtl:900, refreshTtl:2592000, rotate:true, absoluteTtl:7776000 },
+    created:'2026-05-02', rotated:'2026-05-02', secretAge:91, users:0 },
+  { id:'pass_metrics', name:'指标同步任务', type:'m2m', env:'prod', status:'active', trusted:true,
+    desc:'每小时同步一次登录指标。', logoUri:'', clientUri:'', contacts:['ops@transcircle.org'],
+    redirects:[], postLogout:[], scopes:['openid'],
+    tokenPolicy:{ accessTtl:900, refreshTtl:0, rotate:false, absoluteTtl:0 },
+    created:'2026-04-11', rotated:'2026-07-20', secretAge:12, users:0 }
+];
+var ENV_LABEL = { prod:'生产', dev:'开发' };
+
+var AUDIT = [
+  { id:'aud_01', at:'2026-08-01 14:22:07', actorType:'staff', actor:'翅膀', action:'client.secret_rotated',
+    res:'oauth_client', resId:'pass_metrics', before:{ secretRotatedAt:'2026-04-11' }, after:{ secretRotatedAt:'2026-07-20' } },
+  { id:'aud_02', at:'2026-08-01 11:05:44', actorType:'staff', actor:'赶月喵', action:'user.suspended',
+    res:'user', resId:'usr_01JR2P9Q4C1', before:{ status:'active' }, after:{ status:'suspended', reason:'反复发布垃圾内容' } },
+  { id:'aud_03', at:'2026-08-01 09:48:12', actorType:'user', actor:'林晚晴', action:'mfa.passkey_added',
+    res:'user', resId:'usr_01JQ8F3M2A7', before:{ passkeyCount:1 }, after:{ passkeyCount:2 } },
+  { id:'aud_04', at:'2026-07-31 22:13:56', actorType:'staff', actor:'翅膀', action:'admin.step_up',
+    res:'admin_session', resId:'asess_01JV3K', before:null, after:{ factor:'passkey', via:'iam' } },
+  { id:'aud_05', at:'2026-07-31 20:02:31', actorType:'staff', actor:'翅膀', action:'client.created',
+    res:'oauth_client', resId:'pass_archive', before:null,
+    after:{ name:'人物归档', tokenEndpointAuthMethod:'none', isFirstPartyTrusted:true } },
+  { id:'aud_06', at:'2026-07-30 16:39:08', actorType:'user', actor:'周牧', action:'user.login_failed',
+    res:'user', resId:'usr_01JS0B6H3K9', before:null, after:{ attempts:5, lockedUntil:'2026-07-30 17:09' } },
+  { id:'aud_07', at:'2026-07-30 10:11:20', actorType:'staff', actor:'赶月喵', action:'user.force_logout',
+    res:'user', resId:'usr_01JS0B6H3K9', before:{ activeSessions:4 }, after:{ activeSessions:0 } }
+];
+/* 同理补足审计条目，确定性生成。 */
+(function () {
+  var kinds = [
+    ['user.login_failed', 'user', null, { attempts: 3 }],
+    ['mfa.passkey_added', 'user', { passkeyCount: 0 }, { passkeyCount: 1 }],
+    ['user.force_logout', 'staff', { activeSessions: 2 }, { activeSessions: 0 }],
+    ['user.suspended', 'staff', { status: 'active' }, { status: 'suspended' }],
+    ['mfa.passkey_added', 'user', { passkeyCount: 1 }, { passkeyCount: 2 }]
+  ];
+  var actors = ['翅膀', '赶月喵', '林晚晴', '许清和', '苏念'];
+  for (var i = 0; i < 12; i++) {
+    var k = kinds[i % kinds.length];
+    var day = 29 - Math.floor(i / 2);
+    AUDIT.push({
+      id: 'aud_s' + String(i + 1).padStart(2, '0'),
+      at: '2026-07-' + String(day).padStart(2, '0') + ' ' + String(8 + (i % 12)).padStart(2, '0') + ':1' + (i % 6) + ':00',
+      actorType: k[1], actor: actors[i % actors.length], action: k[0],
+      res: 'user', resId: USERS[i % USERS.length].id, before: k[2], after: k[3]
+    });
+  }
+})();
+
+var ACTION_LABEL = { 'client.secret_rotated':'轮换客户端密钥','user.suspended':'暂停账户','mfa.passkey_added':'添加通行密钥',
+  'admin.step_up':'完成二次验证','client.created':'创建客户端','user.login_failed':'登录失败','user.force_logout':'强制下线' };
+
+/* 审计目标显示成人能读的名字，不甩内部 ID。 */
+function resolveRes(e) {
+  var m;
+  if (e.res === 'user') {
+    m = USERS.filter(function (x) { return x.id === e.resId; })[0];
+    return m ? m.name : '已删除的账户';
+  }
+  if (e.res === 'oauth_client') {
+    m = CLIENTS.filter(function (x) { return x.id === e.resId; })[0];
+    return m ? m.name : '已删除的客户端';
+  }
+  if (e.res === 'admin_session') return '管理会话';
+  return e.res;
+}
+
+/**
+ * 员工判定：绑定了 IAM 且在 tc_main 下仍持有权限的账户 = 工作人员。
+ * 工作人员不能被其他工作人员操作 —— 直到 IAM 权限被撤空为止。
+ *
+ * 关键：这个判定必须对目标账户**实时查 IAM**，不能读登录时的快照。
+ * 读快照会两头出错：撤权后仍被锁住改不了，或撤权前被误放行。
+ * IAM 不可达时按「仍是员工」处理（fail-closed）—— 证明不了不是员工，就不能动。
+ */
+var IAM_REACHABLE = { value: true };   /* 由右下角开关控制，用于演示 fail-closed */
+
+/**
+ * 判定结果由后端给出明确的 verdict，前端不从权限数组的「形状」自行推断 ——
+ * 数组缺失/为空/查询失败是三件不同的事，混为一谈就会在 IAM 抖动时把员工账户放开。
+ *   not_staff     未绑定统一身份            → 可操作
+ *   staff         绑定且仍持有 tc_main 权限  → 锁定
+ *   ex_staff      绑定但权限已撤空          → 可操作
+ *   staff_assumed 查询失败/超时             → 锁定（fail-closed）
+ */
+function iamVerdict(u) {
+  var i = u.iam || null;
+  if (!i) return 'not_staff';
+  /* IAM 不可达时后端会返回 staff_assumed，这里模拟那条响应。 */
+  if (!IAM_REACHABLE.value) return 'staff_assumed';
+  /* 正常情况直接消费后端给的 verdict —— 不从 perms 数组的形状自行推断，
+     因为「数组缺失 / 为空 / 查询失败」是三件不同的事，混为一谈就会在 IAM 抖动时放开员工账户。 */
+  return i.verdict;
+}
+function isStaffAccount(u) {
+  var v = iamVerdict(u);
+  return v === 'staff' || v === 'staff_assumed';
+}
+function wasStaffAccount(u) { return iamVerdict(u) === 'ex_staff'; }
+
+/** 员工名册由用户表推导，不另存一份，避免两边漂移。 */
+var STAFF = USERS.filter(isStaffAccount).map(function (u) {
+  return { id:u.id, name:u.name, role:u.iam.role, from:u.iam.from,
+    perms:u.iam.perms, last:u.last, sessions:u.sessions.length };
+});
+
+var KEYS = [
+  { kid:'kid_2026_07', alg:'RS256', status:'current',  created:'2026-07-01', rotated:null },
+  { kid:'kid_2026_01', alg:'RS256', status:'previous', created:'2026-01-05', rotated:'2026-07-01' },
+  { kid:'kid_2025_07', alg:'RS256', status:'retired',  created:'2025-07-02', rotated:'2026-01-05' }
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   共用小件
+   ═══════════════════════════════════════════════════════════════ */
+function CopyField(props) {
+  var s = useState('idle'), st = s[0], setSt = s[1];
+  var tm = useRef(null);
+  useEffect(function () { return function () { clearTimeout(tm.current); }; }, []);
+  function copy() {
+    try { navigator.clipboard.writeText(props.value).then(function () { setSt('ok'); }, function () { setSt('fail'); }); }
+    catch (e) { setSt('fail'); }
+    clearTimeout(tm.current); tm.current = setTimeout(function () { setSt('idle'); }, 1600);
+  }
+  return h('div', { className: 'c-copyfield' }, h('code', null, props.value),
+    h(Btn, { variant:'ghost', size:'sm', onClick: copy },
+      h('span', { 'aria-live':'polite' }, st === 'ok' ? '已复制' : st === 'fail' ? '复制失败' : '复制')));
+}
+
+/* 展示「这些筛选/分页条件会写进地址栏」。原型内不真的操作浏览器 URL，
+   真实实现里它就是路由状态，可直接复制粘贴进工单。 */
+function UrlBar(props) {
+  return h('div', { className:'c-urlbar', title:'真实实现中这就是地址栏内容，可直接粘进工单' },
+    h('span', { style:{ color:'var(--text-muted)', flex:'none' } }, '地址栏'),
+    h('span', { style:{ color:'var(--text-secondary)' } }, props.url));
+}
+
+function ChipSet(props) {
+  return h('div', { className:'c-chipset', role:'group', 'aria-label': props.label },
+    props.options.map(function (o) {
+      return h('button', { key:o.value, className:'c-chip', 'aria-pressed': String(props.value === o.value),
+        onClick: function () { props.onChange(o.value); } }, o.label);
+    }));
+}
+
+/**
+ * 分页控件：页码直达 + 上/下一页 + 每页条数。
+ *
+ * 这要求后端是 offset/limit 且返回总数 —— 游标分页做不到「跳到第 5 页」，
+ * 它只知道下一段从哪开始。仓库里现有的 Pagination 组件注释写得很清楚：
+ * 「后端为游标分页、无总数，故不做页码直达」。所以这是一次对外契约变更，
+ * 已记进 api-delta.md。
+ *
+ * 页码带省略号：首页、末页、当前页 ±1 恒显示，中间折叠。
+ */
+function pageList(current, total) {
+  if (total <= 7) return Array.from({ length: total }, function (_, i) { return i + 1; });
+  var out = [1];
+  var from = Math.max(2, current - 1), to = Math.min(total - 1, current + 1);
+  if (from > 2) out.push('gap-l');
+  for (var i = from; i <= to; i++) out.push(i);
+  if (to < total - 1) out.push('gap-r');
+  out.push(total);
+  return out;
+}
+
+function Pager(props) {
+  var total = props.total, size = props.size, page = props.page;
+  var pages = Math.max(1, Math.ceil(total / size));
+  var first = total === 0 ? 0 : (page - 1) * size + 1;
+  var last = Math.min(page * size, total);
+
+  return h('nav', { className:'c-pager', 'aria-label': props.ariaLabel || '分页' },
+    h('span', { className:'c-pager-range' },
+      total === 0 ? '没有匹配的记录' : ('共 ' + total + ' 条 · 第 ' + first + '–' + last + ' 条')),
+    h('label', { className:'c-pager-size' }, '每页',
+      h('select', { value: String(size), 'aria-label':'每页条数',
+        onChange: function (e) { props.onSize(Number(e.target.value)); } },
+        [10, 20, 50].map(function (n) { return h('option', { key:n, value:String(n) }, n); })),
+      '条'),
+    h('div', { className:'c-pager-nav' },
+      h('button', { className:'c-page-btn', disabled: page <= 1, 'aria-label':'上一页',
+        onClick: function () { props.onPage(page - 1); } }, '‹'),
+      pageList(page, pages).map(function (n) {
+        if (typeof n === 'string') {
+          return h('span', { key:n, className:'c-page-gap', 'aria-hidden':'true' }, '…');
+        }
+        return h('button', { key:n, className:'c-page-btn',
+          'aria-current': n === page ? 'page' : undefined,
+          'aria-label': '第 ' + n + ' 页',
+          onClick: function () { props.onPage(n); } }, n);
+      }),
+      h('button', { className:'c-page-btn', disabled: page >= pages, 'aria-label':'下一页',
+        onClick: function () { props.onPage(page + 1); } }, '›')));
+}
+
+/* 配置驱动的表格。窄容器下由 CSS 变卡片，data-label 提供字段名。 */
+function Table(props) {
+  var cols = props.columns, rows = props.rows;
+  var sort = props.sort, onSort = props.onSort;
+  if (!rows.length) return h(Card, null, h(EmptyState, { title: props.emptyTitle || '没有数据',
+    description: props.emptyDesc }));
+  return h('div', { className:'c-table-wrap' }, h('div', { className:'c-table-scroll' },
+    h('table', { className:'c-table' },
+      h('thead', null, h('tr', null, cols.map(function (c) {
+        var cls = c.hideAt === 1 ? 'c-col-1' : c.hideAt === 2 ? 'c-col-2' : undefined;
+        if (!c.sortKey || !onSort) return h('th', { key:c.key, scope:'col', className:cls,
+          style:{ width:c.width, textAlign:c.align } }, c.label);
+        var active = sort && sort.key === c.sortKey;
+        return h('th', { key:c.key, scope:'col', className:cls, style:{ width:c.width, textAlign:c.align },
+          'aria-sort': active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none' },
+          h('button', { className:'c-th-sort', onClick: function () { onSort(c.sortKey); } }, c.label,
+            active ? h('span', { 'aria-hidden':'true' }, sort.dir === 'asc' ? '↑' : '↓') : null));
+      }))),
+      h('tbody', null, rows.map(function (r, i) {
+        var key = props.rowKey(r, i);
+        var clickable = !!props.onRowClick;
+        return h('tr', { key:key, className: clickable ? 'c-clickable' : undefined,
+          tabIndex: clickable ? 0 : undefined, role: clickable ? 'button' : undefined,
+          onClick: clickable ? function () { props.onRowClick(r); } : undefined,
+          onKeyDown: clickable ? function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); props.onRowClick(r); } } : undefined },
+          cols.map(function (c) {
+            var cls = [c.primary ? 'c-td-tight' : null,
+                       c.hideAt === 1 ? 'c-col-1' : c.hideAt === 2 ? 'c-col-2' : null].filter(Boolean).join(' ');
+            return h('td', { key:c.key, className: cls || undefined,
+              'data-label': c.label, 'data-primary': c.primary ? '1' : undefined,
+              style:{ textAlign:c.align } }, c.render(r));
+          }));
+      })))));
+}
+
+/* 变更缓冲区：编辑先入草稿，提交前出 diff，确认后原子提交。 */
+function useEdit(base, fields) {
+  var s = useState(function () { return JSON.parse(JSON.stringify(base)); }), draft = s[0], setDraft = s[1];
+  useEffect(function () { setDraft(JSON.parse(JSON.stringify(base))); }, [base]);
+  var set = useCallback(function (k, v) {
+    setDraft(function (d) { var n = Object.assign({}, d); n[k] = v; return n; });
+  }, []);
+  var changes = useMemo(function () {
+    var out = [];
+    fields.forEach(function (f) {
+      var a = base[f.key], b = draft[f.key];
+      var sa = JSON.stringify(a), sb = JSON.stringify(b);
+      if (sa !== sb) out.push({ key:f.key, label:f.label, from:f.fmt ? f.fmt(a) : a, to:f.fmt ? f.fmt(b) : b });
+    });
+    return out;
+  }, [base, draft, fields]);
+  /* 每张卡片各自保存：按字段子集切分改动，互不牵连。 */
+  var changesFor = useCallback(function (keys) {
+    return changes.filter(function (c) { return keys.indexOf(c.key) >= 0; });
+  }, [changes]);
+  var resetKeys = useCallback(function (keys) {
+    setDraft(function (d) {
+      var n = Object.assign({}, d);
+      keys.forEach(function (k) { n[k] = JSON.parse(JSON.stringify(base[k])); });
+      return n;
+    });
+  }, [base]);
+  /* 保存成功 = 把提交的值升为**新基线**。
+     之前这里复用了 resetKeys，等于把草稿退回旧值 —— 界面提示「已保存」，字段却当场变回去。
+     真实实现里新基线应当来自服务端返回的完整实体，而不是本地草稿。 */
+  var commitKeys = useCallback(function (keys) {
+    keys.forEach(function (k) { base[k] = JSON.parse(JSON.stringify(draft[k])); });
+    setDraft(JSON.parse(JSON.stringify(base)));
+  }, [base, draft]);
+  return { draft:draft, set:set, changes:changes, dirty:changes.length > 0,
+    changesFor:changesFor, resetKeys:resetKeys, commitKeys:commitKeys,
+    reset: function () { setDraft(JSON.parse(JSON.stringify(base))); } };
+}
+
+/* 一张卡片一个保存条。传字段子集，只管这块。 */
+function CardSave(props) {
+  var changes = props.ed.changesFor(props.keys);
+  /* disabled 是卡片级的硬门控。单靠给每个输入控件加 disabled 不可靠 ——
+     组件是否真的支持这个属性得逐个确认（DS 的 RadioGroup 就只支持逐选项 disabled，
+     组级传入会被静默忽略）。所以保存这一层必须自己再挡一道。 */
+  return h(SaveBar, { count: props.disabled ? 0 : changes.length,
+    hint: props.hint,
+    onReset: function () { props.ed.resetKeys(props.keys); },
+    onSave: function () { props.onSave(props.keys); } });
+}
+
+function fmtVal(v) {
+  if (v === null || v === undefined || v === '') return '（空）';
+  if (Array.isArray(v)) return v.length ? v.join('、') : '（空）';
+  if (typeof v === 'boolean') return v ? '是' : '否';
+  return String(v);
+}
+
+/* 改动到哪些字段算「风险项」—— 只有它们才升级到二次验证。
+   其余（昵称、描述、备注、图标、主页、联系人）确认一次即可，别把人烦死。 */
+var RISKY_FIELDS = ['username','email','verified','password',
+  'redirects','postLogout','scopes','trusted','status','tokenPolicy','env',
+  'mfaStaff','emailGate','lockAfter'];
+function isRisky(changes) {
+  return changes.some(function (c) { return RISKY_FIELDS.indexOf(c.key) >= 0; });
+}
+
+/* 分区级保存条：每块自己保存，不用全局浮条。 */
+function SaveBar(props) {
+  return h('div', { className:'c-savebar' },
+    h('span', { className:'c-savebar-hint' },
+      props.count ? props.count + ' 项改动待保存' : (props.hint || '')),
+    h(Btn, { variant:'ghost', size:'sm', disabled: !props.count, onClick: props.onReset }, '放弃'),
+    h(Btn, { variant:'primary', size:'sm', disabled: !props.count, onClick: props.onSave }, '保存'));
+}
+
+/* 保存确认框：先看清改了什么，再按风险决定要不要二次验证。 */
+function DiffModal(props) {
+  var s = useState(false), stepUp = s[0], setStepUp = s[1];
+  var risky = isRisky(props.changes);
+  return h(Modal, { open:true, size:'md', closeOnOverlayClick: !stepUp, onClose: props.onCancel,
+    title:'确认保存', description: props.subject,
+    footer: stepUp ? null : h(Fragment, null,
+      h(Btn, { variant:'secondary', onClick: props.onCancel }, '返回继续改'),
+      h(Btn, { variant: risky ? 'danger' : 'primary', onClick: function () {
+        if (risky) setStepUp(true); else props.onCommit(); } },
+        risky ? '验证并保存' : '保存这 ' + props.changes.length + ' 项')) },
+    h('div', { className:'c-stack-sm' },
+      h('div', { className:'c-diff' }, props.changes.map(function (c) {
+        return h(Fragment, { key:c.key },
+          h('span', { className:'c-diff-k' }, c.label),
+          h('span', { className:'c-diff-v' },
+            h('span', { className:'c-diff-old' }, fmtVal(c.from)), ' → ',
+            h('span', { className:'c-diff-new' }, fmtVal(c.to))));
+      })),
+      h('p', { className:'c-note', style:{ margin:0 } },
+        '一次性提交，要么全成、要么全不成 —— 不存在改到一半的记录。'),
+      risky && !stepUp ? h('div', { className:'c-impact' },
+        '其中含风险项（' + props.changes.filter(function (c) { return RISKY_FIELDS.indexOf(c.key) >= 0; })
+          .map(function (c) { return c.label; }).join('、') + '），保存前需要二次验证。') : null,
+      stepUp ? h(StepUpPanel, { what: props.subject + ' 的 ' + props.changes.length + ' 项变更',
+        onVerified: props.onCommit, onCancel: function () { setStepUp(false); } }) : null));
+}
+
+function StepUpPanel(props) {
+  var s = useState('idle'), phase = s[0], setPhase = s[1];
+  return h('div', { className:'c-stepup' },
+    h('div', { className:'c-stepup-what' }, h('strong', null, '需要二次验证。'), ' 完成后将继续：', props.what),
+    phase === 'idle'
+      ? h('div', { className:'c-row' },
+          h(Btn, { variant:'primary', size:'sm', onClick: function () {
+            setPhase('waiting'); setTimeout(function () { props.onVerified(); }, 800); } }, '用通行密钥验证'),
+          h(Btn, { variant:'secondary', size:'sm', onClick: props.onCancel }, '取消'))
+      : h('span', { style:{ display:'inline-flex', alignItems:'center', gap:'8px', fontSize:'13px' } },
+          h(Spinner, { size:'sm', inline:true }), '等待通行密钥…'));
+}
+
+/* 危险操作：确认 + 影响面预告 + 可选二次验证 */
+function DangerDialog(props) {
+  var s = useState(false), stepUp = s[0], setStepUp = s[1];
+  var r = useState(''), reason = r[0], setReason = r[1];
+  var needReason = props.needReason;
+  var ok = !needReason || reason.trim().length >= 4;
+  return h(Modal, { open:true, size:'sm', closeOnOverlayClick: !stepUp,
+    onClose: props.onCancel, title: props.title, description: props.subject,
+    footer: stepUp ? null : h(Fragment, null,
+      h(Btn, { variant:'secondary', onClick: props.onCancel }, '取消'),
+      h(Btn, { variant:'danger', disabled: !ok, onClick: function () {
+        if (props.needStepUp) setStepUp(true); else props.onConfirm(reason); } }, props.confirmText || props.title)) },
+    h('div', { className:'c-stack-sm' },
+      h('p', { style:{ margin:0, color:'var(--text-body)' } }, props.message),
+      props.impact ? h('div', { className:'c-impact' },
+        h('strong', null, '影响面：'), props.impact) : null,
+      needReason ? h(TextField, { label:'原因（写进审计，至少 4 个字）', value:reason, required:true,
+        onChange: function (e) { setReason(e.target.value); } }) : null,
+      stepUp ? h(StepUpPanel, { what: props.title + '（' + props.subject + '）',
+        onVerified: function () { props.onConfirm(reason); }, onCancel: function () { setStepUp(false); } }) : null));
+}
+
+/* 管理员代设密码：默认强制用户下次登录自行修改，临时密码不长期存活。 */
+function PasswordDialog(props) {
+  var p = useState(''), pwd = p[0], setPwd = p[1];
+  var f = useState(true), force = f[0], setForce = f[1];
+  var s = useState(false), stepUp = s[0], setStepUp = s[1];
+  var ok = pwd.length >= 12;
+  function gen() {
+    var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    var out = '';
+    var buf = new Uint32Array(16);
+    (window.crypto || window.msCrypto).getRandomValues(buf);
+    for (var i = 0; i < 16; i++) out += abc[buf[i] % abc.length];
+    setPwd(out);
+  }
+  return h(Modal, { open:true, size:'sm', closeOnOverlayClick: !stepUp, onClose: props.onCancel,
+    title:'设置新密码', description: props.subject,
+    footer: stepUp ? null : h(Fragment, null,
+      h(Btn, { variant:'secondary', onClick: props.onCancel }, '取消'),
+      h(Btn, { variant:'danger', disabled: !ok, onClick: function () { setStepUp(true); } }, '设置密码')) },
+    h('div', { className:'c-stack-sm' },
+      h(TextField, { label:'新密码', value:pwd, required:true,
+        hint: pwd && !ok ? '至少 12 位' : '建议直接生成，不要用你能想出来的密码',
+        invalid: !!pwd && !ok,
+        onChange: function (e) { setPwd(e.target.value); } }),
+      h('div', null, h(Btn, { variant:'secondary', size:'sm', onClick: gen }, '生成随机密码')),
+      h(Checkbox, { label:'要求用户下次登录时修改密码', checked:force,
+        hint:'取消勾选意味着这个由你设定的密码会一直有效 —— 除非有特殊理由，别关。',
+        onChange: function (e) { setForce(chk(e)); } }),
+      h('div', { className:'c-impact' },
+        '设置后该账户的全部活跃会话将被吊销，用户需用新密码重新登录。'),
+      stepUp ? h(StepUpPanel, { what:'为 ' + props.subject + ' 设置新密码',
+        onVerified: function () { props.onDone(force); },
+        onCancel: function () { setStepUp(false); } }) : null));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   概览：系统状态。刻意不做图表 —— 这个体量的数据画比例条是浮夸。
+   状态色按保留语义使用，且始终带文字标签（不靠颜色单独表意）。
+   ═══════════════════════════════════════════════════════════════ */
+function Kpi(props) {
+  return h('div', { className:'c-kpi' },
+    h('span', { className:'c-kpi-label' }, props.label),
+    h('span', { className:'c-kpi-value' }, props.value,
+      props.unit ? h('span', { className:'c-kpi-unit' }, props.unit) : null),
+    props.sub ? h('span', { className:'c-kpi-sub' }, props.sub) : null);
+}
+
+function OverviewPage(props) {
+  var byStatus = {};
+  USERS.forEach(function (u) { byStatus[u.status] = (byStatus[u.status] || 0) + 1; });
+  var sessions = USERS.reduce(function (n, u) { return n + u.sessions.length; }, 0);
+  var activeUsers = USERS.filter(function (u) { return u.status === 'active'; });
+  var withMfa = activeUsers.filter(function (u) { return u.totp || u.passkeys.length; });
+  var mfaPct = activeUsers.length ? Math.round(withMfa.length / activeUsers.length * 100) : 0;
+  var activeClients = CLIENTS.filter(function (c) { return c.status === 'active'; }).length;
+  var disabledClients = CLIENTS.length - activeClients;
+  var failures = AUDIT.filter(function (a) { return a.action === 'user.login_failed'; }).length;
+  var grants = USERS.reduce(function (n, u) { return n + u.grants.length; }, 0);
+
+  var order = ['active','suspended','banned','pending_deletion'];
+
+  return h('div', { className:'c-stack' },
+    h('div', { className:'c-kpis' },
+      h(Kpi, { label:'账户总数', value: USERS.length,
+        sub: activeUsers.length + ' 个活跃' }),
+      h(Kpi, { label:'活跃会话', value: sessions,
+        sub: '跨 ' + USERS.filter(function (u) { return u.sessions.length; }).length + ' 个账户' }),
+      h(Kpi, { label:'二次验证覆盖', value: mfaPct, unit:'%',
+        sub: withMfa.length + '/' + activeUsers.length + ' 个活跃账户' }),
+      h(Kpi, { label:'启用中的客户端', value: activeClients,
+        sub: disabledClients ? disabledClients + ' 个已停用' : '无停用' }),
+      h(Kpi, { label:'已授权 SSO', value: grants, sub:'用户 × 站点' }),
+      h(Kpi, { label:'近期登录失败', value: failures, sub:'来自审计链' }),
+      h(Kpi, { label:'工作人员账户', value: USERS.filter(isStaffAccount).length,
+        sub:'账户受保护，只读' })),
+
+    h('div', { className:'c-grid-2' },
+      h(Card, null,
+        h(SectionLabel, { as:'h3' }, '账户状态分布'),
+        h('div', { className:'c-breakdown' }, order.map(function (s) {
+          return h('div', { key:s, className:'c-breakdown-row' },
+            h(Badge, { tone: STATUS_TONE[s], label: STATUS_LABEL[s], size:'sm' }),
+            h('span', { className:'c-breakdown-n' }, byStatus[s] || 0));
+        }))),
+      h(Card, null,
+        h(SectionLabel, { as:'h3' }, '签名密钥'),
+        h(DescriptionList, { columns:1, items:[
+          { term:'签发中', value: h('code', { className:'c-mono' }, 'kid_2026_07') },
+          { term:'已使用', value:'31 天' },
+          { term:'仅验签', value: h('code', { className:'c-mono' }, 'kid_2026_01') },
+          { term:'算法', value:'RS256' }] }))));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   用户列表
+   ═══════════════════════════════════════════════════════════════ */
+function UsersPage(props) {
+  var q = useState(''), kw = q[0], setKw = q[1];
+  var f = useState(props.initialStatus || 'all'), status = f[0], setStatus = f[1];
+  var so = useState({ key:'last', dir:'desc' }), sort = so[0], setSort = so[1];
+  var pg = useState(1), page = pg[0], setPage = pg[1];
+  var ps = useState(10), size = ps[0], setSize = ps[1];
+  var onSort = useCallback(function (k) {
+    setSort(function (s) { return s.key === k ? { key:k, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key:k, dir:'asc' }; });
+  }, []);
+  /* 筛选或排序变了就回第 1 页 —— 否则会停在一个已经不存在的页码上，显示空列表。 */
+  useEffect(function () { setPage(1); }, [kw, status, sort, size]);
+
+  var matched = USERS.filter(function (u) {
+    if (status !== 'all' && u.status !== status) return false;
+    if (!kw) return true;
+    return (u.name + ' ' + u.username + ' ' + u.email).toLowerCase().indexOf(kw.toLowerCase()) >= 0;
+  });
+  var ordered = sortUsers(matched, sort);
+  var rows = ordered.slice((page - 1) * size, page * size);
+
+  var url = '/admin/users?' + [kw ? 'q=' + encodeURIComponent(kw) : null,
+    status !== 'all' ? 'status=' + status : null, 'sort=' + sort.key + ':' + sort.dir,
+    'page=' + page, 'pageSize=' + size].filter(Boolean).join('&');
+
+  function mfaOf(u) {
+    if (u.passkeys.length) return '通行密钥 ×' + u.passkeys.length;
+    if (u.totp) return '动态口令';
+    return '未启用';
+  }
+
+  var columns = [
+    { key:'name', label:'账户', primary:true, render: function (u) {
+      return h('div', { className:'c-cell-primary' },
+        h(Avatar, { name:u.name, size:30, label:u.name }),
+        h('div', { className:'c-cell-text' },
+          h('span', { className:'c-cell-name' }, u.name,
+            u.id === ME_ID ? h('span', { className:'c-self-tag', style:{ marginLeft:8 } }, '你自己') : null,
+            u.id !== ME_ID && isStaffAccount(u)
+              ? h('span', { className:'c-staff-tag', style:{ marginLeft:8 } }, '工作人员') : null),
+          h('span', { className:'c-cell-sub' }, u.email, u.verified ? '' : ' · 邮箱未验证')));
+    }, sortKey:'name' },
+    { key:'status', label:'状态', render: function (u) {
+      return h(Badge, { tone: STATUS_TONE[u.status], label: STATUS_LABEL[u.status], size:'sm' }); }, sortKey:'status' },
+    { key:'mfa', label:'二次验证', render: function (u) { return h('span', { className:'c-num' }, mfaOf(u)); } },
+    { key:'bind', label:'绑定', hideAt:2, render: function (u) {
+      return u.bindings.length ? h('span', { style:{ display:'inline-flex', gap:4, flexWrap:'wrap' } },
+        u.bindings.map(function (b) { return h(Pill, { key:b.provider, tone: b.provider === 'iam' ? 'accent' : undefined },
+          PROVIDER_LABEL[b.provider]); })) : h('span', { className:'c-num' }, '—'); } },
+    { key:'sessions', label:'会话', align:'right', hideAt:1, render: function (u) {
+      return h('span', { className:'c-num' }, u.sessions.length); }, sortKey:'sessions' },
+    { key:'grants', label:'授权站点', align:'right', hideAt:2, render: function (u) {
+      return h('span', { className:'c-num' }, u.grants.length); } },
+    { key:'last', label:'最后活动', render: function (u) { return h('span', { className:'c-num' }, u.last); }, sortKey:'last' },
+    { key:'go', label:'', width:40, render: function () {
+      return h('span', { style:{ color:'var(--text-muted)', display:'inline-flex' } }, h(IconChev, null)); } }
+  ];
+
+  return h('div', { className:'c-stack' },
+    h('div', { className:'c-filters' },
+      h('div', { className:'c-filters-search' },
+        h(SearchField, { value:kw, onValueChange:setKw, placeholder:'按昵称、用户名或邮箱搜索',
+          searchAriaLabel:'搜索用户', clearAriaLabel:'清空搜索' })),
+      h(ChipSet, { label:'按状态筛选', value:status, onChange:setStatus, options:[
+        { value:'all', label:'全部' }, { value:'active', label:'活跃' }, { value:'suspended', label:'已暂停' },
+        { value:'banned', label:'已封禁' }, { value:'pending_deletion', label:'待注销' }] })),
+    h(UrlBar, { url:url }),
+    h(Table, { columns:columns, rows:rows, sort:sort, onSort:onSort,
+      rowKey: function (u) { return u.id; }, onRowClick: props.onOpen,
+      emptyTitle:'没有匹配的账户', emptyDesc:'试试放宽筛选条件，或换个关键词。' }),
+    h(Pager, { total: matched.length, page:page, size:size,
+      onPage:setPage, onSize:setSize, ariaLabel:'用户列表分页' }));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   用户详情（7 个分区）
+   ═══════════════════════════════════════════════════════════════ */
+var USER_FIELDS = [
+  { key:'name', label:'昵称' }, { key:'username', label:'用户名' },
+  { key:'email', label:'邮箱' }, { key:'verified', label:'邮箱已验证' }, { key:'note', label:'管理备注' }
+];
+
+function UserDetail(props) {
+  var u = props.user, role = props.role;
+  var isSelf = u.id === ME_ID;
+  var t = useState('profile'), tab = t[0], setTab = t[1];
+  var n = useState(null), notice = n[0], setNotice = n[1];
+  var d = useState(null), danger = d[0], setDanger = d[1];
+  var rv = useState(null), review = rv[0], setReview = rv[1];
+  var sq = useState(null), sec = sq[0], setSec = sq[1];
+  var pq = useState(false), pw = pq[0], setPw = pq[1];
+  var pk = useState(null), passkey = pk[0], setPasskey = pk[1];
+  var mg = useState(false), merging = mg[0], setMerging = mg[1];
+  var ed = useEdit(u, USER_FIELDS);
+
+  /* 绑定 IAM 且仍持有 tc_main 权限 = 工作人员，其账户对其他工作人员只读。
+     解锁方式只有一个：在 IAM 把他的权限撤空。 */
+  var verdict = iamVerdict(u);
+  var lockedStaff = !isSelf && isStaffAccount(u);
+  var exStaff = wasStaffAccount(u);
+  var canEdit = can(role, 'pass.user:write') && !lockedStaff;
+  /* 二次验证因子的操作，对自己也要挡住 —— 与「不能重置自己 2FA」保持一致，
+     否则只挡住了危险区那个总按钮，逐项入口却是敞开的。 */
+  var canReset = can(role, 'pass.user:reset-2fa') && !lockedStaff && !isSelf;
+
+  var SEC_ACTIONS = {
+    'disable-totp': { title:'关闭动态口令', confirmText:'关闭动态口令',
+      message:'移除该账户绑定的 TOTP 验证器。用户之后登录不再需要动态口令。',
+      impact: u.passkeys.length
+        ? '该账户还有 ' + u.passkeys.length + ' 把通行密钥，关闭后仍有第二因素。'
+        : '关闭后该账户将只剩密码一道防线。' },
+    'revoke-recovery': { title:'作废全部恢复码', confirmText:'全部作废',
+      message:'作废该账户现有的全部恢复码。用户需要重新生成，旧码立即失效。',
+      impact: (u.recovery.total - u.recovery.used) + ' 个未使用的恢复码将立即失效。' }
+  };
+  var curSec = sec ? SEC_ACTIONS[sec] : null;
+  var sessionCount = u.sessions.length, grantCount = u.grants.length;
+
+  var DANGER = [
+    { key:'force-logout', perm:'pass.user:force-logout', label:'强制下线全部会话', step:false, reason:false,
+      msg:'立即注销该账户的全部活跃会话，用户需重新登录。',
+      impact: sessionCount + ' 个会话将被吊销；已签发的业务站访问令牌在 ≤15 分钟内自然失效。' },
+    { key:'reset-2fa', perm:'pass.user:reset-2fa', label:'重置二次验证', step:true, reason:true,
+      msg:'移除该账户的全部通行密钥与动态口令，用户下次登录只需密码。',
+      impact: u.passkeys.length + ' 把通行密钥、' + (u.totp ? '1 个动态口令' : '0 个动态口令') + '将被删除；恢复码同时作废并重发。' },
+    { key:'suspend', perm:'pass.user:suspend', label: u.status === 'suspended' ? '恢复账户' : '暂停账户', step:false, reason:true,
+      msg:'暂停后用户无法登录；已签发令牌在有效期（≤15 分钟）内仍然有效。',
+      impact:'该用户在 ' + grantCount + ' 个业务站的登录将在令牌过期后中断。' },
+    { key:'ban', perm:'pass.user:ban', label:'封禁账户', step:true, reason:true,
+      msg:'封禁并吊销该用户在所有业务站的刷新令牌族，立即切断全生态单点登录。',
+      impact: grantCount + ' 个业务站的 SSO 立即中断；' + sessionCount + ' 个会话被吊销。' },
+    { key:'delete', perm:'pass.user:delete', label:'注销账户', step:true, reason:true,
+      msg:'按 GDPR 注销该账户，进入 7 天保留期，到期后不可恢复。',
+      impact:'账户资料、绑定、通行密钥将被清除；审计记录按合规要求保留。' },
+    { key:'export', perm:'pass.user:read', label:'导出用户数据', step:false, reason:false,
+      msg:'生成该账户的全部个人数据（GDPR 可携权），完成后以下载链接提供。',
+      impact:'导出动作本身会写入审计。' }
+  ];
+  var allowed = DANGER.filter(function (a) { return can(role, a.perm); });
+  var hidden = DANGER.length - allowed.length;
+  var cur = danger ? DANGER.filter(function (a) { return a.key === danger; })[0] : null;
+
+  var tabs = [
+    { key:'profile', label:'概览' },
+    { key:'security', label:'安全' },
+    { key:'sessions', label:'会话', badge: sessionCount || undefined },
+    { key:'bindings', label:'绑定', badge: u.bindings.length || undefined },
+    { key:'grants', label:'授权', badge: grantCount || undefined },
+    { key:'audit', label:'审计' },
+    { key:'danger', label:'危险区' }
+  ];
+
+  var userAudit = AUDIT.filter(function (a) { return a.resId === u.id; });
+
+  return h('div', { className:'c-stack' },
+    notice ? h(Alert, { tone:'success' }, notice) : null,
+
+    h('div', { className:'c-detail-head' },
+      h(Avatar, { name:u.name, size:56, label:u.name }),
+      h('div', { style:{ minWidth:0, flex:1 } },
+        h('div', { className:'c-row', style:{ gap:'var(--sp-2)' } },
+          h('h2', { style:{ margin:0, fontSize:22, letterSpacing:'-.02em' } }, u.name),
+          h(Badge, { tone: STATUS_TONE[u.status], label: STATUS_LABEL[u.status], size:'sm' }),
+          isSelf ? h('span', { className:'c-self-tag' }, '你自己') : null),
+        h('div', { className:'c-detail-id' }, '@' + u.username))),
+
+    isSelf ? h(Alert, { tone:'info' }, h('strong', null, '这是你自己的账户。'),
+      h('div', null, '管理员在 Pass 里也是普通用户，因此针对自己的封禁、注销、重置二次验证已被阻断 —— 避免把自己锁在系统外。需要处理请让另一名管理员操作。')) : null,
+
+    lockedStaff ? h(Alert, { tone:'error' },
+      verdict === 'staff_assumed'
+        ? h(Fragment, null,
+            h('strong', null, '无法向 IAM 确认此账户的身份，已按工作人员锁定。'),
+            h('div', null, '该账户绑定了统一身份，但权限查询失败或超时。证明不了他不是工作人员，就不能动 —— 这是刻意的 fail-closed。'),
+            h('div', { style:{ marginTop:'var(--sp-2)' } }, '请等 IAM 恢复后重试；持续失败请联系后端组长。'))
+        : h(Fragment, null,
+            h('strong', null, '这是工作人员账户，只读。'),
+            h('div', null, '该账户绑定了统一身份，且在 IAM 的 tc_main 下仍持有权限（' +
+              ((u.iam && u.iam.role) || '直接授权') + '）。工作人员的账户不能被其他工作人员改动 —— 资料、密码、二次验证、暂停、封禁、注销一律不可用。'),
+            h('div', { style:{ marginTop:'var(--sp-2)' } },
+              '确需处理：先在 IAM 的 tc_main 里撤空他的权限，本页随即解锁。'))) : null,
+
+    exStaff && !isSelf ? h(Alert, { tone:'info' },
+      h('strong', null, '曾是工作人员，IAM 权限已撤空。'),
+      h('div', null, '该账户仍绑定着统一身份，但在 tc_main 下已无任何权限，因此按普通用户处理，可以正常操作。')) : null,
+
+    h(Tabs, { items:tabs, value:tab, onChange: function (k) { setTab(val(k)); },
+      ariaLabel:'用户详情分区', panelId:'user-panel' }),
+
+    h('div', { id:'user-panel' },
+      tab === 'profile' ? h('div', { className:'c-stack' },
+        h('div', { className:'c-grid-2' },
+          h(Card, null, h(SectionLabel, { as:'h3' }, '资料'),
+            h('div', { className:'c-stack-sm', style:{ marginTop:'var(--sp-3)' } },
+              h(TextField, { label:'昵称', value: ed.draft.name, disabled: !canEdit,
+                onChange: function (e) { ed.set('name', e.target.value); } }),
+              h(TextField, { label:'用户名', value: ed.draft.username, disabled: !canEdit,
+                hint:'用户名同时是登录标识，改动会影响用户既有的登录习惯。',
+                onChange: function (e) { ed.set('username', e.target.value); } }),
+              h(TextField, { label:'邮箱', type:'email', value: ed.draft.email, disabled: !canEdit,
+                onChange: function (e) { ed.set('email', e.target.value); } }),
+              h(Checkbox, { label:'标记邮箱为已验证', checked: !!ed.draft.verified, disabled: !canEdit,
+                hint:'仅在人工核实过用户身份后使用；此动作会写入审计。',
+                onChange: function (e) { ed.set('verified', chk(e)); } })),
+            h(CardSave, { ed:ed, keys:['name','username','email','verified'], onSave:setReview, disabled: !canEdit,
+              hint: canEdit ? '用户名、邮箱、验证态属风险项' : '你的角色不能编辑资料' })),
+          h(Card, null, h(SectionLabel, { as:'h3' }, '账户'),
+            h(DescriptionList, { columns:1, items:[
+              { term:'注册时间', value: u.created },
+              { term:'最后活动', value: u.last },
+              { term:'登录锁定', value: u.lockedUntil ? h('span', { style:{ color:'var(--soft-amber-text)' } }, '曾锁至 ' + u.lockedUntil) : '无' },
+              { term:'活跃会话', value: sessionCount + ' 个' },
+              { term:'授权站点', value: grantCount + ' 个' },
+              { term:'统一身份', value: u.iam
+                  ? h('span', { style:{ display:'inline-flex', alignItems:'center', gap:6, flexWrap:'wrap' } },
+                      verdict === 'staff'
+                        ? h(Badge, { tone:'blue', label:'工作人员 · ' + (u.iam.role || '直接授权'), size:'sm' })
+                        : verdict === 'staff_assumed'
+                        ? h(Badge, { tone:'amber', label:'查询失败 · 按员工锁定', size:'sm' })
+                        : h(Badge, { tone:'muted', label:'权限已撤空', size:'sm' }),
+                      h('span', { className:'c-note' },
+                        verdict === 'staff_assumed' ? 'IAM 不可达' : '实时查询于 ' + u.iam.checkedAt))
+                  : '未绑定' }
+            ] }))),
+        h(Card, null, h(SectionLabel, { as:'h3' }, '管理备注'),
+          h('p', { className:'c-note', style:{ marginTop:0 } }, '仅管理员可见，随账户保留，写入审计。'),
+          h(TextArea ? TextArea : TextField, { label:'备注', value: ed.draft.note, disabled: !canEdit, rows:3,
+            onChange: function (e) { ed.set('note', e.target.value); } }),
+          h(CardSave, { ed:ed, keys:['note'], onSave:setReview, disabled: !canEdit,
+            hint:'备注不属风险项，确认即可保存' }))) : null,
+
+      tab === 'security' ? h('div', { className:'c-stack' },
+        h(Card, null, h(SectionLabel, { as:'h3' }, '登录密码'),
+          h('p', { className:'c-note', style:{ marginTop:0 } },
+            '为用户设置一个新密码，并强制其下次登录时自行修改 —— 这样临时密码不会长期留在你和用户的聊天记录里。'),
+          canReset
+            ? h(Btn, { variant:'secondary', size:'sm', onClick: function () { setPw(true); } }, '设置新密码')
+            : h('span', { className:'c-note' }, '需要 pass.user:reset-2fa 权限。')),
+        h('div', { className:'c-grid-2' },
+          h(Card, null, h(SectionLabel, { as:'h3' }, '动态口令'),
+            h('div', { className:'c-row', style:{ marginTop:'var(--sp-3)' } },
+              h(Badge, { tone: u.totp ? 'green' : 'muted', label: u.totp ? '已启用' : '未启用', size:'sm' })),
+            h('p', { className:'c-note' }, u.totp
+              ? '用户已绑定 TOTP 验证器。关闭后该账户将不再要求动态口令。'
+              : '该账户未绑定验证器，无可关闭项。'),
+            u.totp && canReset
+              ? h(Btn, { variant:'danger', size:'sm', onClick: function () { setSec('disable-totp'); } }, '关闭动态口令')
+              : null),
+          h(Card, null, h(SectionLabel, { as:'h3' }, '恢复码'),
+            h(DescriptionList, { columns:1, items:[
+              { term:'已生成', value: u.recovery.total + ' 个' },
+              { term:'已使用', value: u.recovery.used + ' 个' },
+              { term:'剩余', value: (u.recovery.total - u.recovery.used) + ' 个' }] }),
+            u.recovery.total > 0 && u.recovery.total - u.recovery.used <= 2
+              ? h(Alert, { tone:'error' }, '恢复码即将用尽，建议提醒用户重新生成。') : null,
+            u.recovery.total > 0 && canReset
+              ? h('div', { style:{ marginTop:'var(--sp-3)' } },
+                  h(Btn, { variant:'danger', size:'sm', onClick: function () { setSec('revoke-recovery'); } },
+                    '作废全部恢复码'))
+              : null)),
+        h(Card, null,
+          h('div', { className:'c-spread' }, h(SectionLabel, { as:'h3' }, '通行密钥'),
+            h('span', { className:'c-note' }, u.passkeys.length + ' 把')),
+          u.passkeys.length
+            ? h(Table, { columns:[
+                { key:'name', label:'名称', primary:true, render: function (k) { return h('span', { className:'c-cell-name' }, k.name); } },
+                { key:'created', label:'创建', render: function (k) { return h('span', { className:'c-num' }, k.created); } },
+                { key:'last', label:'最后使用', render: function (k) { return h('span', { className:'c-num' }, k.last); } },
+                { key:'act', label:'', align:'right', render: function (k) {
+                  return canReset
+                    ? h(Btn, { variant:'ghost', size:'sm',
+                        onClick: function () { setPasskey(k); } }, '吊销')
+                    : null; } }],
+                rows: u.passkeys, rowKey: function (k) { return k.id; } })
+            : h(EmptyState, { title:'该账户没有通行密钥' }),
+          h('p', { className:'c-note', style:{ marginBottom:0 } },
+            '可以逐把吊销 —— 现有后台只有「全部重置」一个按钮，用户丢一把钥匙就得把全部因素清空重来。'))) : null,
+
+      tab === 'sessions' ? h('div', { className:'c-stack' },
+        h(Table, { columns:[
+          { key:'device', label:'设备', primary:true, render: function (s) {
+            return h('span', { className:'c-cell-name' }, s.device,
+              s.current ? h('span', { className:'c-self-tag', style:{ marginLeft:8 } }, '当前') : null); } },
+          { key:'ip', label:'IP 段', render: function (s) { return h('code', { className:'c-mono' }, s.ip); } },
+          { key:'created', label:'建立于', hideAt:1, render: function (s) { return h('span', { className:'c-num' }, s.created); } },
+          { key:'last', label:'最后活动', render: function (s) { return h('span', { className:'c-num' }, s.last); } },
+          { key:'act', label:'', align:'right', render: function (s) {
+            return can(role, 'pass.user:force-logout') && !lockedStaff
+              ? h(Btn, { variant:'ghost', size:'sm',
+                  onClick: function () { setNotice('已吊销「' + s.device + '」的会话（原型内不落库）'); } }, '吊销')
+              : null; } }],
+          rows: u.sessions, rowKey: function (s) { return s.id; },
+          emptyTitle:'没有活跃会话', emptyDesc:'该账户当前没有任何设备保持登录。' }),
+        h('p', { className:'c-note' },
+          '只存 IP 段与 UA 哈希，不存完整 IP —— 审计不保留可识别个人信息。')) : null,
+
+      tab === 'bindings' ? h('div', { className:'c-stack' },
+        h(Table, { columns:[
+          { key:'p', label:'提供商', primary:true, render: function (b) {
+            return h('span', { className:'c-cell-name' }, PROVIDER_LABEL[b.provider]); } },
+          { key:'email', label:'对端邮箱', hideAt:2, render: function (b) { return h('span', { className:'c-num' }, b.email || '—'); } },
+          { key:'bound', label:'绑定于', render: function (b) { return h('span', { className:'c-num' }, b.bound); } }],
+          rows: u.bindings, rowKey: function (b) { return b.provider; },
+          emptyTitle:'没有第三方绑定' }),
+        h('p', { className:'c-note' },
+          '只读。第三方绑定属于用户自己的账户所有权 —— 管理员不提供解绑入口，用户在账户中心自行管理。管理员误解绑会直接把人锁在门外，而这个错误无法由用户自己纠正。')) : null,
+
+      tab === 'grants' ? h('div', { className:'c-stack' },
+        h(Table, { columns:[
+          { key:'c', label:'业务站', primary:true, render: function (g) {
+            var c = CLIENTS.filter(function (x) { return x.id === g.client; })[0];
+            return h('span', { className:'c-cell-name' }, c ? c.name : '已删除的客户端'); } },
+          { key:'s', label:'作用域', hideAt:1, render: function (g) {
+            return h('span', { style:{ display:'inline-flex', gap:4, flexWrap:'wrap' } },
+              g.scopes.map(function (s) { return h(Pill, { key:s }, s); })); } },
+          { key:'at', label:'授权于', render: function (g) { return h('span', { className:'c-num' }, g.at); } },
+          { key:'t', label:'令牌族', align:'right', hideAt:2, render: function (g) { return h('span', { className:'c-num' }, g.tokens); } },
+          { key:'act', label:'', align:'right', render: function (g) {
+            return can(role, 'pass.user:force-logout') && !lockedStaff
+              ? h(Btn, { variant:'ghost', size:'sm',
+                  onClick: function () { var cc = CLIENTS.filter(function (x) { return x.id === g.client; })[0];
+                    setNotice('已撤销对「' + (cc ? cc.name : g.client) + '」的授权，其令牌族一并吊销（原型内不落库）'); } }, '撤销')
+              : null; } }],
+          rows: u.grants, rowKey: function (g) { return g.client; },
+          emptyTitle:'尚未授权任何业务站' }),
+        h('p', { className:'c-note' },
+          '可以只切断某一个站的 SSO，而不影响用户在其他站的登录 —— 现有后台做不到这件事。')) : null,
+
+      tab === 'audit' ? h('div', { className:'c-stack' },
+        h(Table, { columns:[
+          { key:'at', label:'时间', primary:true, render: function (a) { return h('span', { className:'c-num c-mono' }, a.at); } },
+          { key:'actor', label:'操作者', render: function (a) {
+            return h('span', null, a.actor, ' ', h(Pill, { tone: a.actorType === 'staff' ? 'accent' : undefined },
+              a.actorType === 'staff' ? '管理员' : '本人')); } },
+          { key:'act', label:'动作', render: function (a) {
+            return h('div', { className:'c-cell-text' }, h('span', null, ACTION_LABEL[a.action] || a.action),
+              h('span', { className:'c-cell-sub c-mono' }, a.action)); } }],
+          rows: userAudit, rowKey: function (a) { return a.id; },
+          emptyTitle:'该账户没有审计记录' })) : null,
+
+      tab === 'danger' ? h('div', { className:'c-stack' },
+        h(Card, { accent:true }, h(SectionLabel, { as:'h3' }, '账户生命周期'),
+          lockedStaff
+            ? h('p', { className:'c-note', style:{ margin:0 } },
+                '工作人员账户不接受任何生命周期操作。先在 IAM 撤空其 tc_main 权限，本区随即可用。')
+            : allowed.length === 0
+            ? h('p', { className:'c-note', style:{ margin:0 } }, '你当前的角色没有可对该账户执行的操作。')
+            : h('div', { className:'c-row', style:{ marginTop:'var(--sp-3)' } }, allowed.map(function (a) {
+                var blocked = lockedStaff || (isSelf && a.key !== 'force-logout' && a.key !== 'export');
+                return h(Btn, { key:a.key, variant: a.key === 'export' || a.key === 'force-logout' ? 'secondary' : 'danger',
+                  size:'sm', disabled: blocked, onClick: function () { setDanger(a.key); } }, a.label);
+              })),
+          hidden > 0 ? h('p', { className:'c-note', style:{ marginTop:'var(--sp-3)', marginBottom:0 } },
+            '另有 ' + hidden + ' 项操作需要更高权限，已按你的角色隐藏。授权在 IAM 的 tc_main 应用里配置。') : null),
+        h(Card, null, h(SectionLabel, { as:'h3' }, '合并账户'),
+          h('p', { className:'c-note', style:{ marginTop:0 } },
+            '同一个人注册了两个账户时，把此账户并入另一个：绑定、授权、投稿归属迁移，此账户置为 merged。'),
+          h('div', { style:{ marginTop:'var(--sp-3)' } },
+            h(Btn, { variant:'danger', size:'sm',
+              disabled: !can(role, 'pass.user:delete') || isSelf || lockedStaff,
+              onClick: function () { setMerging(true); } }, '开始合并')))) : null),
+
+    review ? h(DiffModal, { subject: u.name, changes: ed.changesFor(review),
+      onCancel: function () { setReview(null); },
+      onCommit: function () { var n = ed.changesFor(review).length; ed.commitKeys(review); setReview(null);
+        setNotice('已保存 ' + n + ' 项变更（原型内不落库）'); } }) : null,
+
+    cur ? h(DangerDialog, { title: cur.label, subject: u.name, message: cur.msg,
+      impact: cur.impact, needStepUp: cur.step, needReason: cur.reason,
+      onCancel: function () { setDanger(null); },
+      onConfirm: function () { setDanger(null); setNotice('已执行：' + cur.label + '（原型内不落库）'); } }) : null,
+
+    curSec ? h(DangerDialog, { title: curSec.title, subject: u.name, message: curSec.message,
+      impact: curSec.impact, confirmText: curSec.confirmText, needStepUp:true, needReason:true,
+      onCancel: function () { setSec(null); },
+      onConfirm: function () { setSec(null); setNotice('已执行：' + curSec.title + '（原型内不落库）'); } }) : null,
+
+    pw ? h(PasswordDialog, { subject: u.name,
+      onCancel: function () { setPw(false); },
+      onDone: function (force) { setPw(false);
+        setNotice(force ? '已设置新密码，用户下次登录将被要求修改（原型内不落库）'
+                        : '已设置新密码（未要求下次登录修改，原型内不落库）'); } }) : null,
+
+    passkey ? h(DangerDialog, { title:'吊销通行密钥', subject: u.name + ' · ' + passkey.name,
+      message:'吊销后该设备不能再用于登录，用户需重新注册一把。',
+      impact: u.passkeys.length === 1 && !u.totp
+        ? '这是该账户唯一的第二因素，吊销后将只剩密码一道防线。'
+        : '该账户还有 ' + (u.passkeys.length - 1) + ' 把通行密钥' + (u.totp ? ' 和动态口令' : '') + '。',
+      needStepUp:true, needReason:true, confirmText:'吊销',
+      onCancel: function () { setPasskey(null); },
+      onConfirm: function () { setNotice('已吊销通行密钥「' + passkey.name + '」（原型内不落库）'); setPasskey(null); } }) : null,
+
+    merging ? h(MergeDialog, { user:u,
+      onCancel: function () { setMerging(false); },
+      onDone: function (target) { setMerging(false);
+        setNotice('已将本账户并入「' + target + '」（原型内不落库）'); } }) : null);
+}
+
+/**
+ * 合并账户：两阶段。先算影响再确认 —— 合并是不可逆的，
+ * 让人在看不见「到底会搬走什么」的情况下点确定，是不负责任的。
+ */
+function MergeDialog(props) {
+  var t = useState(''), target = t[0], setTarget = t[1];
+  var p = useState(null), preview = p[0], setPreview = p[1];
+  var s = useState(false), stepUp = s[0], setStepUp = s[1];
+  var r = useState(''), reason = r[0], setReason = r[1];
+  var u = props.user;
+  var match = USERS.filter(function (x) {
+    return x.id !== u.id && (x.username === target.trim() || x.email === target.trim());
+  })[0];
+  var canPreview = !!match;
+  var reasonOk = reason.trim().length >= 4;
+
+  return h(Modal, { open:true, size:'md', closeOnOverlayClick: !stepUp,
+    onClose: props.onCancel, title:'合并账户', description: u.name,
+    footer: stepUp ? null : (preview
+      ? h(Fragment, null,
+          h(Btn, { variant:'secondary', onClick: function () { setPreview(null); } }, '返回'),
+          h(Btn, { variant:'danger', disabled: !reasonOk, onClick: function () { setStepUp(true); } }, '确认合并'))
+      : h(Fragment, null,
+          h(Btn, { variant:'secondary', onClick: props.onCancel }, '取消'),
+          h(Btn, { variant:'primary', disabled: !canPreview,
+            onClick: function () { setPreview(match); } }, '预览影响'))) },
+    h('div', { className:'c-stack-sm' },
+      !preview ? h(Fragment, null,
+        h(TextField, { label:'并入目标账户（用户名或邮箱）', value:target, required:true,
+          invalid: !!target.trim() && !match,
+          hint: target.trim() && !match ? '找不到这个账户' : '本账户的绑定、授权与投稿归属会迁移过去，本账户置为已合并。',
+          onChange: function (e) { setTarget(e.target.value); } }),
+        match ? h(Card, { tone:'subtle', padding:'sm' },
+          h('div', { className:'c-cell-primary' },
+            h(Avatar, { name:match.name, size:32, label:match.name }),
+            h('div', { className:'c-cell-text' },
+              h('span', { className:'c-cell-name' }, match.name),
+              h('span', { className:'c-cell-sub' }, match.email)))) : null)
+        : h(Fragment, null,
+            h('div', { className:'c-impact' },
+              h('strong', null, '将从「' + u.name + '」迁移到「' + preview.name + '」：'),
+              h('ul', { style:{ margin:'6px 0 0', paddingLeft:'1.1rem' } },
+                h('li', null, u.bindings.length + ' 个第三方绑定'),
+                h('li', null, u.grants.length + ' 个业务站授权（令牌族一并转移）'),
+                h('li', null, u.sessions.length + ' 个活跃会话将被吊销，需重新登录'),
+                h('li', null, u.passkeys.length + ' 把通行密钥将被作废，不迁移'))),
+            h('p', { className:'c-note', style:{ margin:0 } },
+              '合并不可撤销。「' + u.name + '」之后状态为已合并，无法登录。'),
+            h(TextField, { label:'原因（写进审计，至少 4 个字）', value:reason, required:true,
+              onChange: function (e) { setReason(e.target.value); } })),
+      stepUp ? h(StepUpPanel, { what:'把「' + u.name + '」并入「' + (preview && preview.name) + '」',
+        onVerified: function () { props.onDone(preview.name); },
+        onCancel: function () { setStepUp(false); } }) : null));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   客户端列表
+   ═══════════════════════════════════════════════════════════════ */
+function ClientsPage(props) {
+  var e = useState('all'), env = e[0], setEnv = e[1];
+  var pg = useState(1), page = pg[0], setPage = pg[1];
+  var ps = useState(10), size = ps[0], setSize = ps[1];
+  useEffect(function () { setPage(1); }, [env, size]);
+  var matched = CLIENTS.filter(function (c) { return env === 'all' || c.env === env; });
+  var rows = matched.slice((page - 1) * size, page * size);
+
+  var columns = [
+    { key:'name', label:'客户端', primary:true, render: function (c) {
+      return h('div', { className:'c-cell-text' },
+        h('span', { className:'c-cell-name' }, c.name),
+        h('span', { className:'c-cell-sub' }, c.desc || APP_TYPES[c.type].label)); } },
+    { key:'type', label:'类型', render: function (c) { return h('span', { className:'c-num' }, APP_TYPES[c.type].label); } },
+    { key:'env', label:'环境', render: function (c) { return h(Pill, { tone: c.env === 'prod' ? 'accent' : undefined }, ENV_LABEL[c.env]); } },
+    { key:'status', label:'状态', render: function (c) {
+      return h(Badge, { tone: c.status === 'active' ? 'green' : 'muted',
+        label: c.status === 'active' ? '启用' : '已停用', size:'sm' }); } },
+    { key:'secret', label:'密钥', hideAt:1, render: function (c) {
+      if (c.secretAge === null) return h('span', { className:'c-num' }, '无（公开客户端）');
+      var stale = c.secretAge > 90;
+      return h('span', { className:'c-num', style: stale ? { color:'var(--soft-amber-text)' } : null },
+        stale ? h('span', { style:{ display:'inline-flex', alignItems:'center', gap:4 } },
+          h(IconWarn, null), c.secretAge + ' 天未轮换') : c.secretAge + ' 天'); } },
+    { key:'users', label:'授权用户', align:'right', hideAt:2, render: function (c) { return h('span', { className:'c-num' }, c.users); } },
+    { key:'consent', label:'同意屏', hideAt:2, render: function (c) {
+      return h('span', { className:'c-num' }, c.trusted ? '跳过（第一方）' : '每次询问'); } },
+    { key:'go', label:'', width:40, render: function () {
+      return h('span', { style:{ color:'var(--text-muted)', display:'inline-flex' } }, h(IconChev, null)); } }
+  ];
+
+  return h('div', { className:'c-stack' },
+    h('div', { className:'c-filters' },
+      h(ChipSet, { label:'按环境筛选', value:env, onChange:setEnv, options:[
+        { value:'all', label:'全部' }, { value:'prod', label:'生产' }, { value:'dev', label:'开发' }] }),
+      h('div', { style:{ marginLeft:'auto' } },
+        can(props.role, 'pass.client:manage') ? h(Btn, { variant:'primary', size:'sm', onClick: props.onNew }, '接入新站点') : null)),
+    h(Table, { columns:columns, rows:rows, rowKey: function (c) { return c.id; }, onRowClick: props.onOpen,
+      emptyTitle:'该环境下没有客户端' }),
+    h(Pager, { total: matched.length, page:page, size:size,
+      onPage:setPage, onSize:setSize, ariaLabel:'客户端列表分页' }),
+    h('p', { className:'c-note', style:{ margin:0 } },
+      '「密钥」列显示距上次轮换的天数，超过 90 天标黄 —— 现有后台没有这个信息，没人知道密钥多久没换过。'));
+}
+
+/* ── 回调校验 ───────────────────────────────────────────────── */
+function checkRedirect(raw, type) {
+  var s = (raw || '').trim();
+  if (!s) return null;
+  var u;
+  try { u = new URL(s); } catch (e) { return { level:'bad', msg:'不是合法的绝对地址' }; }
+  if (u.hash) return { level:'bad', msg:'含 # 片段，OAuth 回调不允许' };
+  if (s.indexOf('*') >= 0) return { level:'bad', msg:'不支持通配符，回调按精确匹配放行' };
+  var local = u.hostname === 'localhost' || u.hostname === '127.0.0.1' || u.hostname === '[::1]';
+  if (type === 'native' && u.protocol !== 'http:' && u.protocol !== 'https:')
+    return { level:'ok', msg:'自定义 scheme，原生应用可用' };
+  if (u.protocol === 'http:' && !local) return { level:'bad', msg:'生产环境必须用 https' };
+  if (u.protocol === 'http:' && local) return { level:'ok', msg:'本地回环，开发环境放行' };
+  if (u.protocol !== 'https:') return { level:'bad', msg:'只接受 https（本地回环除外）' };
+  if (u.pathname === '/') return { level:'warn', msg:'建议指向具体回调路径，而非站点根' };
+  return { level:'ok', msg:'可用' };
+}
+
+function UriEditor(props) {
+  var d = useState(''), draft = d[0], setDraft = d[1];
+  var c = checkRedirect(draft, props.type);
+  function add() {
+    var v = draft.trim();
+    if (props.disabled || !c || c.level === 'bad' || !v) return;
+    if (props.value.indexOf(v) < 0) props.onChange(props.value.concat([v]));
+    setDraft('');
+  }
+  return h('div', { className:'c-stack-sm' },
+    h(TextField, { label: props.label, value:draft, placeholder: props.placeholder,
+      disabled: props.disabled, invalid: !!(c && c.level === 'bad'), hint: props.hint,
+      onChange: function (e) { setDraft(e.target.value); },
+      onKeyDown: function (e) { if (e.key === 'Enter') { e.preventDefault(); add(); } } }),
+    c ? h('div', { className:'c-uri-check' },
+      h('span', { className: c.level === 'ok' ? 'c-uri-ok' : c.level === 'warn' ? 'c-uri-warn' : 'c-uri-bad' },
+        c.level === 'ok' ? h(IconCheck, null) : c.level === 'warn' ? h(IconWarn, null) : h(IconX, null)),
+      h('span', { className: c.level === 'ok' ? 'c-uri-ok' : c.level === 'warn' ? 'c-uri-warn' : 'c-uri-bad' }, c.msg)) : null,
+    h('div', null, h(Btn, { variant:'secondary', size:'sm',
+      disabled: props.disabled || !c || c.level === 'bad', onClick: add }, '添加')),
+    props.value.length ? h(Card, { tone:'subtle', padding:'sm' },
+      h('div', { className:'c-stack-sm' }, props.value.map(function (v) {
+        return h('div', { key:v, className:'c-spread' }, h('code', { className:'c-mono' }, v),
+          props.disabled ? null : h(Btn, { variant:'ghost', size:'sm', onClick: function () {
+            props.onChange(props.value.filter(function (x) { return x !== v; })); } }, '移除'));
+      }))) : null);
+}
+
+/* ── 授权中间页 ─────────────────────────────────────────────
+   面向普通用户，所以：不出现任何内部 ID，不出现 scope 原始 key，
+   每一条都是一句人话。                                        */
+var SCOPE_HUMAN = {
+  profile: '读取你的昵称、用户名和头像',
+  email: '读取你的邮箱地址及验证状态',
+  offline_access: '在你离开后保持登录，不必反复输入密码',
+  'pass.profile.full': '读取完整账户信息：注册时间、已绑定的登录方式、二次验证状态'
+};
+function hostOf(url) {
+  try { return new URL(url).host; } catch (e) { return ''; }
+}
+
+function ConsentCard(props) {
+  var name = props.name || '未命名应用';
+  var host = hostOf(props.clientUri);
+  var lines = (props.scopes || []).filter(function (s) { return SCOPE_HUMAN[s]; });
+  return h(Card, null,
+    h('div', { className:'c-consent-heads' },
+      h(Avatar, { name:name, src: props.logoUri || undefined, size:44, label:name }),
+      h('span', { className:'c-consent-arrow', 'aria-hidden':'true' },
+        ic([P('M5 12h14', 1), P('M13 6l6 6-6 6', 2)], 18)),
+      h(Avatar, { name: props.user.name, size:44, label: props.user.name })),
+    h('h2', { className:'c-consent-title' }, name, ' 想要访问你的 TransCircle 账户'),
+    h('p', { className:'c-consent-as' }, '以 ', h('strong', null, props.user.name), ' 的身份继续',
+      h('span', { className:'c-consent-mail' }, props.user.email)),
+    lines.length ? h('div', { className:'c-consent-scopes' },
+      h('span', { className:'c-consent-scopes-h' }, '将允许它'),
+      h('ul', { className:'c-consent-list' }, lines.map(function (s) {
+        return h('li', { key:s },
+          h('span', { className:'c-consent-tick', 'aria-hidden':'true' }, h(IconCheck, null)),
+          h('span', null, SCOPE_HUMAN[s]));
+      }))) : null,
+    h('div', { className:'c-consent-actions' },
+      h(Btn, { variant:'secondary', fullWidth:true }, '不允许'),
+      h(Btn, { variant:'primary', fullWidth:true }, '允许')),
+    h('p', { className:'c-consent-foot' },
+      host ? h('span', null, '将跳转到 ', h('strong', null, host)) : null,
+      h('span', null, '你可以随时在账户中心撤销这项授权。')));
+}
+
+function ConsentPreview(props) {
+  if (props.trusted) return h('div', { className:'c-preview' },
+    h('div', { className:'c-preview-frame' },
+      h(EmptyState, { title:'不展示同意屏', description:'可信第一方：用户登录后直接回跳，中间没有页面。' })));
+  return h('div', { className:'c-preview' },
+    h('div', { className:'c-preview-chrome' }, 'transcircle.org/consent'),
+    h('div', { className:'c-preview-frame' },
+      h(ConsentCard, { name: props.name, clientUri: props.clientUri, logoUri: props.logoUri,
+        scopes: props.scopes, user: USERS[0] })));
+}
+
+/* 独立场景：满尺寸看授权中间页 */
+function ConsentScene() {
+  var c = CLIENTS[0];
+  return h('div', { className:'c-scene' },
+    h('div', { className:'c-consent-shell' },
+      h(ConsentCard, { name: c.name, clientUri: c.clientUri, logoUri: c.logoUri,
+        scopes: c.scopes, user: USERS[0] })));
+}
+
+/* ── 接入向导 ───────────────────────────────────────────────── */
+function ClientWizard(props) {
+  var st = useState(1), step = st[0], setStep = st[1];
+  var ty = useState('web_backend'), type = ty[0], setType = ty[1];
+  var nm = useState(''), name = nm[0], setName = nm[1];
+  var ev = useState('prod'), env = ev[0], setEnv = ev[1];
+  var cu = useState(''), clientUri = cu[0], setClientUri = cu[1];
+  var rd = useState([]), uris = rd[0], setUris = rd[1];
+  var sc = useState(['openid','profile','email']), scopes = sc[0], setScopes = sc[1];
+  var tr = useState(true), trusted = tr[0], setTrusted = tr[1];
+  var su = useState(false), stepUp = su[0], setStepUp = su[1];
+  var dn = useState(null), result = dn[0], setResult = dn[1];
+
+  var meta = APP_TYPES[type];
+  var needsRedirect = type !== 'm2m';
+  var isConfidential = type === 'web_backend' || type === 'm2m';
+  var canNext = step === 1 ? true : step === 2 ? (name.trim() && (!needsRedirect || uris.length)) : true;
+
+  function submit() {
+    if (!stepUp) { setStepUp(true); return; }
+    setResult({ clientId: name.trim() ? 'pass_' + name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 12) : 'pass_new',
+      secret: isConfidential ? 'cs_live_7Kq2xM9pR4vT8wZa1bY6nC3eH5jL0dS' : null });
+    setStepUp(false);
+  }
+
+  if (result) {
+    var cfg = ['# TransCircle Pass · 接入配置', '# ' + (name || '新客户端') + ' · ' + ENV_LABEL[env] + '环境', '',
+      'PASS_ISSUER="https://pass.transcircle.org"', 'PASS_CLIENT_ID="' + result.clientId + '"'];
+    if (result.secret) cfg.push('PASS_CLIENT_SECRET="' + result.secret + '"   # 仅此一次可见');
+    if (needsRedirect) cfg.push('PASS_REDIRECT_URI="' + (uris[0] || '') + '"');
+    cfg.push('PASS_SCOPE="' + scopes.join(' ') + '"', '',
+      '# 端点无需手写，由 discovery 自动解析：',
+      '#   GET https://pass.transcircle.org/.well-known/openid-configuration');
+    return h('div', { className:'c-stack', style:{ maxWidth:'46rem' } },
+      h(Alert, { tone:'success' }, h('strong', null, '客户端已创建。'),
+        result.secret ? h('div', null, '密钥只在此刻可见一次。离开本页后无法再查看，只能轮换。') : null),
+      h(Card, null, h(SectionLabel, { as:'h3' }, '拿去粘贴'),
+        h('p', { className:'c-note', style:{ marginTop:0 } }, '已包含接入方需要的全部内容 —— 不必再回文档拼端点。'),
+        h('pre', { className:'c-code' }, cfg.join('\n')),
+        h('div', { className:'c-row', style:{ marginTop:'var(--sp-4)' } }, h(CopyField, { value: cfg.join('\n') }))),
+      h(Card, { accent: !!result.secret },
+        h(SectionLabel, { as:'h3' }, result.secret ? '确认已保存密钥' : '完成'),
+        result.secret ? h('p', { className:'c-note', style:{ marginTop:0 } },
+          '这一层独立于登录状态 —— 即便会话此刻过期，密钥也不会被顶掉。') : null,
+        h(Btn, { variant:'primary', onClick: props.onDone }, result.secret ? '我已保存，完成' : '完成')));
+  }
+
+  return h('div', null,
+    h('div', { className:'c-steps' }, [[1,'选类型'],[2,'填信息'],[3,'定权限']].map(function (s, i) {
+      var state = step > s[0] ? 'done' : step === s[0] ? 'current' : 'todo';
+      return h(Fragment, { key:s[0] },
+        h('div', { className:'c-step', 'data-state':state },
+          h('span', { className:'c-step-dot' }, state === 'done' ? h(IconCheck, null) : s[0]),
+          h('span', null, s[1])),
+        i < 2 ? h('span', { className:'c-step-line' }) : null);
+    })),
+    h('div', { className:'c-wizard' },
+      h('div', { className:'c-stack' },
+        step === 1 ? h(Fragment, null,
+          h(RadioGroup, { label:'你要接入什么？', value:type, onChange: function (v) { setType(val(v)); },
+            options: Object.keys(APP_TYPES).map(function (k) {
+              return { value:k, label: APP_TYPES[k].label, hint: APP_TYPES[k].hint }; }) }),
+          h(Card, { tone:'subtle', padding:'sm' },
+            h('span', { style:{ fontSize:'13px', color:'var(--text-body)' } }, meta.why))) : null,
+
+        step === 2 ? h(Fragment, null,
+          h(TextField, { label:'站点名称', required:true, value:name, maxLength:100,
+            hint:'会显示在用户看到的授权同意屏上，请用用户认得出的名字。',
+            onChange: function (e) { setName(e.target.value); } }),
+          h(TextField, { label:'站点主页', value:clientUri, placeholder:'https://example.transcircle.org',
+            hint:'同意屏上展示，帮助用户确认这是他们认识的站点。',
+            onChange: function (e) { setClientUri(e.target.value); } }),
+          h(RadioGroup, { label:'环境', orientation:'horizontal', value:env, onChange: function (v) { setEnv(val(v)); },
+            options:[{ value:'prod', label:'生产' }, { value:'dev', label:'开发' }] }),
+          needsRedirect
+            ? h(UriEditor, { label:'回调地址', type:type, value:uris, onChange:setUris,
+                placeholder:'https://api.example.org/auth/callback',
+                hint:'回调按精确匹配放行：协议、主机、端口、路径必须完全一致。' })
+            : h(Card, { tone:'subtle', padding:'sm' },
+                h('span', { style:{ fontSize:'13px', color:'var(--text-body)' } },
+                  '服务间调用没有用户登录跳转，因此不需要回调地址 —— 这一步已跳过。'))) : null,
+
+        step === 3 ? h(Fragment, null,
+          h(SectionLabel, { as:'h3' }, '这个站点能读到什么'),
+          h('div', { className:'c-stack-sm' }, SCOPES.map(function (s) {
+            var on = scopes.indexOf(s.key) >= 0;
+            return h(Checkbox, { key:s.key, label:s.key, hint:s.desc, checked: s.locked ? true : on,
+              disabled: !!s.locked || (s.firstParty && !trusted),
+              onChange: function (e) { var c = chk(e);
+                setScopes(c ? scopes.concat([s.key]) : scopes.filter(function (x) { return x !== s.key; })); } });
+          })),
+          h('div', { className:'c-danger-zone' },
+            h(Checkbox, { label:'可信第一方 —— 跳过授权同意屏', checked:trusted,
+              hint:'生态内自有站点勾选。第三方应用必须留空，让用户每次明确同意。仅超级管理员可设。',
+              onChange: function (e) {
+                var on = chk(e);
+                setTrusted(on);
+                /* 与客户端详情页同一条规则：第一方专属 scope 在非第一方客户端上是非法组合。
+                   只把复选框置灰、把值留在 scopes 里，会一路提交到后端才被拒。 */
+                if (!on) {
+                  setScopes(scopes.filter(function (x) {
+                    var m = SCOPES.filter(function (y) { return y.key === x; })[0];
+                    return !(m && m.firstParty);
+                  }));
+                }
+              } })),
+          h(SectionLabel, { as:'h3' }, '用户会看到什么'),
+          h(ConsentPreview, { trusted:trusted, name:name, clientUri:clientUri, scopes:scopes }),
+          stepUp ? h(StepUpPanel, { what:'创建客户端「' + (name || '新客户端') + '」',
+            onVerified: submit, onCancel: function () { setStepUp(false); } }) : null) : null,
+
+        h('div', { className:'c-row', style:{ marginTop:'var(--sp-4)' } },
+          step > 1 ? h(Btn, { variant:'secondary', onClick: function () { setStep(step - 1); } }, '上一步') : null,
+          step < 3 ? h(Btn, { variant:'primary', disabled: !canNext, onClick: function () { setStep(step + 1); } }, '下一步')
+                   : (stepUp ? null : h(Btn, { variant:'primary', onClick: submit }, '创建客户端')),
+          h(Btn, { variant:'ghost', onClick: props.onCancel }, '取消'))),
+
+      h('div', { className:'c-derived' },
+        h(Card, null, h(SectionLabel, { as:'h3' }, '据此推导的配置'),
+          h('p', { className:'c-note', style:{ marginTop:0 } }, '你不用填这些 —— 选了类型就定了。'),
+          Object.keys(meta.derived).map(function (k) {
+            return h('div', { key:k, className:'c-derived-row' },
+              h('span', { className:'c-derived-k' }, k),
+              h('span', { className:'c-derived-v' }, meta.derived[k])); }),
+          step >= 3 ? h('div', { className:'c-derived-row' },
+            h('span', { className:'c-derived-k' }, '作用域'),
+            h('span', { className:'c-derived-v' }, scopes.join(' '))) : null))));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   客户端详情（7 个分区，全部可改）
+   ═══════════════════════════════════════════════════════════════ */
+var CLIENT_FIELDS = [
+  { key:'name', label:'名称' }, { key:'desc', label:'描述' }, { key:'clientUri', label:'站点主页' },
+  { key:'logoUri', label:'图标地址' }, { key:'contacts', label:'联系人' }, { key:'env', label:'环境',
+    fmt: function (v) { return ENV_LABEL[v] || v; } },
+  { key:'status', label:'状态', fmt: function (v) { return v === 'active' ? '启用' : '已停用'; } },
+  { key:'redirects', label:'回调地址' }, { key:'postLogout', label:'登出回跳' },
+  { key:'scopes', label:'作用域' }, { key:'trusted', label:'可信第一方' },
+  { key:'tokenPolicy', label:'令牌策略', fmt: function (v) {
+    return '访问 ' + v.accessTtl + 's / 刷新 ' + v.refreshTtl + 's / ' + (v.rotate ? '轮换' : '不轮换'); } }
+];
+
+function ClientDetail(props) {
+  var c = props.client, role = props.role;
+  var t = useState('settings'), tab = t[0], setTab = t[1];
+  var n = useState(null), notice = n[0], setNotice = n[1];
+  var rv = useState(null), review = rv[0], setReview = rv[1];
+  var rot = useState(false), rotating = rot[0], setRotating = rot[1];
+  var ns = useState(null), newSecret = ns[0], setNewSecret = ns[1];
+  var dz = useState(null), danger = dz[0], setDanger = dz[1];
+  var ed = useEdit(c, CLIENT_FIELDS);
+  var meta = APP_TYPES[c.type];
+  var manage = can(role, 'pass.client:manage');
+
+  var tabs = [
+    { key:'settings', label:'设置' },
+    { key:'redirect', label:'回调' },
+    { key:'scopes', label:'权限与同意' },
+    { key:'creds', label:'凭据' },
+    { key:'tokens', label:'令牌策略' },
+    { key:'danger', label:'危险区' }
+  ];
+
+  function setPolicy(k, v) {
+    var p = Object.assign({}, ed.draft.tokenPolicy); p[k] = v; ed.set('tokenPolicy', p);
+  }
+
+  return h('div', { className:'c-stack' },
+    notice ? h(Alert, { tone:'success' }, notice) : null,
+
+    h('div', { className:'c-detail-head' },
+      h('div', { style:{ flex:1, minWidth:0 } },
+        h('div', { className:'c-row', style:{ gap:'var(--sp-2)' } },
+          h('h2', { style:{ margin:0, fontSize:22, letterSpacing:'-.02em' } }, c.name),
+          h(Badge, { tone: c.status === 'active' ? 'green' : 'muted',
+            label: c.status === 'active' ? '启用' : '已停用', size:'sm' }),
+          h(Pill, { tone: c.env === 'prod' ? 'accent' : undefined }, ENV_LABEL[c.env])),
+        h('div', { className:'c-detail-id' }, meta.label))),
+
+    h(Tabs, { items:tabs, value:tab, onChange: function (k) { setTab(val(k)); },
+      ariaLabel:'客户端详情分区', panelId:'client-panel' }),
+
+    h('div', { id:'client-panel' },
+      tab === 'settings' ? h('div', { className:'c-stack' },
+        h('div', { className:'c-grid-2' },
+          h(Card, null, h(SectionLabel, { as:'h3' }, '基本信息'),
+            h('div', { className:'c-stack-sm', style:{ marginTop:'var(--sp-3)' } },
+              h(TextField, { label:'名称', value: ed.draft.name, required:true, disabled: !manage,
+                hint:'显示在授权同意屏上。', onChange: function (e) { ed.set('name', e.target.value); } }),
+              h(TextField, { label:'描述', value: ed.draft.desc, disabled: !manage,
+                onChange: function (e) { ed.set('desc', e.target.value); } }),
+              h(TextField, { label:'站点主页', value: ed.draft.clientUri, disabled: !manage, placeholder:'https://…',
+                onChange: function (e) { ed.set('clientUri', e.target.value); } }),
+              h(TextField, { label:'图标地址', value: ed.draft.logoUri, disabled: !manage, placeholder:'https://…',
+                onChange: function (e) { ed.set('logoUri', e.target.value); } }),
+              h(TagInput, { label:'联系人邮箱', value: ed.draft.contacts, disabled: !manage,
+                hint:'出问题时我们联系谁。', removeTagLabel: function (t2) { return '移除 ' + t2; },
+                onChange: function (v) { ed.set('contacts', v); } })),
+            h(CardSave, { ed:ed, keys:['name','desc','clientUri','logoUri','contacts'], onSave:setReview, disabled: !manage,
+              hint: manage ? '这些不属风险项，确认即可保存' : '你的角色不能编辑客户端' })),
+          h(Card, null, h(SectionLabel, { as:'h3' }, '不可修改的属性'),
+            h(DescriptionList, { columns:1, items:[
+              { term:'Client ID', value: h('code', { className:'c-mono' }, c.id) },
+              { term:'应用类型', value: meta.label },
+              { term:'认证方式', value: meta.derived['认证方式'] },
+              { term:'创建于', value: c.created }] }),
+            h('p', { className:'c-note' },
+              'Client ID 与应用类型改了等于换一个客户端，会静默切断已接入方 —— 因此锁定。确实需要换类型时，请另建一个客户端让接入方切换过去，再停用这一个。')),
+        ),
+        h(Card, null, h(SectionLabel, { as:'h3' }, '运行状态'),
+          h(DescriptionList, { columns:2, items:[
+            { term:'环境', value: h(RadioGroup, { label:'运行环境', orientation:'horizontal',
+                value: ed.draft.env,
+                onChange: function (v) { ed.set('env', val(v)); },
+                /* DS 的 RadioGroup 只认逐选项 disabled，组级属性会被忽略 */
+                options:[{ value:'prod', label:'生产', disabled: !manage },
+                         { value:'dev', label:'开发', disabled: !manage }] }) },
+            { term:'启用', value: h(Checkbox, { label: ed.draft.status === 'active' ? '已启用' : '已停用',
+                checked: ed.draft.status === 'active', disabled: !manage,
+                hint:'停用后该站点的登录立即失败，已签发令牌不受影响。',
+                onChange: function (e) { ed.set('status', chk(e) ? 'active' : 'disabled'); } }) }] }),
+          h(CardSave, { ed:ed, keys:['env','status'], onSave:setReview, disabled: !manage,
+            hint: manage ? '环境与启停属风险项' : '你的角色不能编辑客户端' }))) : null,
+
+      tab === 'redirect' ? h('div', { className:'c-stack' },
+        c.type === 'm2m'
+          ? h(Card, null, h(EmptyState, { title:'服务间调用无回调地址',
+              description:'client_credentials 流程没有浏览器跳转，因此不需要也不接受回调地址。' }))
+          : h(Fragment, null,
+              h(Card, null, h(SectionLabel, { as:'h3' }, '回调地址'),
+                h('div', { style:{ marginTop:'var(--sp-3)' } },
+                  h(UriEditor, { label:'新增回调地址', type:c.type, value: ed.draft.redirects,
+                    disabled: !manage,
+                    onChange: function (v) { ed.set('redirects', v); },
+                    placeholder:'https://api.example.org/auth/callback',
+                    hint:'精确匹配：协议 / 主机 / 端口 / 路径必须完全一致。' })),
+                h(CardSave, { ed:ed, keys:['redirects'], onSave:setReview, disabled: !manage, hint:'回调地址属风险项' })),
+              h(Card, null, h(SectionLabel, { as:'h3' }, '登出回跳'),
+                h('p', { className:'c-note', style:{ marginTop:0 } },
+                  '用户在 Pass 登出后允许跳回的地址。留空则不允许回跳。'),
+                h(UriEditor, { label:'新增登出回跳地址', type:c.type, value: ed.draft.postLogout,
+                  disabled: !manage,
+                  onChange: function (v) { ed.set('postLogout', v); }, placeholder:'https://example.org/' }),
+                h(CardSave, { ed:ed, keys:['postLogout'], onSave:setReview, disabled: !manage, hint:'登出回跳属风险项' })))) : null,
+
+      tab === 'scopes' ? h('div', { className:'c-stack' },
+        h('div', { className:'c-grid-2' },
+          h(Card, null, h(SectionLabel, { as:'h3' }, '作用域'),
+            h('div', { className:'c-stack-sm', style:{ marginTop:'var(--sp-3)' } }, SCOPES.map(function (s) {
+              var on = ed.draft.scopes.indexOf(s.key) >= 0;
+              return h(Checkbox, { key:s.key, label:s.key, hint:s.desc, checked: s.locked ? true : on,
+                disabled: !manage || !!s.locked || (s.firstParty && !ed.draft.trusted),
+                onChange: function (e) { var v = chk(e);
+                  ed.set('scopes', v ? ed.draft.scopes.concat([s.key])
+                    : ed.draft.scopes.filter(function (x) { return x !== s.key; })); } });
+            })),
+            h('div', { className:'c-danger-zone' },
+              h(Checkbox, { label:'可信第一方 —— 跳过授权同意屏', checked: !!ed.draft.trusted, disabled: !manage,
+                hint:'仅超级管理员可设。取消勾选后，所有用户下次登录都会重新看到同意屏。',
+                onChange: function (e) {
+                  var on = chk(e);
+                  ed.set('trusted', on);
+                  /* 第一方专属 scope 在非第一方客户端上是非法组合，后端会拒。
+                     这里同步移除，而不是只把复选框置灰留着一个存不进去的值。 */
+                  if (!on) {
+                    ed.set('scopes', ed.draft.scopes.filter(function (x) {
+                      var m = SCOPES.filter(function (y) { return y.key === x; })[0];
+                      return !(m && m.firstParty);
+                    }));
+                  }
+                } })),
+            h(CardSave, { ed:ed, keys:['scopes','trusted'], onSave:setReview, disabled: !manage,
+              hint:'作用域与同意策略属风险项' })),
+          h(Card, null, h(SectionLabel, { as:'h3' }, '用户会看到什么'),
+            h('p', { className:'c-note', style:{ marginTop:0 } }, '随左侧改动实时变化。'),
+            h(ConsentPreview, { trusted: !!ed.draft.trusted, name: ed.draft.name,
+              clientUri: ed.draft.clientUri, logoUri: ed.draft.logoUri, scopes: ed.draft.scopes })))) : null,
+
+      tab === 'creds' ? h('div', { className:'c-stack' },
+        c.secretAge === null
+          ? h(Card, null, h(EmptyState, { title:'公开客户端没有密钥',
+              description:'前端代码人人可读，任何密钥都等于公开。这个客户端靠 PKCE（S256）保证「换码的人就是发起授权的人」。' }))
+          : h(Card, { accent:true }, h(SectionLabel, { as:'h3' }, '客户端密钥'),
+              h(DescriptionList, { columns:2, items:[
+                { term:'上次轮换', value: c.rotated || '从未' },
+                { term:'已使用', value: c.secretAge + ' 天' + (c.secretAge > 90 ? '（建议轮换）' : '') },
+                { term:'存储方式', value:'AES-GCM 可逆加密入库' },
+                { term:'重叠期', value:'轮换后旧密钥保留 24 小时' }] }),
+              newSecret
+                ? h('div', { className:'c-stack-sm', style:{ marginTop:'var(--sp-4)' } },
+                    h(Alert, { tone:'success' }, h('strong', null, '新密钥已生成。'),
+                      h('div', null, '旧密钥仍可用 24 小时 —— 接入方在重叠期内换过去即可，不会掉线。')),
+                    h(CopyField, { value:newSecret }),
+                    h('div', { className:'c-row' },
+                      h(Btn, { variant:'primary', size:'sm', onClick: function () { setNewSecret(null); } }, '我已保存'),
+                      h(Btn, { variant:'danger', size:'sm', onClick: function () {
+                        setDanger('revoke-old-secret'); } }, '立即吊销旧密钥')))
+                : (manage ? h('div', { style:{ marginTop:'var(--sp-4)' } },
+                    h(Btn, { variant:'secondary', size:'sm', onClick: function () { setRotating(true); } }, '轮换密钥'))
+                  : h('p', { className:'c-note', style:{ marginBottom:0 } }, '轮换密钥需要 pass.client:manage 权限。')))) : null,
+
+      tab === 'tokens' ? h('div', { className:'c-stack' },
+        h(Card, null, h(SectionLabel, { as:'h3' }, '令牌有效期'),
+          h('p', { className:'c-note', style:{ marginTop:0 } },
+            '按客户端单独设置。收紧访问令牌能缩短「封禁后仍能用」的窗口，但会增加刷新频率。'),
+          h('div', { className:'c-grid-2', style:{ marginTop:'var(--sp-3)' } },
+            h(Select, { label:'访问令牌有效期', value: String(ed.draft.tokenPolicy.accessTtl), disabled: !manage,
+              hint:'越短，封禁 / 撤权收敛越快。',
+              onChange: function (v) { setPolicy('accessTtl', Number(val(v))); },
+              options:[{ value:'300', label:'5 分钟' }, { value:'900', label:'15 分钟（默认）' },
+                       { value:'1800', label:'30 分钟' }, { value:'3600', label:'1 小时' }] }),
+            h(Select, { label:'刷新令牌有效期', value: String(ed.draft.tokenPolicy.refreshTtl), disabled: !manage || c.type === 'm2m',
+              hint: c.type === 'm2m' ? '服务间调用不签发刷新令牌。' : '用户多久不来就需要重新登录。',
+              onChange: function (v) { setPolicy('refreshTtl', Number(val(v))); },
+              options:[{ value:'604800', label:'7 天' }, { value:'1209600', label:'14 天' },
+                       { value:'2592000', label:'30 天（默认）' }, { value:'0', label:'不签发' }] })),
+          h('div', { className:'c-grid-2', style:{ marginTop:'var(--sp-3)' } },
+            h(Select, { label:'会话绝对上限', value: String(ed.draft.tokenPolicy.absoluteTtl),
+              disabled: !manage || c.type === 'm2m',
+              hint: c.type === 'm2m' ? '服务间调用不适用。'
+                : '不论期间是否活跃，超过这个时长一律要求重新登录 —— 挡住「靠不断刷新永不过期」。',
+              onChange: function (v) { setPolicy('absoluteTtl', Number(val(v))); },
+              options:[{ value:'2592000', label:'30 天' }, { value:'7776000', label:'90 天（默认）' },
+                       { value:'15552000', label:'180 天' }, { value:'0', label:'不设上限' }] })),
+          h('div', { style:{ marginTop:'var(--sp-3)' } },
+            h(Checkbox, { label:'刷新令牌一次性轮换', checked: !!ed.draft.tokenPolicy.rotate,
+              disabled: !manage || c.type === 'm2m',
+              hint:'旧令牌用后即废；复用会吊销整条令牌族。关闭它等于放弃盗用检测 —— 除非接入方确实无法保存新令牌，否则不要关。',
+              onChange: function (e) { setPolicy('rotate', chk(e)); } })),
+          h(CardSave, { ed:ed, keys:['tokenPolicy'], onSave:setReview, disabled: !manage, hint:'令牌策略属风险项' }))) : null,
+
+      tab === 'danger' ? h('div', { className:'c-stack' },
+        h(Card, { accent:true }, h(SectionLabel, { as:'h3' }, '停用与删除'),
+          h('p', { className:'c-note', style:{ marginTop:0 } },
+            '停用是可逆的：登录立即失败，配置保留。删除不可逆，且 Client ID 不再可用。'),
+          manage
+            ? h('div', { className:'c-row', style:{ marginTop:'var(--sp-3)' } },
+                h(Btn, { variant:'danger', size:'sm', onClick: function () { setDanger('disable'); } },
+                  c.status === 'active' ? '停用客户端' : '重新启用'),
+                h(Btn, { variant:'danger', size:'sm', onClick: function () { setDanger('delete'); } }, '删除客户端'))
+            : h('p', { className:'c-note', style:{ margin:0 } }, '需要 pass.client:manage 权限。'))) : null),
+
+    review ? h(DiffModal, { subject: c.name, changes: ed.changesFor(review),
+      onCancel: function () { setReview(null); },
+      onCommit: function () { var n = ed.changesFor(review).length; ed.commitKeys(review); setReview(null);
+        setNotice('已保存 ' + n + ' 项变更（原型内不落库）'); } }) : null,
+
+    rotating ? h(DangerDialog, { title:'轮换客户端密钥', subject: c.name,
+      message:'生成新密钥。旧密钥保留 24 小时重叠期，接入方在此期间完成替换即可 —— 无需停机。',
+      impact:'重叠期内新旧密钥同时有效；重叠期结束旧密钥自动失效。', needStepUp:true, confirmText:'轮换密钥',
+      onCancel: function () { setRotating(false); },
+      onConfirm: function () { setRotating(false); setNewSecret('cs_live_2Wq8nP4mR7vX1zA5bK9cE3jH6dL0sT'); } }) : null,
+
+    danger ? h(DangerDialog, {
+      title: danger === 'delete' ? '删除客户端'
+        : danger === 'revoke-old-secret' ? '立即吊销旧密钥'
+        : (c.status === 'active' ? '停用客户端' : '重新启用客户端'),
+      subject: c.name,
+      message: danger === 'delete' ? '删除后该客户端标识永久不可用，已接入方将立即无法登录。'
+        : danger === 'revoke-old-secret'
+        ? '放弃 24 小时重叠期，旧密钥立即失效。只有确认接入方已经换用新密钥时才这么做。'
+        : '停用后该站点的登录立即失败，配置与密钥保留。',
+      impact: danger === 'revoke-old-secret'
+        ? '若接入方尚未换用新密钥，其登录会当场中断，且无缓冲期。'
+        : c.users + ' 个用户在该站点的登录会受影响。',
+      needStepUp:true, needReason: danger === 'delete' || danger === 'revoke-old-secret',
+      onCancel: function () { setDanger(null); },
+      onConfirm: function () {
+        if (danger === 'revoke-old-secret') setNewSecret(null);
+        setDanger(null); setNotice('已执行（原型内不落库）'); } }) : null);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   审计
+   ═══════════════════════════════════════════════════════════════ */
+function AuditPage() {
+  var a = useState('all'), actor = a[0], setActor = a[1];
+  var q = useState(''), kw = q[0], setKw = q[1];
+  var o = useState(null), open = o[0], setOpen = o[1];
+  var pg = useState(1), page = pg[0], setPage = pg[1];
+  var ps = useState(10), size = ps[0], setSize = ps[1];
+  useEffect(function () { setPage(1); setOpen(null); }, [kw, actor, size]);
+
+  var matched = AUDIT.filter(function (e) {
+    if (actor !== 'all' && e.actorType !== actor) return false;
+    if (!kw) return true;
+    return (e.actor + ' ' + e.action + ' ' + resolveRes(e)).toLowerCase().indexOf(kw.toLowerCase()) >= 0; });
+  var rows = matched.slice((page - 1) * size, page * size);
+
+  var url = '/admin/audit?' + [actor !== 'all' ? 'actorType=' + actor : null,
+    kw ? 'q=' + encodeURIComponent(kw) : null, 'page=' + page, 'pageSize=' + size]
+    .filter(Boolean).join('&');
+
+  return h('div', { className:'c-stack' },
+    h('div', { className:'c-filters' },
+      h('div', { className:'c-filters-search' },
+        h(SearchField, { value:kw, onValueChange:setKw, placeholder:'按操作者、动作或目标名称搜索',
+          searchAriaLabel:'搜索审计日志', clearAriaLabel:'清空搜索' })),
+      h(ChipSet, { label:'按操作者类型筛选', value:actor, onChange:setActor, options:[
+        { value:'all', label:'全部' }, { value:'staff', label:'管理员' }, { value:'user', label:'用户本人' }] })),
+    h(UrlBar, { url:url }),
+    h('div', { className:'c-table-wrap' }, h('div', { className:'c-table-scroll' },
+      h('table', { className:'c-table' },
+        h('thead', null, h('tr', null,
+          h('th', { scope:'col' }, '时间'), h('th', { scope:'col' }, '操作者'),
+          h('th', { scope:'col' }, '动作'), h('th', { scope:'col', className:'c-col-1' }, '目标'),
+          h('th', { scope:'col', style:{ width:80 } }, ''))),
+        h('tbody', null, rows.map(function (e) {
+          return h(Fragment, { key:e.id },
+            h('tr', { className:'c-clickable', tabIndex:0, role:'button',
+              'aria-expanded': String(open === e.id), 'aria-controls': 'audit-detail-' + e.id,
+              onClick: function () { setOpen(open === e.id ? null : e.id); },
+              onKeyDown: function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); setOpen(open === e.id ? null : e.id); } } },
+              h('td', { 'data-label':'时间', 'data-primary':'1' }, h('span', { className:'c-num c-mono' }, e.at)),
+              h('td', { 'data-label':'操作者' }, h('span', null, e.actor, ' ',
+                h(Pill, { tone: e.actorType === 'staff' ? 'accent' : undefined },
+                  e.actorType === 'staff' ? '管理员' : '本人'))),
+              h('td', { 'data-label':'动作' }, h('div', { className:'c-cell-text' },
+                h('span', null, ACTION_LABEL[e.action] || e.action),
+                h('span', { className:'c-cell-sub c-mono' }, e.action))),
+              h('td', { 'data-label':'目标', className:'c-col-1' }, h('span', { className:'c-num' }, resolveRes(e))),
+              h('td', { 'data-label':'' }, h('span', { className:'c-num' }, open === e.id ? '收起' : '展开'))),
+            open === e.id ? h('tr', { id:'audit-detail-' + e.id }, h('td', { colSpan:5, 'data-label':'',
+              style:{ padding:'var(--sp-4)', background:'var(--hover-bg-mix, var(--hover-bg))' } },
+              h('div', { className:'c-grid-2' },
+                h('div', null, h(SectionLabel, { as:'h4' }, '变更前'),
+                  h('pre', { className:'c-code' }, e.before ? JSON.stringify(e.before, null, 2) : '—')),
+                h('div', null, h(SectionLabel, { as:'h4' }, '变更后'),
+                  h('pre', { className:'c-code' }, e.after ? JSON.stringify(e.after, null, 2) : '—'))))) : null);
+        }))))),
+    h(Pager, { total: matched.length, page:page, size:size,
+      onPage:setPage, onSize:setSize, ariaLabel:'审计日志分页' }),
+    h('p', { className:'c-note', style:{ margin:0 } },
+      '审计链为 append-only，数据库触发器拒绝任何 UPDATE / DELETE。'));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   员工与权限（IAM 的只读投影）
+   ═══════════════════════════════════════════════════════════════ */
+function StaffPage() {
+  return h('div', { className:'c-stack' },
+    h(Alert, { tone:'info' },
+      h('strong', null, '这一页是只读的。'),
+      h('div', null, '管理权限的唯一权威是 IAM 的 tc_main 应用 —— Pass 后台不提供任何「授予/撤销权限」的入口，改权限请回 IAM。这里回答的是另一个问题：现在谁有权限、权限从哪儿来、快照什么时候同步的。')),
+    h(Table, { columns:[
+      { key:'n', label:'员工', primary:true, render: function (s) {
+        return h('div', { className:'c-cell-primary' }, h(Avatar, { name:s.name, size:30, label:s.name }),
+          h('span', { className:'c-cell-name' }, s.name)); } },
+      { key:'r', label:'角色', render: function (s) { return h(Pill, { tone:'accent' }, s.role); } },
+      { key:'f', label:'权限来源', hideAt:1, render: function (s) { return h('span', { className:'c-num' }, s.from); } },
+      { key:'se', label:'活跃会话', align:'right', hideAt:2, render: function (s) {
+        return h('span', { className:'c-num' }, s.sessions); } },
+      { key:'l', label:'最后活动', render: function (s) { return h('span', { className:'c-num' }, s.last); } }],
+      rows:STAFF, rowKey: function (s) { return s.id; } }),
+    h(Card, null, h(SectionLabel, { as:'h3' }, '工作人员账户受保护'),
+      h('p', { style:{ fontSize:14, color:'var(--text-body)', marginTop:'var(--sp-2)' } },
+        '上表里的每一个人，其 Pass 账户都不能被其他工作人员操作 —— 改资料、改密码、动二次验证、暂停、封禁、注销，一律拒绝。要处理某个工作人员的账户，先在 IAM 的 tc_main 里把他的权限撤空，他才会退回成普通用户。'),
+      h('p', { className:'c-note', style:{ marginBottom:0 } },
+        '判定是实时向 IAM 查询的，不吃快照；IAM 不可达时按「仍是员工」拒绝 —— 证明不了不是员工，就不能动。')),
+    h(Card, null, h(SectionLabel, { as:'h3' }, '权限什么时候生效'),
+      h('p', { style:{ fontSize:14, color:'var(--text-body)', marginTop:'var(--sp-2)' } },
+        '每次登录后台都会重新向 IAM 拉一次权限（机器接口 M2M），不吃旧缓存。所以在 IAM 里改完权限，让本人重新登录一次即可生效 —— 不存在「改了半天不知道什么时候才认」的情况。'),
+      h('p', { className:'c-note', style:{ marginBottom:0 } },
+        '危险操作执行前还会再向 IAM 实时复查一次：即使人已经登录着，撤权也能立刻收敛。')));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   安全（策略 + 签名密钥）
+   ═══════════════════════════════════════════════════════════════ */
+var POLICY_BASE = { mfaStaff:true, emailGate:true, lockAfter:'5' };
+var POLICY_FIELDS = [
+  { key:'mfaStaff', label:'管理员必须启用二次验证' },
+  { key:'emailGate', label:'邮箱未验证禁止登录' },
+  { key:'lockAfter', label:'密码错误锁定阈值', fmt: function (v) { return v + ' 次'; } }
+];
+
+function SecurityPage(props) {
+  var rot = useState(false), rotating = rot[0], setRotating = rot[1];
+  var n = useState(null), notice = n[0], setNotice = n[1];
+  var rv = useState(null), review = rv[0], setReview = rv[1];
+  var ed = useEdit(POLICY_BASE, POLICY_FIELDS);
+  var canPolicy = can(props.role, 'pass.policy:manage');
+
+  return h('div', { className:'c-stack' },
+    notice ? h(Alert, { tone:'success' }, notice) : null,
+    h(Card, null, h(SectionLabel, { as:'h3' }, '账户策略'),
+      h('div', { className:'c-stack-sm', style:{ marginTop:'var(--sp-3)' } },
+        h(Checkbox, { label:'持有管理权限的账户必须启用二次验证', checked: !!ed.draft.mfaStaff, disabled: !canPolicy,
+          hint:'关闭后，仅凭密码即可执行封禁、删号、轮换密钥等操作。',
+          onChange: function (e) { ed.set('mfaStaff', chk(e)); } }),
+        h(Checkbox, { label:'邮箱未验证则禁止登录', checked: !!ed.draft.emailGate, disabled: !canPolicy,
+          hint:'作用于全部登录方式，包括第三方绑定登录。',
+          onChange: function (e) { ed.set('emailGate', chk(e)); } }),
+        h(Select, { label:'连续密码错误多少次后锁定', value: ed.draft.lockAfter, disabled: !canPolicy,
+          onChange: function (x) { ed.set('lockAfter', val(x)); },
+          hint:'锁定 30 分钟；通行密钥登录不受此限制。',
+          options:[{ value:'3', label:'3 次' }, { value:'5', label:'5 次（默认）' }, { value:'10', label:'10 次' }] })),
+      h(CardSave, { ed:ed, keys:['mfaStaff','emailGate','lockAfter'], onSave:setReview, disabled: !canPolicy,
+        hint: canPolicy ? '安全策略属风险项' : '需要 pass.policy:manage 权限' })),
+
+    review ? h(DiffModal, { subject:'账户策略', changes: ed.changesFor(review),
+      onCancel: function () { setReview(null); },
+      onCommit: function () { ed.commitKeys(review); setReview(null);
+        setNotice('账户策略已保存（原型内不落库）'); } }) : null,
+    h(Card, { accent:true }, h(SectionLabel, { as:'h3' }, '签名密钥'),
+      h('p', { className:'c-note', style:{ marginTop:0 } },
+        '轮换会同时发布 current 与 previous 两把公钥，已签发的令牌在宽限期内仍可验签。这是全站最高危操作。'),
+      h(Table, { columns:[
+        { key:'k', label:'kid', primary:true, render: function (k) { return h('code', { className:'c-mono' }, k.kid); } },
+        { key:'s', label:'状态', render: function (k) {
+          return h(Badge, { size:'sm', tone: k.status === 'current' ? 'green' : k.status === 'previous' ? 'amber' : 'muted',
+            label: k.status === 'current' ? '签发中' : k.status === 'previous' ? '仅验签' : '已停用' }); } },
+        { key:'a', label:'算法', hideAt:2, render: function (k) { return h('span', { className:'c-num' }, k.alg); } },
+        { key:'c', label:'启用于', render: function (k) { return h('span', { className:'c-num' }, k.created); } },
+        { key:'r', label:'轮换于', hideAt:1, render: function (k) { return h('span', { className:'c-num' }, k.rotated || '—'); } }],
+        rows:KEYS, rowKey: function (k) { return k.kid; } }),
+      can(props.role, 'pass.key:rotate')
+        ? h('div', { style:{ marginTop:'var(--sp-4)' } },
+            h(Btn, { variant:'danger', size:'sm', onClick: function () { setRotating(true); } }, '轮换签名密钥'))
+        : h('p', { className:'c-note', style:{ marginBottom:0 } }, '轮换签名密钥需要 pass.key:rotate 权限。')),
+    rotating ? h(DangerDialog, { title:'轮换签名密钥', subject:'kid_2026_07 → 新密钥',
+      message:'生成新的 RS256 密钥对并立即用于签发。当前密钥降级为「仅验签」，上一把 kid_2026_01 停用。',
+      impact:'所有业务站需在缓存的 JWKS 过期后刷新；接入方遇到未知 kid 时应自动重取 —— 未正确实现的接入方会短暂验签失败。',
+      needStepUp:true, needReason:true, confirmText:'轮换密钥',
+      onCancel: function () { setRotating(false); },
+      onConfirm: function () { setRotating(false); setNotice('已轮换签名密钥（原型内不落库）'); } }) : null);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   场景
+   ═══════════════════════════════════════════════════════════════ */
+function LoginScene(props) {
+  return h('div', { className:'c-scene' }, h('div', { className:'c-scene-card' },
+    h(Card, null,
+      h('div', { className:'c-row', style:{ gap:'var(--sp-2)', marginBottom:'var(--sp-4)' } },
+        h('span', { className:'c-brand-mark', style:{ width:30, height:30 } }, 'P'),
+        h('div', { className:'c-brand-text' },
+          h('span', { className:'c-brand-name', style:{ fontSize:15 } }, 'Pass 管理控制台'),
+          h('span', { className:'c-brand-sub' }, 'transcircle.org/admin'))),
+      h('p', { style:{ color:'var(--text-body)', fontSize:14, marginTop:0 } },
+        '用你的 TransCircle 账户登录。管理权限来自 IAM，登录后自动生效。'),
+      h('div', { className:'c-stack-sm' },
+        h(TextField, { label:'邮箱或用户名', value:'mycbxzd', onChange: function () {} }),
+        h(TextField, { label:'密码', type:'password', value:'password-here', onChange: function () {} }),
+        h(Btn, { variant:'primary', fullWidth:true, onClick: props.onEnter }, '登录')),
+      h('p', { className:'c-note', style:{ marginTop:'var(--sp-4)', marginBottom:0 } },
+        '现状是：管理后台没有自己的入口，/admin/login 只是一句 Navigate，真正的入口是消费者登录页最底下一行小字。这里把它还原成一个真正的页面。'))));
+}
+
+function NoAccessScene(props) {
+  return h('div', { className:'c-scene' }, h('div', { className:'c-scene-card' },
+    h(Card, null,
+      h(EmptyState, { icon: h(IconShield, null), title:'你的账户没有 Pass 管理权限',
+        description:'登录成功了，但你在 IAM 的 tc_main 应用下没有被授予任何角色。请联系团队主或后端组长在 IAM 里配置，配置后重新登录即可生效。',
+        action: h(Btn, { variant:'secondary', onClick: props.onBack }, '返回') }),
+      h('p', { className:'c-note', style:{ marginTop:'var(--sp-4)', marginBottom:0 } },
+        '说清楚三件事：权限在哪儿配、找谁配、配完要重新登录。现状只有一句「访问被拒绝」。'))));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   外壳
+   ═══════════════════════════════════════════════════════════════ */
+function App() {
+  var sc = useState('console'), scene = sc[0], setScene = sc[1];
+  var r = useState('pass-admin'), role = r[0], setRole = r[1];
+  var v = useState({ name:'overview' }), view = v[0], setView = v[1];
+  var lo = useState(false), logout = lo[0], setLogout = lo[1];
+  var th = useState('light'), theme = th[0], setTheme = th[1];
+  var de = useState('comfortable'), dens = de[0], setDens = de[1];
+  var rl = useState('full'), rail = rl[0], setRail = rl[1];
+  /* IAM 可达性开关：用来演示 fail-closed —— 切成「不可达」后，所有绑定了统一身份的账户
+     都会被按工作人员锁定，而不是因为查不到权限就放开。 */
+  var iu = useState('up'), iamUp = iu[0], setIamUp = iu[1];
+  IAM_REACHABLE.value = iamUp === 'up';
+  var nt = useState(null), gnotice = nt[0], setGnotice = nt[1];
+
+  useEffect(function () { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
+  useEffect(function () { document.documentElement.setAttribute('data-density', dens); }, [dens]);
+
+  /* 左栏按视口宽度自动收成图标条，不用手动切 */
+  useEffect(function () {
+    /* 阈值选 1280 是算出来的，不是拍的：左栏 232→60 会让工作区骤增 172px。
+       若折叠点落在容器断点（1040/860/700）附近，就会出现「视口变窄、表格列反而变多」。
+       1280 时容器 = 1048（>1040），折叠后 = 1220，两侧都在同一档，单调。 */
+    function onResize() { setRail(window.innerWidth < 1280 ? 'mini' : 'full'); }
+    onResize();
+    window.addEventListener('resize', onResize);
+    return function () { window.removeEventListener('resize', onResize); };
+  }, []);
+
+  var devbar = h(DevBar, { scene:scene, setScene:setScene, role:role, setRole:setRole,
+    theme:theme, setTheme:setTheme, dens:dens, setDens:setDens,
+    iamUp:iamUp, setIamUp:setIamUp });
+
+  /* 导航不带计数：手机端放不下，带了就得两套颗粒度。数量归概览。 */
+  var NAV = [
+    { key:'overview', label:'概览', icon:h(IconHome, null), perm:'pass.user:read' },
+    { key:'users', label:'用户', icon:h(IconUsers, null), perm:'pass.user:read' },
+    { key:'clients', label:'客户端', icon:h(IconApps, null), perm:'pass.client:read' },
+    { key:'audit', label:'审计', icon:h(IconAudit, null), perm:'pass.audit:read' },
+    { key:'staff', label:'员工与权限', icon:h(IconStaff, null), perm:'pass.audit:read' },
+    { key:'security', label:'安全', icon:h(IconShield, null), perm:'pass.policy:manage' }
+  ].filter(function (n) { return can(role, n.perm); });
+
+  useEffect(function () {
+    var vis = NAV.map(function (n) { return n.key; });
+    var root = view.name.split('-')[0];
+    var ok = vis.indexOf(view.name) >= 0 || vis.indexOf(root) >= 0 ||
+      (view.name.indexOf('client') === 0 && vis.indexOf('clients') >= 0) ||
+      (view.name.indexOf('user') === 0 && vis.indexOf('users') >= 0);
+    if (!ok) setView({ name: vis[0] || 'users' });
+  }, [role]);
+
+  if (scene === 'login') return h(Fragment, null,
+    h(LoginScene, { onEnter: function () { setScene('console'); } }), devbar);
+  if (scene === 'noaccess') return h(Fragment, null,
+    h(NoAccessScene, { onBack: function () { setScene('login'); } }), devbar);
+  if (scene === 'consent') return h(Fragment, null, h(ConsentScene, null), devbar);
+
+  var head, body;
+  if (view.name === 'overview') {
+    head = { title:'概览', sub:'系统当前状态' };
+    body = h(OverviewPage, { go:setView });
+  } else if (view.name === 'users') {
+    head = { title:'用户', sub:'Pass 的 C 端账户 —— 业务站签发令牌的身份主体' };
+    body = h(UsersPage, { role:role, initialStatus: view.status,
+      onOpen: function (u) { setView({ name:'user-detail', user:u }); } });
+  } else if (view.name === 'user-detail') {
+    head = { title: view.user.name, back: function () { setView({ name:'users' }); }, backLabel:'用户' };
+    body = h(UserDetail, { user: view.user, role:role });
+  } else if (view.name === 'clients') {
+    head = { title:'客户端', sub:'接入 Pass 单点登录的业务站' };
+    body = h(ClientsPage, { role:role, onOpen: function (c) { setView({ name:'client-detail', client:c }); },
+      onNew: function () { setView({ name:'client-new' }); } });
+  } else if (view.name === 'client-new') {
+    head = { title:'接入新站点', back: function () { setView({ name:'clients' }); }, backLabel:'客户端' };
+    body = h(ClientWizard, { onCancel: function () { setView({ name:'clients' }); },
+      onDone: function () { setView({ name:'clients' }); } });
+  } else if (view.name === 'client-detail') {
+    head = { title: view.client.name, back: function () { setView({ name:'clients' }); }, backLabel:'客户端' };
+    body = h(ClientDetail, { client: view.client, role:role, onNew: function () { setView({ name:'client-new' }); } });
+  } else if (view.name === 'audit') {
+    head = { title:'审计', sub:'跨两个平面的 append-only 操作链' };
+    body = h(AuditPage, null);
+  } else if (view.name === 'staff') {
+    head = { title:'员工与权限', sub:'IAM tc_main 的只读投影' };
+    body = h(StaffPage, null);
+  } else {
+    head = { title:'安全', sub:'影响全生态的账户策略与签名密钥' };
+    body = h(SecurityPage, { role:role });
+  }
+
+  return h('div', { className:'c-shell', 'data-rail':rail },
+    h('nav', { className:'c-rail', 'aria-label':'控制台导航' },
+      h('div', { className:'c-brand' },
+        h('span', { className:'c-brand-mark' }, 'P'),
+        h('span', { className:'c-brand-text' },
+          h('span', { className:'c-brand-name' }, 'Pass'),
+          h('span', { className:'c-brand-sub' }, '管理控制台'))),
+      h('div', { className:'c-nav' },
+        h('div', { className:'c-nav-group' }, '管理'),
+        NAV.map(function (n) {
+          var active = view.name === n.key ||
+            (n.key === 'users' && view.name === 'user-detail') ||
+            (n.key === 'clients' && (view.name === 'client-detail' || view.name === 'client-new'));
+          return h('button', { key:n.key, className:'c-nav-item', title:n.label,
+            'aria-current': active ? 'page' : undefined,
+            onClick: function () { setView({ name:n.key }); } },
+            h('span', { className:'c-nav-icon' }, n.icon),
+            h('span', null, n.label));
+        })),
+      h('div', { className:'c-rail-foot' },
+        h('button', { className:'c-me', onClick: function () { setLogout(true); }, title:'退出' },
+          h(Avatar, { name:'翅膀', size:30, label:'翅膀' }),
+          h('span', { className:'c-me-text' },
+            h('span', { className:'c-me-name' }, '翅膀'),
+            h('span', { className:'c-me-role' }, ROLES[role].label))))),
+
+    h('main', { className:'c-main' },
+      h('header', { className:'c-topbar' },
+        h('div', { className:'c-crumb' },
+          head.back ? h(Btn, { variant:'ghost', size:'sm', iconLeft:h(IconBack, null), onClick: head.back }, head.backLabel) : null,
+          h('div', null,
+            h('h1', { className:'c-title' }, head.title),
+            head.sub ? h('div', { className:'c-subtitle' }, head.sub) : null))),
+      h('div', { className:'c-body' },
+        h('div', { className:'c-wide' },
+          gnotice ? h('div', { style:{ marginBottom:'var(--sp-4)' } }, h(Alert, { tone:'success' }, gnotice)) : null,
+          body))),
+
+    logout ? h(ConfirmDialog, { open:true, title:'退出登录',
+      message:'管理控制台复用你自己的账户会话 —— 没有单独的「管理员会话」可退。退出即登出整个账户。',
+      confirmText:'退出登录', cancelText:'取消', tone:'danger',
+      onCancel: function () { setLogout(false); },
+      onConfirm: function () { setLogout(false); setScene('login'); } }) : null,
+
+    devbar);
+}
+
+function DevBar(props) {
+  function sel(label, value, onChange, options) {
+    return h(Fragment, null,
+      h('span', { className:'c-devbar-label' }, label),
+      h('select', { value:value, onChange: function (e) { onChange(e.target.value); }, 'aria-label':label },
+        options.map(function (o) { return h('option', { key:o[0], value:o[0] }, o[1]); })));
+  }
+  return h('div', { className:'c-devbar' },
+    sel('主题', props.theme, props.setTheme, [['light','浅色'],['dark','深色']]),
+    sel('密度', props.dens, props.setDens, [['comfortable','宽松'],['compact','紧凑']]),
+    sel('身份', props.role, props.setRole, [['pass-admin','管理员'],['pass-ops','站点运营'],['pass-support','客服支持']]),
+    sel('场景', props.scene, props.setScene,
+      [['console','控制台'],['login','登录页'],['noaccess','无权限'],['consent','授权中间页']]),
+    sel('IAM', props.iamUp, props.setIamUp, [['up','可达'],['down','不可达']]));
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(h(Provider, null, h(App, null)));
+})();
+</script>
+</body>
+</html>

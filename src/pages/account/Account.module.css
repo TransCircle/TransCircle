@@ -113,6 +113,46 @@
   gap: 0.6rem;
 }
 
+/* ── 顶部强提示(强制改密):说明与就地操作按钮同框,窄屏折行后按钮满宽。 ── */
+.noticeBody {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  flex-wrap: wrap;
+}
+.noticeText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+.noticeTitle {
+  font-weight: 700;
+}
+@media (max-width: 560px) {
+  .noticeBody > :not(.noticeText) {
+    width: 100%;
+  }
+}
+
+/* ── 后果清单(弹窗内):把「开启后会发生什么」逐条列清,而不是一段糊在一起的话。 ── */
+.bulletList {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-body);
+}
+.bulletStrong {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
 @media (max-width: 560px) {
   .wrap {
     padding: 1.5rem 1rem 3rem;
@@ -238,6 +278,16 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 行内补充说明(如「统一身份绑定不可自行解除」):
+   替代一个必然失败的按钮 —— 灰按钮只会让人反复去点。 */
+.rowNote {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-muted);
   overflow-wrap: anywhere;
 }
 
