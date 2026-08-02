@@ -261,6 +261,9 @@ async function handle401(
       headers.set("Authorization", `Bearer ${newToken}`);
       return fetch(url, { ...init, headers });
     }
+    // 远端在这里按平面分叉（clearAdminAuth + pass:admin-expired），那是旧的双平面模型。
+    // 现在管理端复用同一条用户会话，没有独立的管理员令牌可清，
+    // 续期失败就是「这条会话没了」，一种处理即可。
   }
   _userToken = null;
   dispatchAuthEvent("pass:session-expired");

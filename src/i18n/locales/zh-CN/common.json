@@ -141,7 +141,8 @@
     "captchaFailed": "人机验证失败，请重试",
     "mfaIamPrompt": "此账户的两步验证已交给「TransCircle 统一身份」接管，请前往完成验证。",
     "mfaIamGo": "前往统一身份验证",
-    "iam": "统一身份登录"
+    "iam": "统一身份登录",
+    "sessionExpired": "会话已结束，请重新登录。"
   },
   "register": {
     "title": "创建账户",

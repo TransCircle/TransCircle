@@ -36,7 +36,7 @@ const PencilIcon = () => (
  */
 const AccountPage = () => {
   const { t } = useTranslation();
-  const { user, loading } = useSession();
+  const { user, loading, sessionExpired } = useSession();
   const location = useLocation();
   const [avatarOpen, setAvatarOpen] = useState(false);
   /** 递增即让「登录密码」分区打开修改弹窗（供强制改密提示调用）。 */
@@ -48,7 +48,9 @@ const AccountPage = () => {
     return <StatusScreen kind="loading" title={t("account.verifying")} />;
   }
   if (!user) {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    const params = new URLSearchParams({ redirect: location.pathname });
+    if (sessionExpired) params.set("reason", "session_expired");
+    return <Navigate to={`/login?${params.toString()}`} replace />;
   }
 
   const displayName = user.displayName || user.username;

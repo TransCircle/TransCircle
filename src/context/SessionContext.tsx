@@ -22,6 +22,9 @@ import type { MeProfile } from "../api/types";
 interface SessionContextValue {
   user: MeProfile | null;
   loading: boolean;
+  /** 会话因失效被清除；受保护页面据此给登录页一次性反馈。 */
+  sessionExpired: boolean;
+  clearSessionExpired: () => void;
   /** 重新拉取 /v1/me（登录/资料更新后调用）。返回最新用户或 null。 */
   refresh: () => Promise<MeProfile | null>;
   /** 乐观更新本地用户。 */
@@ -35,6 +38,8 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<MeProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const clearSessionExpired = useCallback(() => setSessionExpired(false), []);
 
   const refresh = useCallback(async (): Promise<MeProfile | null> => {
     const res = await api.get<MeProfile>("/v1/me");
@@ -86,13 +91,18 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
 
   // 监听 401 自动失效（refresh 兑换失败）。
   useEffect(() => {
-    const onExpired = () => setUser(null);
+    const onExpired = () => {
+      setUser(null);
+      setSessionExpired(true);
+    };
     window.addEventListener("pass:session-expired", onExpired);
     return () => window.removeEventListener("pass:session-expired", onExpired);
   }, []);
 
   return (
-    <SessionContext.Provider value={{ user, loading, refresh, setUser, logout }}>
+    <SessionContext.Provider
+      value={{ user, loading, sessionExpired, clearSessionExpired, refresh, setUser, logout }}
+    >
       {children}
     </SessionContext.Provider>
   );

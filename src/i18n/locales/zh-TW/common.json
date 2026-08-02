@@ -141,7 +141,8 @@
     "captchaFailed": "人機驗證失敗，請重試",
     "mfaIamPrompt": "此賬戶的兩步驗證已交給「TransCircle 統一身份」接管，請前往完成驗證。",
     "mfaIamGo": "前往統一身份驗證",
-    "iam": "統一身分登入"
+    "iam": "統一身分登入",
+    "sessionExpired": "工作階段已結束，請重新登入。"
   },
   "register": {
     "title": "建立賬戶",

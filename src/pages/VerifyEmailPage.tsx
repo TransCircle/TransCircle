@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { usePageTitle } from "../utils/usePageTitle";
+import { readOidcInteraction } from "../utils/oidcInteraction";
 import {
   CenteredCard,
   PageHeader,
@@ -25,6 +26,8 @@ const VerifyEmailPage = () => {
   const { t } = useTranslation();
   const { user, refresh } = useSession();
   const [params] = useSearchParams();
+  const oidcUid = readOidcInteraction(params.get("oidc"), true);
+  const [resumeOidc, setResumeOidc] = useState<string | null>(oidcUid);
   // 捕获一次性令牌后立即从地址栏抹去，避免经浏览器历史 / Referer 泄露。
   const [token] = useState(() => params.get("token") ?? "");
   useEffect(() => {
@@ -61,12 +64,18 @@ const VerifyEmailPage = () => {
     if (!token || ran.current) return;
     ran.current = true;
     void (async () => {
-      const res = await api.post("/v1/auth/email/verify", { token }, { noAuth: true });
+      const res = await api.post<{ oidcInteraction?: string }>(
+        "/v1/auth/email/verify",
+        { token },
+        { noAuth: true },
+      );
       if (!res.ok) {
         setFailMsg(res.error.message);
         setPhase("failed");
         return;
       }
+      const nextOidc = readOidcInteraction(res.data?.oidcInteraction, true);
+      if (nextOidc) setResumeOidc(nextOidc);
       // 若当前已登录，刷新资料以更新「已验证」徽标。
       void refresh();
       setPhase("success");
@@ -79,7 +88,9 @@ const VerifyEmailPage = () => {
     setResendError(null);
     setResendBusy(true);
     try {
-      const res = await api.post("/v1/auth/email/resend", { email }, { noAuth: true });
+      const body: Record<string, unknown> = { email };
+      if (resumeOidc) body.oidcInteraction = resumeOidc;
+      const res = await api.post("/v1/auth/email/resend", body, { noAuth: true });
       if (!res.ok) {
         setResendError(res.error.message);
         return;
@@ -103,7 +114,10 @@ const VerifyEmailPage = () => {
         actions={
           user
             ? [{ label: t("verify.toAccount"), to: "/account" }]
-            : [{ label: t("nav.login"), to: "/login" }]
+            : [{
+                label: t("nav.login"),
+                to: resumeOidc ? `/login?oidc=${encodeURIComponent(resumeOidc)}` : "/login",
+              }]
         }
       />
     );
@@ -115,7 +129,10 @@ const VerifyEmailPage = () => {
         kind="success"
         title={t("verify.resendDoneTitle")}
         description={t("verify.resendDoneDesc")}
-        actions={[{ label: t("nav.login"), to: "/login" }]}
+        actions={[{
+          label: t("nav.login"),
+          to: resumeOidc ? `/login?oidc=${encodeURIComponent(resumeOidc)}` : "/login",
+        }]}
       />
     );
   }
@@ -152,7 +169,10 @@ const VerifyEmailPage = () => {
         </Button>
       </form>
       <p className={authStyles.aside}>
-        <Link to="/login" className={authStyles.link}>
+        <Link
+          to={resumeOidc ? `/login?oidc=${encodeURIComponent(resumeOidc)}` : "/login"}
+          className={authStyles.link}
+        >
           {t("common.back")}
         </Link>
       </p>
