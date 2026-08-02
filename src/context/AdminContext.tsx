@@ -81,28 +81,45 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     let alive = true;
     setState("loading");
     setError(null);
-    void (async () => {
+
+    // 登录成功后紧跟着的这次探测，最容易撞上会话/令牌刚建立还没完全稳定的窗口
+    // （典型例子：refresh 竞态、后端瞬态 500/502/429）。这类请求失败会被判成 "error"
+    // 或者错误地表现成一次性的 403——不像 SessionContext 的静默续期那样有重试，
+    // 这里一旦落地就再也不会自己重跑，导航栏的入口从此消失，只能手动刷新页面才会
+    // 重新挂载 Provider、再探测一次——这正是"登录了却看不到管理后台入口，手动开
+    // /admin 才行"的成因。跟 SessionContext 一样：失败后等 1 秒重试一次，只重试
+    // 真正的请求失败（网络/5xx），不重试后端已经明确给出的 no-access / needs-mfa。
+    const attemptFetch = async (): Promise<boolean> => {
       const res = await api.get<AdminMe>("/v1/admin/me", { plane: "user" });
-      if (!alive) return;
+      if (!alive) return true;
       if (res.ok) {
         setMe(res.data);
         setState("ready");
-        return;
+        return true;
       }
       setMe(null);
       // NO_ADMIN_ACCESS 是「登录成功但没被授权」，与请求失败是两回事：
       // 前者要给说人话的空态，后者要给重试按钮。混成一个会让人以为权限没配好。
       if (res.error.code === "STAFF_MFA_REQUIRED") {
         setState("needs-mfa");
-        return;
+        return true;
       }
       if (res.status === 403 || res.error.code === "NO_ADMIN_ACCESS") {
         setState("no-access");
-        return;
+        return true;
       }
       setError(res.error.message);
       setState("error");
+      return false;
+    };
+
+    void (async () => {
+      const settled = await attemptFetch();
+      if (settled || !alive) return;
+      await new Promise((r) => setTimeout(r, 1000));
+      if (alive) await attemptFetch();
     })();
+
     return () => {
       alive = false;
     };
