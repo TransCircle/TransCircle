@@ -58,6 +58,13 @@
   font-weight: 800;
   font-size: 0.8rem;
   letter-spacing: -0.02em;
+  overflow: hidden;
+}
+/* 站点 favicon 图标：铺满圆角方块，不留出色块背景——图标本身已经是完整的品牌方图。 */
+.brandMark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .brandText {
   display: flex;

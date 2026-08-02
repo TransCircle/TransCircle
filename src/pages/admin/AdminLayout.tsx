@@ -6,6 +6,7 @@ import { Avatar } from "../../components/Avatar";
 import { cx } from "../../components/admin/cx";
 import { AdminButton as Button, Card, EmptyState, StatusScreen } from "../../components/ui";
 import { usePageTitle } from "../../utils/usePageTitle";
+import { useFaviconHref } from "../../utils/useFaviconHref";
 import { PERM } from "./shared/constants";
 import { AdminHeaderContext, type AdminHeaderState } from "./shared/header";
 import {
@@ -61,6 +62,7 @@ const AdminLayout = () => {
   const { state, me, error, hasPermission, reload } = useAdmin();
   const [header, setHeader] = useState<AdminHeaderState>({ title: t("admin.title") });
   const [rail, setRail] = useState<"full" | "mini">("full");
+  const faviconHref = useFaviconHref();
 
   usePageTitle(state === "ready" ? `${header.title} · ${t("admin.title")}` : t("admin.title"));
 
@@ -184,7 +186,7 @@ const AdminLayout = () => {
       <nav className={styles.rail} aria-label={t("admin.title")}>
         <div className={styles.brand}>
           <span className={styles.brandMark} aria-hidden="true">
-            P
+            {faviconHref ? <img src={faviconHref} alt="" width={28} height={28} /> : "P"}
           </span>
           <span className={styles.brandText}>
             <span className={styles.brandName}>{t("admin.brand")}</span>
