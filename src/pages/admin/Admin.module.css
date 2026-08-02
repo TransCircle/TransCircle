@@ -29,7 +29,12 @@
   padding: 20px 12px 12px;
   position: sticky;
   top: var(--app-nav-height);
-  height: calc(100dvh - var(--app-nav-height));
+  /* max-height 而非 height：固定 height 会把这个 grid 项撑到视口高度，即使内容（导航项）
+     远矮于此，.shell 所在的网格行也会被迫同样高，把页脚推到一屏之外——短内容的管理页
+     几乎摸不到页脚，跟站内其它页面「内容多高页脚就多高」的行为不一致。改 max-height 后
+     侧栏只在导航项本身超出视口时才需要内部滚动，其余情况随内容收缩，页脚随之回到正常
+     位置；sticky 定位不依赖显式 height，这条行为不受影响。 */
+  max-height: calc(100dvh - var(--app-nav-height));
   overflow-y: auto;
   overflow-x: hidden;
 }
