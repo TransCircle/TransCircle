@@ -42,13 +42,3 @@ export function checkRedirect(raw: string, type: ClientApplicationType): UriChec
   if (url.pathname === "/") return { level: "warn", reason: "rootPath" };
   return { level: "ok", reason: "usable" };
 }
-
-/** 取主机名用于「将跳转到 …」提示；非法地址返回空串而不是抛。 */
-export function hostOf(raw: string | null | undefined): string {
-  if (!raw) return "";
-  try {
-    return new URL(raw).host;
-  } catch {
-    return "";
-  }
-}

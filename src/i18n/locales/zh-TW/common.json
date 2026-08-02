@@ -200,23 +200,27 @@
     "providersFailed": "無法確認該登入方式的綁定規則，暫時不能提交註冊。請重試。"
   },
   "consent": {
-    "title": "授權請求",
-    "subtitle": "{{client}} 請求訪問您的 TransCircle 賬戶",
+    "pageTitle": "授權請求",
+    "cardTitle": "{{app}} 想要訪問你的 TransCircle 賬戶",
     "allow": "同意授權",
     "deny": "拒絕",
     "loading": "載入授權資訊…",
     "loadFailed": "無法載入授權資訊",
-    "scope": {
-      "openid": "確認您的身份",
-      "profile": "讀取基礎資料（暱稱、頭像）",
-      "email": "讀取您的郵箱地址",
-      "offline_access": "在您離線時保持登入",
-      "pass.profile.full": "讀取完整賬戶資料"
+    "asUser": "以 {{name}} 的身份繼續",
+    "willAllow": "將允許它",
+    "scopeHuman": {
+      "profile": "讀取你的暱稱、使用者名稱和頭像",
+      "email": "讀取你的郵箱地址及驗證狀態",
+      "offline_access": "在你離開後保持登入，不必反覆輸入密碼",
+      "pass": {
+        "profile": {
+          "full": "讀取完整賬戶資訊：註冊時間、已繫結的登入方式、二次驗證狀態"
+        }
+      }
     },
-    "asUser": "以 {{name}} 的身份授權",
-    "scopesLabel": "此應用將獲得以下許可權",
-    "redirectNotice": "授權後將跳轉至 {{domain}}",
-    "scopeFallback": "基礎身份資訊"
+    "redirectNotice": "將跳轉到 {{host}}。",
+    "revocable": "你可以隨時在賬戶中心撤銷這項授權。",
+    "unnamed": "未命名應用"
   },
   "callback": {
     "processing": "正在完成登入…",
@@ -666,16 +670,6 @@
         }
       }
     },
-    "scopeHuman": {
-      "profile": "讀取你的暱稱、使用者名稱和頭像",
-      "email": "讀取你的郵箱地址及驗證狀態",
-      "offline_access": "在你離開後保持登入，不必反覆輸入密碼",
-      "pass": {
-        "profile": {
-          "full": "讀取完整賬戶資訊：註冊時間、已繫結的登入方式、二次驗證狀態"
-        }
-      }
-    },
     "appType": {
       "web_backend": {
         "label": "後端 Web 站點",
@@ -758,12 +752,6 @@
     },
     "consentPreview": {
       "chrome": "transcircle.org/consent",
-      "unnamed": "未命名應用",
-      "title": "{{app}} 想要訪問你的 TransCircle 賬戶",
-      "as": "以 {{name}} 的身份繼續",
-      "willAllow": "將允許它",
-      "redirect": "將跳轉到該站點。",
-      "revocable": "使用者可以隨時在賬戶中心撤銷這項授權。",
       "skippedTitle": "不展示同意屏",
       "skippedDesc": "可信第一方：使用者登入後直接回跳，中間沒有頁面。"
     },

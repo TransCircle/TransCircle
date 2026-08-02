@@ -200,23 +200,27 @@
     "providersFailed": "无法确认该登录方式的绑定规则，暂时不能提交注册。请重试。"
   },
   "consent": {
-    "title": "授权请求",
-    "subtitle": "{{client}} 请求访问您的 TransCircle 账户",
+    "pageTitle": "授权请求",
+    "cardTitle": "{{app}} 想要访问你的 TransCircle 账户",
     "allow": "同意授权",
     "deny": "拒绝",
     "loading": "加载授权信息…",
     "loadFailed": "无法加载授权信息",
-    "scope": {
-      "openid": "确认您的身份",
-      "profile": "读取基础资料（昵称、头像）",
-      "email": "读取您的邮箱地址",
-      "offline_access": "在您离线时保持登录",
-      "pass.profile.full": "读取完整账户资料"
+    "asUser": "以 {{name}} 的身份继续",
+    "willAllow": "将允许它",
+    "scopeHuman": {
+      "profile": "读取你的昵称、用户名和头像",
+      "email": "读取你的邮箱地址及验证状态",
+      "offline_access": "在你离开后保持登录，不必反复输入密码",
+      "pass": {
+        "profile": {
+          "full": "读取完整账户信息：注册时间、已绑定的登录方式、二次验证状态"
+        }
+      }
     },
-    "asUser": "以 {{name}} 的身份授权",
-    "scopesLabel": "此应用将获得以下权限",
-    "redirectNotice": "授权后将跳转至 {{domain}}",
-    "scopeFallback": "基础身份信息"
+    "redirectNotice": "将跳转到 {{host}}。",
+    "revocable": "你可以随时在账户中心撤销这项授权。",
+    "unnamed": "未命名应用"
   },
   "callback": {
     "processing": "正在完成登录…",
@@ -666,16 +670,6 @@
         }
       }
     },
-    "scopeHuman": {
-      "profile": "读取你的昵称、用户名和头像",
-      "email": "读取你的邮箱地址及验证状态",
-      "offline_access": "在你离开后保持登录，不必反复输入密码",
-      "pass": {
-        "profile": {
-          "full": "读取完整账户信息：注册时间、已绑定的登录方式、二次验证状态"
-        }
-      }
-    },
     "appType": {
       "web_backend": {
         "label": "后端 Web 站点",
@@ -758,12 +752,6 @@
     },
     "consentPreview": {
       "chrome": "transcircle.org/consent",
-      "unnamed": "未命名应用",
-      "title": "{{app}} 想要访问你的 TransCircle 账户",
-      "as": "以 {{name}} 的身份继续",
-      "willAllow": "将允许它",
-      "redirect": "将跳转到该站点。",
-      "revocable": "用户可以随时在账户中心撤销这项授权。",
       "skippedTitle": "不展示同意屏",
       "skippedDesc": "可信第一方：用户登录后直接回跳，中间没有页面。"
     },

@@ -75,14 +75,6 @@ export const SCOPES: readonly ScopeDef[] = [
   { key: "pass.profile.full", firstParty: true },
 ];
 
-/** 授权中间页能说人话的 scope；其余（如 openid）不单独成句。 */
-export const HUMAN_SCOPES: readonly string[] = [
-  "profile",
-  "email",
-  "offline_access",
-  "pass.profile.full",
-];
-
 /** 令牌策略各档位（api-delta §五 的取值域，前后端必须一致）。 */
 export const ACCESS_TTL_OPTIONS = ["300", "900", "1800", "3600"] as const;
 export const REFRESH_TTL_OPTIONS = ["604800", "1209600", "2592000", "0"] as const;
