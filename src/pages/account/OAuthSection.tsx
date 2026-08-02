@@ -33,12 +33,24 @@ const IamIcon = () => (
   </svg>
 );
 
-/** 门户已知的提供商与图标；展示名一律以后端 label 为准，此处只作未绑定时的兜底。 */
-const PROVIDERS: Array<{ id: string; icon: ReactNode; labelKey: string }> = [
-  { id: "github", icon: <GithubIcon />, labelKey: "account.oauth.provider.github" },
-  { id: "x", icon: <XIcon />, labelKey: "account.oauth.provider.x" },
-  { id: "iam", icon: <IamIcon />, labelKey: "account.oauth.provider.iam" },
-];
+/**
+ * 门户已知提供商的**图标与兜底展示名**。
+ *
+ * ⚠️ 这里**不是**「有哪些提供商」的名单 —— 那件事只有后端知道
+ * （`GET /v1/auth/oauth/providers` 只列已配置的，缺客户端凭据的提供商点了必然 502，
+ * 不如不显示）。前端自己维护第二份名单必然漂移：要么少了新加的提供商，
+ * 要么留着一个后端根本没配的死按钮。本表只负责「认识的提供商长什么样」。
+ */
+const PROVIDER_ICONS: Record<string, ReactNode> = {
+  github: <GithubIcon />,
+  x: <XIcon />,
+  iam: <IamIcon />,
+};
+const PROVIDER_LABEL_KEYS: Record<string, string> = {
+  github: "account.oauth.provider.github",
+  x: "account.oauth.provider.x",
+  iam: "account.oauth.provider.iam",
+};
 
 /**
  * label 与 unbindable 已进入公共 `OAuthBinding` 类型（design/api-delta.md §5b.1/§5b.2），
@@ -77,11 +89,24 @@ export function OAuthSection() {
   const [pendingUnbind, setPendingUnbind] = useState<string | null>(null);
   const [permanentBind, setPermanentBind] = useState<PendingPermanentBind | null>(null);
 
+  /** 后端给出的可用提供商（已配置的才在里面）；null = 没拿到，退回本地已知集合。 */
+  const [available, setAvailable] = useState<Array<{ provider: string; label?: string }> | null>(
+    null,
+  );
+
   const load = async () => {
     setLoading(true);
-    const res = await api.get<OAuthBindingItem[]>("/v1/me/oauth");
-    if (res.ok) setBindings(res.data);
-    else setError(res.error.message);
+    // 两个请求一起发，一起收：分开会让列表先按兜底名单渲染再抖一下。
+    const [bound, offered] = await Promise.all([
+      api.get<OAuthBindingItem[]>("/v1/me/oauth"),
+      api.get<{ providers: Array<{ provider: string; label?: string }> }>(
+        "/v1/auth/oauth/providers",
+      ),
+    ]);
+    if (bound.ok) setBindings(bound.data);
+    else setError(bound.error.message);
+    // 拿不到名单不算致命：退回本地已知集合，用户至少还能操作既有绑定。
+    if (offered.ok) setAvailable(offered.data.providers);
     setLoading(false);
   };
 
@@ -89,10 +114,11 @@ export function OAuthSection() {
     void load();
   }, []);
 
-  /** 未绑定时的兜底展示名（已绑定一律用后端 label）。 */
+  /** 未绑定时的展示名：先用后端 label，再回落本地文案，最后才是原始 id。 */
   const fallbackLabel = (id: string) => {
-    const known = PROVIDERS.find((p) => p.id === id);
-    const key = known?.labelKey;
+    const fromBackend = available?.find((p) => p.provider === id)?.label;
+    if (fromBackend) return fromBackend;
+    const key = PROVIDER_LABEL_KEYS[id];
     if (!key) return id;
     const text = t(key);
     return text === key ? id : text;
@@ -158,19 +184,15 @@ export function OAuthSection() {
     setUnbindTarget(null);
   };
 
-  // 已知提供商在前、后端返回的历史/未知 provider 在后：列表按 label 展示，
-  // 不认识的 provider 也要看得见，否则用户会以为绑定丢了。
-  const knownIds = new Set(PROVIDERS.map((p) => p.id));
-  const rows = [
-    ...PROVIDERS.map((p) => ({
-      id: p.id,
-      icon: p.icon,
-      bound: bindings.find((b) => b.provider === p.id) ?? null,
-    })),
-    ...bindings
-      .filter((b) => !knownIds.has(b.provider))
-      .map((b) => ({ id: b.provider, icon: null as ReactNode, bound: b })),
-  ];
+  // 可绑定的（后端名单）在前、只在绑定记录里出现的历史/已下线 provider 在后。
+  // 后者也必须看得见，否则用户会以为绑定丢了 —— 哪怕它已经不在可绑定名单里。
+  const offeredIds = available ? available.map((p) => p.provider) : Object.keys(PROVIDER_ICONS);
+  const rowIds = [...new Set([...offeredIds, ...bindings.map((b) => b.provider)])];
+  const rows = rowIds.map((id) => ({
+    id,
+    icon: PROVIDER_ICONS[id] ?? null,
+    bound: bindings.find((b) => b.provider === id) ?? null,
+  }));
 
   const unbindTargetLabel =
     bindings.find((b) => b.provider === unbindTarget)?.label ??

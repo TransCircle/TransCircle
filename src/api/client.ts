@@ -105,9 +105,16 @@ export async function tryRefreshToken(): Promise<string | null> {
 
 // ─── CSRF（OAuth 注册/绑定双提交防护）──────────────────────────
 
-/** 读取 oauth_pending_csrf：优先 Cookie，回退 sessionStorage（跨页导航存活）。 */
+/**
+ * 读取 oauth_pending_csrf：优先 Cookie，回退 sessionStorage（跨页导航存活）。
+ *
+ * ⚠️ 跨子域部署（门户 ↔ api.*）下这个 Cookie 是 API 主机的 host-only Cookie，这里**必然读空**，
+ * 只能回退 sessionStorage —— 令牌由后端回调重定向的 `csrfToken` URL 参数交到页面手里，
+ * 由页面 saveCsrfToken() 存进来。新增 OAuth 落地页时别忘了消费那个参数。
+ * 匹配必须锚在 Cookie 边界（开头或 `; `），否则会误命中形如 `xx_oauth_pending_csrf` 的同后缀 Cookie。
+ */
 export function getCsrfToken(): string {
-  const match = document.cookie.match(/oauth_pending_csrf=([^;]+)/);
+  const match = document.cookie.match(/(?:^|;\s*)oauth_pending_csrf=([^;]*)/);
   if (match?.[1]) return match[1];
   try {
     return sessionStorage.getItem("oauth_pending_csrf") || "";
@@ -115,11 +122,19 @@ export function getCsrfToken(): string {
     return "";
   }
 }
-export function saveCsrfToken(token: string): void {
+/**
+ * 落盘 CSRF 令牌，**返回是否真的存下了**。
+ *
+ * 返回值不是装饰：调用方（OAuth 落地页）存完就要把令牌从地址栏抹掉，
+ * 而隐私模式/嵌入环境下 sessionStorage 会抛异常。存不下还抹 URL，
+ * 等于把跨子域部署下仅剩的那条通道也掐了，流程只能以 CSRF_TOKEN_INVALID 收场。
+ */
+export function saveCsrfToken(token: string): boolean {
   try {
     sessionStorage.setItem("oauth_pending_csrf", token);
+    return true;
   } catch {
-    /* noop */
+    return false;
   }
 }
 export function clearCsrfToken(): void {

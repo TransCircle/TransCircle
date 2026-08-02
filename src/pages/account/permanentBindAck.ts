@@ -26,20 +26,23 @@ export function markPermanentBindAck(provider: string): void {
 }
 
 /**
- * 落地页读取并立即清除（一次性）。
- * 清除放在读取的同一步，避免「绑定失败后残留的确认」被下一次无声复用。
+ * 落地页读取确认，**不清除**。
+ *
+ * ⚠️ 曾经这里是「读取并立即清除」，而落地页在 `useState` 初始化函数里调用它。
+ * React StrictMode 会把 state initializer 调用两次以检测副作用：第一次读到 true 并删掉，
+ * 第二次读到 false，而 React 保留的是**第二次**的结果 —— 于是开发环境下确认凭空消失，
+ * 后端返回 400 ACK_REQUIRED，看起来像「绑定又坏了」。
+ * 读取必须幂等；清除交给明确的终态（绑定成功 / 走到错误屏）调用 clearPermanentBindAck。
  */
-export function consumePermanentBindAck(provider: string): boolean {
+export function peekPermanentBindAck(provider: string): boolean {
   try {
-    const hit = sessionStorage.getItem(key(provider)) === "1";
-    sessionStorage.removeItem(key(provider));
-    return hit;
+    return sessionStorage.getItem(key(provider)) === "1";
   } catch {
     return false;
   }
 }
 
-/** 用户取消确认框时清掉，别把上一次的确认留到下一次。 */
+/** 用户取消确认框、或绑定走到终态时清掉，别把上一次的确认留到下一次。 */
 export function clearPermanentBindAck(provider: string): void {
   try {
     sessionStorage.removeItem(key(provider));

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, setUserToken, saveCsrfToken, clearCsrfToken } from "../api/client";
+import { api, setUserToken, getCsrfToken, saveCsrfToken, clearCsrfToken } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { sanitizeRedirect } from "../utils/url";
 import { usePageTitle } from "../utils/usePageTitle";
@@ -29,28 +29,83 @@ const OAuthContinuePage = () => {
   const [params] = useSearchParams();
   const provider = params.get("provider") ?? "";
   /**
+   * 本站可用的登录方式，**以后端注册表为准**。
+   *
+   * ⚠️ 这里曾经只取 `permanent` 一个布尔值，而合法性判定另写成
+   * `provider === "github" || provider === "x"` 的硬编码白名单 —— 统一身份（iam）
+   * 加进后端注册表时没人改这一行，于是「首次用统一身份登录」回跳到本页会被判成
+   * 「无效的提供商」，建号这条路直接断掉。名单只有后端知道，前端别再自己维护第二份。
+   *
+   * 拉取失败时**不放行提交**：`permanent` 只能从这份名单得出，拿不到就默认 false，
+   * 而统一身份恰恰是 permanent 的那个 —— 放行等于让用户在没见过「永久绑定」警告的情况下
+   * 提交一个必然被后端 400 ACK_REQUIRED 打回的请求，且反复点都不会好。
+   * 所以失败时给一条可重试的错误，而不是默认 false 硬着头皮往下走。
+   */
+  const [providers, setProviders] = useState<
+    Array<{ provider: string; label?: string; permanent: boolean }> | null
+  >(null);
+  const [providersFailed, setProvidersFailed] = useState(false);
+  /** 重试计数：递增即重跑下面的 effect。 */
+  const [providersAttempt, setProvidersAttempt] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      setProvidersFailed(false);
+      const res = await api.get<{
+        providers: Array<{ provider: string; label?: string; permanent: boolean }>;
+      }>("/v1/auth/oauth/providers", { noAuth: true });
+      if (!alive) return;
+      if (res.ok) setProviders(res.data.providers);
+      else setProvidersFailed(true);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [providersAttempt]);
+  const providerInfo = providers?.find((p) => p.provider === provider) ?? null;
+  /**
    * 该提供商绑定后是否不可自行解除（统一身份如此）。
    * 经它首次登录 = 建号并**永久**绑定，所以要在提交前把话说在前面，
    * 后端也会要求 acknowledgedPermanent，两边一致。
+   *
+   * ⚠️ 这个值来自异步请求，名单没到手之前它是 false。提交因此必须等 `providers` 真的有值
+   * 才放行 —— 否则手快的用户会在警告还没渲染出来时就提交，请求里缺 acknowledgedPermanent，
+   * 后端直接 400 ACK_REQUIRED，而用户压根没见过那条警告。
    */
-  const [permanent, setPermanent] = useState(false);
-  useEffect(() => {
-    void (async () => {
-      const res = await api.get<{ providers: Array<{ provider: string; permanent: boolean }> }>(
-        "/v1/auth/oauth/providers",
-        { noAuth: true },
-      );
-      if (res.ok) setPermanent(res.data.providers.some((p) => p.provider === provider && p.permanent));
-    })();
-  }, [provider]);
+  const permanent = providerInfo?.permanent === true;
   // 来自 URL 的重定向目标必须净化，防开放重定向。
   const redirectAfter = sanitizeRedirect(params.get("redirectAfter"), "/account");
 
-  // 从 URL 参数读取 CSRF token（跨域 cookie 不可读时的兜底通道），写入 sessionStorage 供后续 POST 使用
-  const csrfFromUrl = params.get("csrfToken");
-  if (csrfFromUrl) {
-    saveCsrfToken(csrfFromUrl);
-  }
+  /**
+   * CSRF 双提交令牌，取定即固定（与绑定落地页同一套做法）。
+   *
+   * 曾经这里只把 URL 参数存进 sessionStorage，提交时走 `{ csrf: true }` ——
+   * 而 getCsrfToken() 是 **Cookie 优先**：localhost 上多个服务共用一个 cookie jar，
+   * 同名不同 path 的 oauth_pending_csrf 残留会盖掉本次流程的令牌，
+   * 服务端与前端各读到一条，报出来仍然是 CSRF_TOKEN_INVALID。
+   * 本次流程的权威值只有 URL 参数，固定下来显式发头。
+   */
+  const [csrfToken] = useState(() => params.get("csrfToken") || getCsrfToken());
+  // 副作用放 effect（StrictMode 会把 state initializer 跑两次）。
+  const [csrfPersisted, setCsrfPersisted] = useState(false);
+  useEffect(() => {
+    if (csrfToken) setCsrfPersisted(saveCsrfToken(csrfToken));
+  }, [csrfToken]);
+  // 令牌取定后从地址栏抹掉，别留在浏览器历史与 Referer 里；provider/redirectAfter 保留。
+  // 存不下（隐私模式）就别抹：跨子域部署下 URL 是仅剩的通道。
+  useEffect(() => {
+    if (!csrfPersisted) return;
+    const sp = new URLSearchParams(window.location.search);
+    if (!sp.has("csrfToken")) return;
+    sp.delete("csrfToken");
+    const q = sp.toString();
+    // 传 history.state 而非 null：React Router 的 key/index 存在里面。
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}${q ? `?${q}` : ""}${window.location.hash}`,
+    );
+  }, [csrfPersisted]);
 
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
@@ -62,8 +117,11 @@ const OAuthContinuePage = () => {
   const errorRef = useRef<HTMLDivElement>(null);
 
   const mismatch = confirm.length > 0 && confirm !== password;
-  const validProvider = provider === "github" || provider === "x";
-  const providerLabel = provider === "x" ? "X" : provider === "github" ? "GitHub" : provider;
+  // 名单没到手之前只认「参数缺失」这一种无效；拿到名单后才按名单判定，
+  // 免得在 providers 请求回来之前把合法 provider 判死。
+  const validProvider = !!provider && (providers === null || !!providerInfo);
+  const providerLabel =
+    providerInfo?.label || (provider === "x" ? "X" : provider === "github" ? "GitHub" : provider);
 
   usePageTitle(validProvider ? t("continue.title") : t("continue.invalidTitle"));
 
@@ -86,6 +144,10 @@ const OAuthContinuePage = () => {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    // 硬门控，不能只靠按钮 disabled：回车隐式提交、requestSubmit()、以后新增的提交控件
+    // 都绕得过 UI。名单没到手时 permanent 恒为 false，提交出去就是缺 acknowledgedPermanent
+    // 的请求，用户根本没看过那条「永久绑定」警告。
+    if (busy || !providers) return;
     setError(null);
     if (password !== confirm) {
       setError(t("account.password.mismatch"));
@@ -100,7 +162,7 @@ const OAuthContinuePage = () => {
         // 不可解绑的提供商（统一身份）：后端要求先拿到不可逆确认。
         // 这一页上面已经把「绑定后无法自行解除」摆出来了，用户点提交即视为确认。
         { username, email, password, displayName, ...(permanent ? { acknowledgedPermanent: true } : {}) },
-        { noAuth: true, csrf: true },
+        { noAuth: true, headers: csrfToken ? { "X-CSRF-Token": csrfToken } : undefined },
       );
       if (!res.ok) {
         setError(res.error.message);
@@ -150,6 +212,15 @@ const OAuthContinuePage = () => {
           <div>{t("continue.permanentDesc")}</div>
         </Alert>
       )}
+      {/* 名单拿不到就不能提交（permanent 无从判定），给一条明确的重试出路，别让人干瞪眼。 */}
+      {providersFailed && !providers && (
+        <Alert tone="error">
+          <div>{t("continue.providersFailed")}</div>
+          <Button variant="secondary" onClick={() => setProvidersAttempt((n) => n + 1)}>
+            {t("common.retry")}
+          </Button>
+        </Alert>
+      )}
       {error && (
         <div ref={errorRef} tabIndex={-1}>
           <Alert tone="error">{error}</Alert>
@@ -161,7 +232,15 @@ const OAuthContinuePage = () => {
         <TextField label={t("login.email")} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <TextField label={t("account.password.new")} type="password" autoComplete="new-password" hint={t("register.passwordHint")} value={password} onChange={(e) => setPassword(e.target.value)} required />
         <TextField label={t("account.password.confirm")} type="password" autoComplete="new-password" invalid={mismatch} hint={mismatch ? t("account.password.mismatch") : undefined} value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
-        <Button type="submit" variant="primary" fullWidth loading={busy}>
+        {/* 名单到手才放行提交：permanent 警告与 acknowledgedPermanent 都依赖它。
+            加载中显示 loading，加载失败则保持 disabled，由上面的重试提示接手。 */}
+        <Button
+          type="submit"
+          variant="primary"
+          fullWidth
+          loading={busy || (!providers && !providersFailed)}
+          disabled={!providers}
+        >
           {t("continue.submit")}
         </Button>
         {/* 放弃补注册：回登录页换一种方式登录（pending Cookie 会自然过期）。 */}
