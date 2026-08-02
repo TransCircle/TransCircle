@@ -5,7 +5,6 @@ import { api, clearCsrfToken, getCsrfToken, saveCsrfToken } from "../api/client"
 import { useSession } from "../context/SessionContext";
 import { usePageTitle } from "../utils/usePageTitle";
 import { StepUpDialog } from "../components/StepUpDialog";
-import { clearPermanentBindAck, peekPermanentBindAck } from "./account/permanentBindAck";
 import { CenteredCard, PageHeader, StatusScreen } from "../components/ui";
 
 /**
@@ -40,13 +39,6 @@ const OAuthBindConfirmPage = () => {
      * 同源部署下 URL 参数缺失也能从 Cookie/sessionStorage 兜底。
      */
     csrfToken: params.get("csrfToken") || getCsrfToken(),
-    /**
-     * 不可自行解除的绑定（统一身份）要求显式确认，后端缺了就返 400 ACK_REQUIRED。
-     * 确认是在账户中心发起绑定时做的，经 sessionStorage 传到这里。
-     * 这里只**读**不删：StrictMode 会把 state initializer 跑两次，读取必须幂等
-     * （见 permanentBindAck.ts）。删除放在下面的终态里。
-     */
-    ack: params.get("provider") ? peekPermanentBindAck(params.get("provider")!) : false,
   }));
   const [error, setError] = useState<string | null>(null);
   const [stepUpOpen, setStepUpOpen] = useState(false);
@@ -86,21 +78,9 @@ const OAuthBindConfirmPage = () => {
     );
   }, [user, csrfPersisted]);
 
-  /**
-   * 本次绑定尝试到此为止：过渡态凭据全部作废。
-   *
-   * 「不可逆绑定确认」是**一次 OAuth 尝试对应一次明确确认**，残留下来会被下一次绑定
-   * 静默复用 —— 那就等于用户没确认也照样永久绑定。所以成功、终态失败、
-   * 以及用户取消 step-up 三条路都必须走这里。
-   */
-  const discardFlowCredentials = () => {
-    if (flow.provider) clearPermanentBindAck(flow.provider);
-    clearCsrfToken();
-  };
-
-  /** 走到终态（成功或不可重试的失败）。 */
+  /** 走到终态（成功或不可重试的失败）：过渡态 CSRF 凭据作废。 */
   const finish = (fail?: string) => {
-    discardFlowCredentials();
+    clearCsrfToken();
     if (fail) setError(fail);
     else setDone(true);
   };
@@ -110,7 +90,11 @@ const OAuthBindConfirmPage = () => {
       // 显式带上 provider：后端否则只能扫 Cookie 猜，10 分钟内放弃过的另一个 provider
       // 的 pending Cookie 会把本次绑定顶掉（见 complete-binding 的注释）。
       `/v1/auth/oauth/complete-binding${flow.provider ? `?provider=${encodeURIComponent(flow.provider)}` : ""}`,
-      flow.ack ? { acknowledgedPermanent: true } : undefined,
+      // 「不可逆绑定已确认」不再由这里的请求体携带——用户在账户中心确认框里点「继续绑定」
+      // 时，服务端已经把这个结果记进了本次 OAuth state 的 metadata（见
+      // /me/oauth/:provider/bind/start 与 complete-binding 的校验），全程不依赖任何
+      // 客户端存储跨三跳存活。
+      undefined,
       // 不用 { csrf: true }：那条路只读 Cookie/sessionStorage，会被同名的陈旧 Cookie
       // 盖掉本次流程的令牌（localhost 下多个服务共用一个 cookie jar，这很容易发生）。
       // 本次流程的权威值就在 flow.csrfToken 里，直接显式发。
@@ -195,8 +179,8 @@ const OAuthBindConfirmPage = () => {
           setStepUpOpen(false);
           // 仅在用户「取消」（未验证）时离开；验证通过由 complete() 决定结果（成功/错误）。
           if (!verifiedRef.current) {
-            // 放弃也是终点：确认凭据与 CSRF 令牌都不能留到下一次绑定。
-            discardFlowCredentials();
+            // 放弃也是终点：CSRF 令牌不能留到下一次绑定。
+            clearCsrfToken();
             navigate("/account", { replace: true });
           }
         }}

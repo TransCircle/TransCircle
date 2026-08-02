@@ -12,7 +12,6 @@ import {
   StatusBadge,
 } from "../../components/ui";
 import { Dialog, ConfirmDialog } from "../../components/ui/Dialog";
-import { markPermanentBindAck, clearPermanentBindAck } from "./permanentBindAck";
 import s from "./Account.module.css";
 
 const GithubIcon = () => (
@@ -66,11 +65,10 @@ interface BindStart {
   label?: string;
 }
 
-/** 待确认的不可逆绑定：拿到授权地址后先压住，等用户在确认框里点了「继续」再跳。 */
+/** 待确认的不可逆绑定：先弹确认框讲清后果，用户点「继续」后再换一条带确认标记的新授权地址。 */
 interface PendingPermanentBind {
   provider: string;
   label: string;
-  authorizationUrl: string;
 }
 
 /** 第三方与统一身份的账号绑定：绑定 / 解绑（解绑需 step-up；统一身份不可自行解绑）。 */
@@ -88,6 +86,9 @@ export function OAuthSection() {
   const [stepUpOpen, setStepUpOpen] = useState(false);
   const [pendingUnbind, setPendingUnbind] = useState<string | null>(null);
   const [permanentBind, setPermanentBind] = useState<PendingPermanentBind | null>(null);
+  /** confirmPermanentBind 换新地址期间的忙态/错误——独立于外层 busy，弹框内就近展示。 */
+  const [dialogBusy, setDialogBusy] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
 
   /** 后端给出的可用提供商（已配置的才在里面）；null = 没拿到，退回本地已知集合。 */
   const [available, setAvailable] = useState<Array<{ provider: string; label?: string }> | null>(
@@ -131,12 +132,12 @@ export function OAuthSection() {
     const res = await api.get<BindStart>(`/v1/me/oauth/${encodeURIComponent(provider)}/bind/start`);
     if (res.ok && res.data.authorizationUrl) {
       if (res.data.permanent === true) {
-        // 不可逆绑定：先把授权地址压在本地，弹确认框讲清后果，用户点「继续」才跳。
-        // 判定来自后端而不是前端硬编码 provider —— 哪些 provider 不可解绑是后端的事。
+        // 不可逆绑定：先弹确认框讲清后果，用户点「继续」才真正发起跳转（换一条带确认
+        // 标记的新地址，见下方 confirmPermanentBind）。这次拿到的 authorizationUrl 不用，
+        // 对应的 state 会在 10 分钟后自然过期，不必特地作废。
         setPermanentBind({
           provider,
           label: res.data.label || fallbackLabel(provider),
-          authorizationUrl: res.data.authorizationUrl,
         });
         setBindingId(null);
         return;
@@ -149,17 +150,35 @@ export function OAuthSection() {
     setBindingId(null);
   };
 
-  /** 用户在不可逆确认框里点了「继续绑定」：留下 ack 供落地页消费，然后跳转。 */
-  const confirmPermanentBind = () => {
+  /**
+   * 用户在不可逆确认框里点了「继续绑定」：带着 ?ack=true 重新调用 bind/start，
+   * 把「已确认」记进这一次新 state 的服务端 metadata，再跳转到这条新地址。
+   *
+   * 不复用弹框前那次 bind/start 返回的地址——那条 state 没有确认标记，落地页会在
+   * complete-binding 时被后端拒绝（ACK_REQUIRED）。确认结果必须和「即将实际使用的
+   * 这次授权」绑在一起，而不是事后再补。
+   */
+  const confirmPermanentBind = async () => {
     if (!permanentBind) return;
-    markPermanentBindAck(permanentBind.provider);
-    setBindingId(permanentBind.provider);
-    window.location.href = permanentBind.authorizationUrl;
+    const { provider } = permanentBind;
+    setDialogBusy(true);
+    setDialogError(null);
+    const res = await api.get<BindStart>(
+      `/v1/me/oauth/${encodeURIComponent(provider)}/bind/start?ack=true`,
+    );
+    if (res.ok && res.data.authorizationUrl) {
+      setBindingId(provider);
+      window.location.href = res.data.authorizationUrl;
+      return;
+    }
+    setDialogError(res.ok ? t("error.generic") : res.error.message);
+    setDialogBusy(false);
   };
 
   const cancelPermanentBind = () => {
-    if (permanentBind) clearPermanentBindAck(permanentBind.provider);
     setPermanentBind(null);
+    setDialogBusy(false);
+    setDialogError(null);
   };
 
   const doUnbind = async (provider: string) => {
@@ -288,20 +307,22 @@ export function OAuthSection() {
       <Dialog
         open={!!permanentBind}
         onClose={cancelPermanentBind}
+        busy={dialogBusy}
         tone="danger"
         title={t("account.oauth.permanentTitle", { provider: permanentBind?.label ?? "" })}
         footer={
           <>
-            <Button variant="secondary" onClick={cancelPermanentBind}>
+            <Button variant="secondary" disabled={dialogBusy} onClick={cancelPermanentBind}>
               {t("common.cancel")}
             </Button>
-            <Button variant="danger" onClick={confirmPermanentBind}>
+            <Button variant="danger" loading={dialogBusy} onClick={() => void confirmPermanentBind()}>
               {t("account.oauth.permanentConfirm")}
             </Button>
           </>
         }
       >
         <div className={s.stackSm}>
+          {dialogError && <Alert tone="error">{dialogError}</Alert>}
           <Alert tone="error">{t("account.oauth.permanentLead")}</Alert>
           <ul className={s.bulletList}>
             <li>{t("account.oauth.permanentPoint1")}</li>
