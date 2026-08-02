@@ -13,24 +13,25 @@ import {
 } from "../../components/ui";
 import { Dialog } from "../../components/ui/Dialog";
 import { useIamMfa, type IamMfaState } from "./IamMfaContext";
-import { RECOVERY_CODES_SECTION_ID } from "./RecoveryCodesSection";
+import { RecoveryCodesDialog } from "./RecoveryCodesDialog";
 import s from "./Account.module.css";
 
 type ToggleAction = "enable" | "disable";
 
-/** 恢复码前置检查的结果：数量 + 账户是否已有任一本地 2FA（决定引导词怎么写）。 */
-interface RecoveryPrecheck {
-  remaining: number;
-  mfaEnabled: boolean;
-}
+/** 开关接口在成功时额外回传的一次性恢复码（仅 enable 可能非空，见下方说明）。 */
+type ToggleResponse = IamMfaState & { recoveryCodes?: string[] | null };
 
 /**
  * 两步验证交给统一身份接管（design/api-delta.md §5b.3）。
  *
- * 三件事必须做在前面，否则用户会撞上后端的 409：
- * 1. 未绑定统一身份（available=false）→ 开关不可用，直说要先绑定；
- * 2. 无可用恢复码 → 后端返 409 RECOVERY_CODES_REQUIRED，前端提前查 `/v1/me/mfa/recovery-codes` 并引导；
- * 3. 开启前把后果讲清：本地通行密钥与动态口令在登录时不再生效，恢复码是统一身份不可达时唯一的登录方式。
+ * 本区只对已绑定统一身份的账户有意义——普通用户绑不了、也用不上，
+ * 因此未绑定时整块隐藏，而不是显示一个点不动的灰按钮。
+ *
+ * 开启前把后果讲清：本地通行密钥与动态口令在登录时不再生效，恢复码是统一身份
+ * 不可达时唯一的登录方式。恢复码不能单独生成——和 TOTP / Passkey 一样，只在
+ * 账户「首次建立 2FA 且尚无未用码」时才会自动发放；后端把"开启接管"本身也算作
+ * 一次首建事件，因此这里不再需要前端先拦一次「请先去生成恢复码」，直接展示、
+ * 成功后按后端是否随带 recoveryCodes 决定要不要弹一次性展示框即可。
  */
 export function IamMfaSection() {
   const { t } = useTranslation();
@@ -45,21 +46,15 @@ export function IamMfaSection() {
   /** null = 没读到恢复码数量（接口失败）；此时不能拿 0 冒充，那是两回事。 */
   const [remaining, setRemaining] = useState<number | null>(null);
   const [disableOpen, setDisableOpen] = useState(false);
-  const [needCodes, setNeedCodes] = useState<RecoveryPrecheck | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
+  /** 开启成功且后端随带发了新恢复码时的一次性展示；非空即弹框。 */
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
 
   const [stepUpOpen, setStepUpOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<ToggleAction | null>(null);
 
   const available = state?.available === true;
   const delegated = state?.delegated === true;
-
-  /** 查一次恢复码状态；读不到返回 null（此时不阻断，交给后端做最终判定）。 */
-  const checkRecovery = async (): Promise<RecoveryPrecheck | null> => {
-    const res = await api.get<RecoveryCodesStatus>("/v1/me/mfa/recovery-codes");
-    if (!res.ok) return null;
-    return { remaining: res.data.remaining, mfaEnabled: res.data.mfaEnabled };
-  };
 
   const openEnable = async () => {
     if (busy) return;
@@ -68,14 +63,10 @@ export function IamMfaSection() {
     setDialogError(null);
     setBusy(true);
     try {
-      const pre = await checkRecovery();
-      if (pre && pre.remaining === 0) {
-        // 提前拦下：让用户先去生成恢复码，而不是点完确认再撞一个 409。
-        setNeedCodes(pre);
-        return;
-      }
-      // 读不到数量不阻断：后端还会独立判一次 RECOVERY_CODES_REQUIRED，前端只需如实说明。
-      setRemaining(pre ? pre.remaining : null);
+      // 仅用于弹框里的提示文案（"当前有 N 个" / "还没有，开启后自动生成"）；
+      // 读不到不阻断——后端在真正开启时会按同一条规则处理，前端只是提前说明。
+      const res = await api.get<RecoveryCodesStatus>("/v1/me/mfa/recovery-codes");
+      setRemaining(res.ok ? res.data.remaining : null);
       setAck(false);
       setEnableOpen(true);
     } finally {
@@ -95,13 +86,24 @@ export function IamMfaSection() {
     setDialogError(null);
     setBusy(true);
     try {
-      const res = await api.post<IamMfaState>(`/v1/me/mfa/iam/${action}`);
+      const res = await api.post<ToggleResponse>(`/v1/me/mfa/iam/${action}`);
       if (res.ok) {
         // 后端回传权威的 { available, delegated }，直接升为新基线，不再多跑一次 GET。
-        apply(res.data);
-        setEnableOpen(false);
+        apply({ available: res.data.available, delegated: res.data.delegated });
         setDisableOpen(false);
-        setNotice(t(action === "enable" ? "mfa.iam.enabledOk" : "mfa.iam.disabledOk"));
+        if (action === "enable") {
+          setEnableOpen(false);
+          const newCodes = res.data.recoveryCodes?.length ? res.data.recoveryCodes : null;
+          // 有新发的恢复码时，把成功提示推迟到用户在恢复码框里点「我已保存」之后，
+          // 避免提示和一次性码框同时出现分散注意力（与 TOTP 启用同一约定）。
+          if (newCodes) {
+            setRecoveryCodes(newCodes);
+          } else {
+            setNotice(t("mfa.iam.enabledOk"));
+          }
+        } else {
+          setNotice(t("mfa.iam.disabledOk"));
+        }
         return;
       }
       if (res.error.code === "STEP_UP_REQUIRED") {
@@ -110,13 +112,8 @@ export function IamMfaSection() {
         setStepUpOpen(true);
         return;
       }
-      if (res.error.code === "RECOVERY_CODES_REQUIRED") {
-        // 前置检查与提交之间恢复码被用光/作废：关掉确认框，改走引导。
-        setEnableOpen(false);
-        setNeedCodes((await checkRecovery()) ?? { remaining: 0, mfaEnabled: true });
-        return;
-      }
       if (res.error.code === "IAM_NOT_BOUND") {
+        // 弹框打开期间统一身份被解绑（如另一标签页操作）：后端会拒绝，这里如实说明。
         setEnableOpen(false);
         setError(t("mfa.iam.notBound"));
         await reload();
@@ -129,25 +126,22 @@ export function IamMfaSection() {
     }
   };
 
-  /** 引导用户去「恢复码」分区；尊重减少动效偏好。 */
-  const gotoRecoveryCodes = () => {
-    setNeedCodes(null);
-    const el = document.getElementById(RECOVERY_CODES_SECTION_ID);
-    if (!el) return;
-    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
-  };
+  // 未绑定统一身份：这个功能对当前账户完全用不上，整块隐藏而不是显示一个禁用按钮。
+  // 但 delegated 时不能一并隐藏——统一身份绑定理论上可能在接管开启后于后端侧丢失
+  // （如 IAM 管理员直接撤销绑定，见 auth.ts 登录路径里的"iamMfaDelegated=true 但缺少
+  // iam 绑定"防御分支），这种数据不一致下用户必须还能看到「关闭接管」按钮把本地
+  // 通行密钥/动态口令找回来，否则就被这次隐藏顺手焊死了唯一的自助恢复入口。
+  if (!loading && !failed && !available && !delegated) return null;
 
   return (
     <section className={s.group}>
       <h2 className={s.groupTitle}>{t("mfa.iam.title")}</h2>
 
-      {(error || notice || (!loading && !failed && !available) || (!loading && delegated)) && (
+      {(error || notice || (!loading && delegated)) && (
         <div className={s.groupFeedback}>
           {error && <Alert tone="error">{error}</Alert>}
           {notice && <Alert tone="success">{notice}</Alert>}
-          {!loading && !failed && !available && <Alert tone="info">{t("mfa.iam.unavailable")}</Alert>}
-          {/* 恢复码依附于本地因素签发：接管期间把本地因素全删光，就再也生成不出新恢复码。 */}
+          {/* 恢复码依附于首个 2FA 因素签发：接管期间把本地因素全删光，就再也生成不出新恢复码。 */}
           {!loading && delegated && <Alert tone="info">{t("mfa.iam.keepLocalFactors")}</Alert>}
         </div>
       )}
@@ -164,7 +158,7 @@ export function IamMfaSection() {
           </div>
         </div>
       ) : (
-        <Card padding="none" tone={available ? "surface" : "subtle"}>
+        <Card padding="none">
           <ul className={s.list}>
             <li className={s.listRow}>
               <div className={s.rowMain}>
@@ -192,7 +186,7 @@ export function IamMfaSection() {
                     variant="primary"
                     size="sm"
                     loading={busy && !enableOpen}
-                    disabled={!available || busy}
+                    disabled={busy}
                     onClick={() => void openEnable()}
                   >
                     {t("mfa.iam.enable")}
@@ -237,7 +231,9 @@ export function IamMfaSection() {
           <Alert tone={remaining === null ? "error" : "info"}>
             {remaining === null
               ? t("mfa.iam.remainingUnknown")
-              : t("mfa.iam.remaining", { count: remaining })}
+              : remaining === 0
+                ? t("mfa.iam.willIssueCodes")
+                : t("mfa.iam.remaining", { count: remaining })}
           </Alert>
           <Checkbox
             label={t("mfa.iam.enableAck")}
@@ -269,31 +265,15 @@ export function IamMfaSection() {
         {dialogError ? <Alert tone="error">{dialogError}</Alert> : null}
       </Dialog>
 
-      {/* 恢复码不足：讲清为什么必须先有恢复码，并按账户是否已有本地因素给不同的下一步。 */}
-      <Dialog
-        open={!!needCodes}
-        onClose={() => setNeedCodes(null)}
-        title={t("mfa.iam.needCodesTitle")}
-        description={t("mfa.iam.needCodesBody")}
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setNeedCodes(null)}>
-              {t("common.close")}
-            </Button>
-            {needCodes?.mfaEnabled && (
-              <Button variant="primary" onClick={gotoRecoveryCodes}>
-                {t("mfa.iam.needCodesGoto")}
-              </Button>
-            )}
-          </>
-        }
-      >
-        <p className={s.muted}>
-          {needCodes?.mfaEnabled
-            ? t("mfa.iam.needCodesWithMfa")
-            : t("mfa.iam.needCodesWithoutMfa")}
-        </p>
-      </Dialog>
+      {/* 开启接管时若账户此前没有任何未用恢复码，后端会随开关一并发一组：与
+          「恢复码」分区共用同一展示组件，不可再取，须显式保存后才关闭。 */}
+      <RecoveryCodesDialog
+        codes={recoveryCodes}
+        onDismiss={() => {
+          setRecoveryCodes(null);
+          setNotice(t("mfa.iam.enabledOk"));
+        }}
+      />
 
       <StepUpDialog
         open={stepUpOpen}

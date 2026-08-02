@@ -12,17 +12,15 @@ import {
   StatusBadge,
 } from "../../components/ui";
 import { Dialog } from "../../components/ui/Dialog";
+import { useIamMfa } from "./IamMfaContext";
 import { RecoveryCodesDialog } from "./RecoveryCodesDialog";
 import s from "./Account.module.css";
 
-/**
- * 锚点 id：统一身份接管分区在「无可用恢复码」时要把用户送到这里，
- * 常量化避免两处各写一份字符串后失联。
- */
+/** 稳定的锚点 id，供分区间跳转/深链引用。 */
 export const RECOVERY_CODES_SECTION_ID = "account-recovery-codes";
 
 /**
- * 恢复码分区（TOTP / Passkey 共享的账户级备份因素，独立成框）。
+ * 恢复码分区（TOTP / Passkey / IAM 接管共享的账户级备份因素，独立成框）。
  * 仅在已启用任一 2FA 方式时展示：
  *   · GET  /v1/me/mfa/recovery-codes            查剩余数量与是否已启用 2FA。
  *   · POST /v1/me/mfa/recovery-codes/regenerate 重新生成（一次性展示）。
@@ -31,8 +29,10 @@ export const RECOVERY_CODES_SECTION_ID = "account-recovery-codes";
 export function RecoveryCodesSection() {
   const { t } = useTranslation();
   const { user } = useSession();
-  // 依会话资料判断是否已有 2FA——决定是否渲染本区、并在启用/移除 2FA（会话 refresh）后重取。
-  const sessionHas2fa = !!user && (user.security.totpEnabled || user.security.passkeyCount > 0);
+  const { state: iamMfa } = useIamMfa();
+  const delegated = iamMfa?.delegated === true;
+  // 依会话资料 + 接管状态判断是否已有 2FA——决定是否渲染本区、并在其中任一变化后重取。
+  const sessionHas2fa = !!user && (user.security.totpEnabled || user.security.passkeyCount > 0 || delegated);
 
   const [status, setStatus] = useState<RecoveryCodesStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,10 +59,11 @@ export function RecoveryCodesSection() {
   };
 
   // 初次加载，并在任一 2FA 因素变化时重取——不能只依赖 sessionHas2fa 布尔量：
-  // TOTP↔Passkey 之间切换（如禁用 TOTP 仍留 Passkey）时布尔量不翻转，会遗漏对 verifyMode / 剩余数的重取。
+  // TOTP↔Passkey 之间切换（如禁用 TOTP 仍留 Passkey）时布尔量不翻转，会遗漏对 verifyMode / 剩余数的重取；
+  // IAM 接管开关同理——它自己也会首次建立时签发恢复码，见 IamMfaSection。
   useEffect(() => {
     void load();
-  }, [user?.security.totpEnabled, user?.security.passkeyCount]);
+  }, [user?.security.totpEnabled, user?.security.passkeyCount, delegated]);
 
   // 复核方式：有 TOTP 用验证码/恢复码；无 TOTP 但有密码用密码；否则回落到恢复码。
   const verifyMode: "code" | "password" = status?.totpEnabled
