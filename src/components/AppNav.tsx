@@ -90,7 +90,7 @@ function useMenuKeyboard(
  */
 export function AppNav() {
   const { t } = useTranslation();
-  const { user, logout: sessionLogout } = useSession();
+  const { user, loading: sessionLoading, logout: sessionLogout } = useSession();
   // 管理员就是普通用户：控制台复用同一条会话，因此导航身份只有 user 一个来源，
   // 「有没有管理权限」只决定要不要多显示一个入口，不再是第二种登录态。
   const { state: adminState } = useAdmin();
@@ -374,7 +374,13 @@ export function AppNav() {
               <LanguageToggle variant="plain" />
               <ThemeToggle />
             </div>
-            {navUser ? (
+            {sessionLoading ? (
+              <span
+                className={styles.accountPlaceholder}
+                data-testid="session-placeholder"
+                aria-hidden="true"
+              />
+            ) : navUser ? (
               <div
                 ref={acctRef}
                 className={styles.dropdown}
@@ -488,7 +494,7 @@ export function AppNav() {
             <a key={l.href} href={l.href} target="_blank" rel="nofollow noopener noreferrer" className={styles.drawerLink}>{l.label}<ExternalIcon /></a>
           ))}
           <hr className={styles.drawerDivider} />
-          {navUser ? (
+          {!sessionLoading && (navUser ? (
             <>
               {adminAuthed ? (
                 <Link to="/admin" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.admin")}</Link>
@@ -509,7 +515,7 @@ export function AppNav() {
             </>
           ) : (
             <Link to="/login" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.login")}</Link>
-          )}
+          ))}
         </div>
       </div>
       <button

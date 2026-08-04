@@ -168,6 +168,16 @@
 /* 头像本身不吃指针事件:点击/hover 判定始终落到按钮,保证 hover 打开与点击一致。 */
 .acctBtn > * { pointer-events: none; }
 
+.accountPlaceholder {
+  display: block;
+  flex: 0 0 var(--control-h);
+  width: var(--control-h);
+  height: var(--control-h);
+  border-radius: var(--radius-pill);
+  background-color: var(--hover-bg);
+  background-color: var(--hover-bg-mix, var(--hover-bg));
+}
+
 .loginCta {
   display: inline-flex;
   align-items: center;
