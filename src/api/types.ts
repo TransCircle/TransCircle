@@ -76,12 +76,10 @@ export interface OAuthProviderInfo {
   permanent: boolean;
 }
 
-/**
- * POST /v1/auth/login —— 浏览器登录结果（普通或需 MFA）。
- * refresh token 只经 HttpOnly Cookie 下发；原生应用使用 OIDC Authorization Code + PKCE。
- */
+/** POST /v1/auth/login —— 登录结果（普通或需 MFA） */
 export interface LoginResult {
   accessToken?: string;
+  refreshToken?: string;
   tokenType?: string;
   expiresIn?: number;
   user?: LoginUserSummary;

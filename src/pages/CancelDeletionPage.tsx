@@ -17,8 +17,10 @@ import authStyles from "./Auth.module.css";
 /**
  * 撤销账户注销：从注销确认邮件的链接 `?token=` 进入。
  *
- * 后端通过注销确认邮件提供一次性撤销链接，本页负责捕获链接中的 token，
- * 并在未登录状态下完成账户身份验证。
+ * 后端 `POST /v1/me/delete/cancel` 一直存在，但此前**没有任何界面能调用它** ——
+ * 邮件里给的还是一段裸令牌，产品里也没有能粘贴它的表单。
+ * 于是「30 天内可撤销」这个承诺在产品层面是做不到的：账户处于 pending_deletion 时
+ * 登录本身就被拒，用户根本没有可以进入的地方。这一页就是那个入口。
  *
  * 身份验证在**未登录**状态下完成：撤销令牌只证明「持有这封邮件」，
  * 还必须再证明「是账户本人」——密码（有 TOTP 的再加验证码），
@@ -27,39 +29,20 @@ import authStyles from "./Auth.module.css";
  * 通行密钥这条路不是可选项：纯 Passkey 账户根本没有密码，
  * 只给密码表单等于让他们发起得了注销、却撤销不了。
  */
-const CANCEL_TOKEN_STATE_KEY = "__transcircleCancelDeletionToken";
-
-type CancelHistoryState = Record<string, unknown> & {
-  [CANCEL_TOKEN_STATE_KEY]?: string;
-};
-
-function readHistoryToken(): string {
-  const state = window.history.state as CancelHistoryState | null;
-  return typeof state?.[CANCEL_TOKEN_STATE_KEY] === "string"
-    ? state[CANCEL_TOKEN_STATE_KEY]
-    : "";
-}
-
-function replaceCancelHistoryToken(token: string | null): void {
-  const current = (window.history.state as CancelHistoryState | null) ?? {};
-  const next = { ...current };
-  if (token) next[CANCEL_TOKEN_STATE_KEY] = token;
-  else delete next[CANCEL_TOKEN_STATE_KEY];
-  window.history.replaceState(next, "", window.location.pathname);
-}
-
 const CancelDeletionPage = () => {
   const { t } = useTranslation();
   const [params] = useSearchParams();
-  // URL token 优先；刷新后从当前 history entry 恢复。它不会写入持久存储或复制地址。
-  const [token] = useState(() => params.get("token") ?? readHistoryToken());
+  // 捕获一次性令牌后立即从地址栏抹去，避免经浏览器历史 / Referer 泄露。
+  const [token] = useState(() => params.get("token") ?? "");
   useEffect(() => {
-    if (token) replaceCancelHistoryToken(token);
+    if (token) window.history.replaceState(null, "", window.location.pathname);
   }, [token]);
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [mfaCode, setMfaCode] = useState("");
+  /** 后端回了「需要二次验证」之后才展开验证码输入，避免一上来就问一个多数人用不到的东西。 */
+  const [needMfa, setNeedMfa] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -104,10 +87,12 @@ const CancelDeletionPage = () => {
       { noAuth: true },
     );
     if (res.ok) {
-      replaceCancelHistoryToken(null);
       setDone(true);
       return;
     }
+    // 需要二次验证：展开验证码输入，不要把它当成失败让人重头再来。
+    // 后端对「没给验证码」和「验证码不对」用的是同一个码 INVALID_TOTP_CODE。
+    if (res.error.code === "INVALID_TOTP_CODE") setNeedMfa(true);
     fail(res.error.code, res.error.message);
   };
 
@@ -179,14 +164,17 @@ const CancelDeletionPage = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
         )}
-        <TextField
-          label={t("cancelDeletion.mfaLabel")}
-          // 同时接受动态口令与恢复码，不能限制为纯数字输入。
-          value={mfaCode}
-          autoComplete="one-time-code"
-          hint={t("cancelDeletion.mfaHint")}
-          onChange={(e) => setMfaCode(e.target.value)}
-        />
+        {needMfa && (
+          <TextField
+            label={t("login.mfaCode")}
+            // 这个输入框同时接受动态口令与恢复码（后端两者共用一个字段），
+            // 所以不能锁成 numeric —— 恢复码是带连字符的字母数字。
+            value={mfaCode}
+            autoComplete="one-time-code"
+            hint={t("cancelDeletion.mfaHint")}
+            onChange={(e) => setMfaCode(e.target.value)}
+          />
+        )}
         {passkeyMode ? (
           <Button
             type="button"
