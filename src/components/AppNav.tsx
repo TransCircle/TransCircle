@@ -121,14 +121,14 @@ export function AppNav() {
   const acctPointerType = useRef<string>("");
 
   // 导航站主导航:首页 + 生态各业务分区。
-  // - 故事征集:已上线的子域站点(commit 33b4643 的产品意图,曾在合并中回退,此处恢复)。
-  // - 人物归档/社群互助:尚无独立站点(标签仍带「开发中」),指向主页真实分区
-  //   (归档愿景在 #about 阐述、社群入口在 #join),避免 /#archive 这类无目标死锚点。
+  // - 故事征集/社群互助:已上线的子域站点,直接外链(故事为 story.transcircle.org、社群论坛为 community.transcircle.org)。
+  // - 人物归档:尚无独立站点(标签仍带「开发中」),指向主页真实分区
+  //   (归档愿景在 #about 阐述),避免 /#archive 这类无目标死锚点。
   const primaryLinks: NavLinkDef[] = [
     { label: t("nav.home"), to: "/" },
     { label: t("nav.stories"), href: "https://story.transcircle.org/" },
     { label: t("nav.archive"), to: "/#about" },
-    { label: t("nav.community"), to: "/#join" },
+    { label: t("nav.community"), href: "https://community.transcircle.org/" },
   ];
   const externalLinks: NavLinkDef[] = [
     { label: t("nav.blog"), href: "https://blog.transcircle.org/" },
@@ -136,8 +136,8 @@ export function AppNav() {
   ];
 
   // 关闭抽屉/下拉：路由变化时。含 hash——移动端已在 / 时点抽屉里的
-  // 「人物归档」(/#about)/「社群互助」(/#join)只改 hash 不改 pathname,
-  // 若仅依赖 pathname 则抽屉不关、背景滚动保持锁定、main 保持 inert 遮住刚滚到的分区。
+  // 「人物归档」(/#about)只改 hash 不改 pathname,若仅依赖 pathname 则抽屉不关、
+  // 背景滚动保持锁定、main 保持 inert 遮住刚滚到的分区。
   useEffect(() => {
     setDrawerOpen(false);
     setLinksOpen(false);
