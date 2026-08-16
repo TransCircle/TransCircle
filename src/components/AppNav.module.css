@@ -25,6 +25,9 @@
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -33,6 +36,14 @@
   white-space: nowrap;
 }
 .brand:hover { color: var(--accent-pink); }
+
+/* 固定尺寸，避免 SVG 加载前的布局抖动 */
+.brandMark {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
 
 /* ── Desktop links ─────────────────────────────────────── */
 .links {

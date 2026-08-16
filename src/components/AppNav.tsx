@@ -329,7 +329,10 @@ export function AppNav() {
               <span className={cx(styles.bar, drawerOpen && styles.barMid)} />
               <span className={cx(styles.bar, drawerOpen && styles.barBot)} />
             </button>
-            <Link to="/" className={styles.brand}>TransCircle</Link>
+            <Link to="/" className={styles.brand}>
+              <img className={styles.brandMark} src="/logo-mark.svg" width={28} height={28} alt="" aria-hidden="true" />
+              <span>TransCircle</span>
+            </Link>
           </div>
 
           <div className={styles.links}>

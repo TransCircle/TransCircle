@@ -10,6 +10,10 @@
   Cache-Control: public, max-age=604800
   Content-Type: image/vnd.microsoft.icon
 
+/logo-mark.svg
+  Cache-Control: public, max-age=604800
+  Content-Type: image/svg+xml
+
 /favicon.png
   Cache-Control: public, max-age=604800
   Content-Type: image/png
