@@ -24,9 +24,6 @@ export type { RadioGroupProps, RadioOption } from './RadioGroup'
 export { TagInput } from './TagInput'
 export type { TagInputProps } from './TagInput'
 
-export { LanguageToggle } from './LanguageToggle'
-export type { LanguageToggleProps } from './LanguageToggle'
-
 export { PageHeader } from './PageHeader'
 export type { PageHeaderProps } from './PageHeader'
 

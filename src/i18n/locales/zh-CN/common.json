@@ -51,11 +51,6 @@
     "openNav": "打开导航",
     "closeNav": "关闭导航"
   },
-  "language": {
-    "selectLabel": "语言选择",
-    "zhCN": "简体中文",
-    "zhTW": "繁体中文"
-  },
   "theme": {
     "light": "亮色模式",
     "dark": "深色模式",
@@ -95,8 +90,7 @@
     "archive": "人物归档（开发中）",
     "community": "社群互助 · 论坛",
     "settings": "偏好设置",
-    "theme": "主题",
-    "language": "语言"
+    "theme": "主题"
   },
   "password": {
     "strengthLabel": "密码强度",

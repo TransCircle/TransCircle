@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { useSession } from "../context/SessionContext";
 import { useAdmin } from "../context/AdminContext";
 import ThemeToggle from "./ThemeToggle";
-import { LanguageToggle } from "./ui";
 import { Avatar } from "./Avatar";
 import { cx } from "./admin/cx";
 import styles from "./AppNav.module.css";
@@ -370,10 +369,7 @@ export function AppNav() {
           </div>
 
           <div className={styles.right}>
-            <div className={styles.toggles}>
-              <LanguageToggle variant="plain" />
-              <ThemeToggle />
-            </div>
+            <ThemeToggle />
             {navUser ? (
               <div
                 ref={acctRef}

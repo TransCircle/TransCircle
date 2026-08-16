@@ -87,13 +87,6 @@
   flex: 1;
 }
 
-/* 语言/主题开关成组，组内间距略紧（对齐 story）。 */
-.toggles {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .adminLink {
   color: var(--accent-pink);
   font-weight: 500;
