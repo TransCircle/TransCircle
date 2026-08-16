@@ -60,7 +60,8 @@
   letter-spacing: -0.02em;
   overflow: hidden;
 }
-/* 站点 favicon 图标：铺满圆角方块，不留出色块背景——图标本身已经是完整的品牌方图。 */
+/* 站点 favicon 图标（交织圆环标志）：环心与四角为透明，会透出 .brandMark 的 --accent-pink 底色——
+   与标志本身的粉色（logo 仓库 #F5A9B8）同属一个粉色系，透出后观感协调，无需再补背景。 */
 .brandMark img {
   width: 100%;
   height: 100%;

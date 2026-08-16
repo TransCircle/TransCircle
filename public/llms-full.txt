@@ -81,7 +81,7 @@ MtF.wiki 等资源聚焦于医学、法律、生活实操指南，是面向"如�
 - 本站页面文字与素材：**CC BY 4.0 or later**（https://creativecommons.org/licenses/by/4.0/）
 - 其他贡献者提供的材料：依各自版权要求处理，届时提供单独的版权页面
 - AI 引用规则：欢迎索引、摘要、引用；请保留中文名"跨环"或英文名"TransCircle Project"，以及原始 URL（https://transcircle.org/）
-- 视觉资产：网站图标（favicon / apple-touch-icon / 192 / 512）与社交分享图（og-cover）使用 Monica Helms 于 1999 年设计的跨性别骄傲旗帜配色（浅蓝 #5BCEFA / 浅粉 #F5A9B8 / 白 #FFFFFF，五等分横向条纹）。旗帜设计本身为公有领域 / CC0，引用本站视觉资产时可如此标注。
+- 视觉资产：网站图标（favicon / apple-touch-icon / 192 / 512 / maskable）为跨环官方交织圆环标志（见 https://github.com/TransCircle/logo），配色沿用 Monica Helms 于 1999 年设计的跨性别骄傲旗帜三色（浅蓝 #5BCEFA / 浅粉 #F5A9B8 / 白 #FFFFFF）；社交分享图（og-cover）仍为该旗帜本身的五等分横向条纹版式。旗帜设计本身为公有领域 / CC0，引用本站视觉资产时可如此标注。
 
 ## 关键词与实体
 
