@@ -381,10 +381,14 @@ export interface AdminUserPasskey {
   lastUsedAt: number | null;
 }
 
-/** GET /v1/admin/users/:id/sessions —— 只存 IP 段与 UA 哈希，不存完整 IP。 */
+/**
+ * GET /v1/admin/users/:id/sessions —— 只存 IP 段与 UA 哈希，不存完整 IP。
+ * deviceSummary 是 Pass 端 Session.deviceSummary（JSON 对象 {browser, os, type}），
+ * 并非字符串摘要；渲染时取 .browser/.os，勿直接输出对象（会触发 React error #31）。
+ */
 export interface AdminUserSession {
   id: string;
-  deviceSummary: string | null;
+  deviceSummary: { browser: string | null; os: string | null; type: string } | null;
   ipPrefix: string | null;
   /** UA 哈希前缀，仅供辨识同一设备；不还原完整 UA。 */
   userAgentHash: string;

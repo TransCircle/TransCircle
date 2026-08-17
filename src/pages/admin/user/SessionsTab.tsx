@@ -24,7 +24,13 @@ export function SessionsTab({ userId, subject, canRevoke, onDone }: SessionsTabP
   const action = useAdminAction();
   const [target, setTarget] = useState<AdminUserSession | null>(null);
 
-  const deviceOf = (s: AdminUserSession) => s.deviceSummary || t("admin.userDetail.sessions.unknownDevice");
+  // deviceSummary 是 Pass 端 Session.deviceSummary（{browser, os, type} 对象），
+  // 直接拼接会把它当字符串输出 → React error #31。取可读的 browser·os，全空回退占位。
+  const deviceOf = (s: AdminUserSession) => {
+    const d = s.deviceSummary;
+    const parts = [d?.browser, d?.os].filter((v): v is string => !!v);
+    return parts.length > 0 ? parts.join(" · ") : t("admin.userDetail.sessions.unknownDevice");
+  };
 
   const revoke = async (session: AdminUserSession) => {
     // 动作 key 带上目标 ID：只写 "revoke" 的话，同一页面上吊销不同会话会共用一个
