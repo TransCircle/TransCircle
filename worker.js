@@ -36,6 +36,7 @@ export default {
           method: request.method,
           headers: request.headers,
           body: request.body,
+          redirect: 'manual',
         },
       );
 
