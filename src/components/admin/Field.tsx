@@ -97,7 +97,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
         input
       )}
       {hint && (
-        /* aria-live 仅在错误态启用:普通 hint(如 ReasonPromptDialog 的「N / 500」字数计数)
+        /* aria-live 仅在错误态启用:普通 hint(如 TextArea 的「N / 500」字数计数)
            若恒为 live,读屏器会逐键播报计数,极度嘈杂;错误文案才需即时播报。 */
         <span id={hintId} aria-live={invalid ? 'polite' : undefined} className={cx(styles.hint, invalid && styles.hintError)}>
           {hint}

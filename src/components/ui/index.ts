@@ -35,6 +35,3 @@ export type { StatusScreenProps, StatusKind, StatusAction } from './StatusScreen
 
 export { SegmentedControl } from './SegmentedControl'
 export type { SegmentedControlProps } from './SegmentedControl'
-
-export { Pagination } from './Pagination'
-export type { PaginationProps } from './Pagination'

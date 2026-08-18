@@ -331,6 +331,7 @@ export function AppNav() {
             </button>
             <Link to="/" className={styles.brand}>
               <img className={styles.brandMark} src="/logo-mark.svg" width={28} height={28} alt="" aria-hidden="true" />
+              {/* TransCircle 为品牌专有名词，豁免 i18n。 */}
               <span>TransCircle</span>
             </Link>
           </div>

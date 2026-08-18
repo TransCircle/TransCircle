@@ -105,6 +105,7 @@
 @media (max-width: 640px) {
   .tabs {
     scroll-padding-inline: 34px;
+    /* #000 是表现用遮罩的透明度锚点，不参与主题配色，故豁免硬编码规范。 */
     -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
     mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
   }

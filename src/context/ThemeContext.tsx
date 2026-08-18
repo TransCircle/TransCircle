@@ -58,7 +58,15 @@ const clearStoredTheme = (): void => {
   }
 };
 
-/** 各主题对应的移动端浏览器 UI 底色（与 index.html 的 theme-color 一致）。 */
+/**
+ * 各主题对应的移动端浏览器 UI 底色。
+ *
+ * ⚠️ 这里硬编码是因为 <meta name="theme-color"> 的 content 不接受 CSS 变量，
+ * 无法复用 index.css 的 --bg-color。改动颜色时以下三处必须同步：
+ * 1) 本处 THEME_COLORS；
+ * 2) index.html 的两条 <meta name="theme-color">（light/dark）；
+ * 3) index.css 的 --bg-color（light/dark）。
+ */
 const THEME_COLORS: Record<Theme, string> = { light: "#fff9fb", dark: "#12121a" };
 
 /**

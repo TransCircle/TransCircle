@@ -69,6 +69,7 @@ const App = () => {
 
         <section id="follow" className={styles.followSection}>
           <h2 className={styles.sectionHeading}>{t('landing.followHeading')}</h2>
+          {/* GitHub / X (Twitter) / Bluesky 为品牌与社媒专有名词，豁免 i18n。 */}
           <ul className={styles.socialList}>
             <li>
               <a href="https://github.com/TransCircle/TransCircle" className={styles.socialLink} target="_blank" rel="nofollow noopener noreferrer">
