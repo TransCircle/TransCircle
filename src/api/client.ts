@@ -148,12 +148,26 @@ export function clearCsrfToken(): void {
 
 // ─── Idempotency-Key ────────────────────────────────────────────
 
+/** 生成指定字节数的随机十六进制串；无 randomUUID 环境用 crypto.getRandomValues 兜底。 */
+function randomHex(byteLength: number): string {
+  const bytes = new Uint8Array(byteLength);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** 无 randomUUID 环境下的 UUID v4 兜底（RFC 4122）。 */
+function randomUuidV4(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export function newIdempotencyKey(): string {
   if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-  });
+  return randomUuidV4();
 }
 
 // ─── 响应类型 ────────────────────────────────────────────────────
@@ -254,7 +268,7 @@ function newRequestId(): string {
   const rand =
     typeof crypto.randomUUID === "function"
       ? crypto.randomUUID().replace(/-/g, "").slice(0, 20)
-      : Math.random().toString(16).slice(2, 22);
+      : randomHex(10);
   return `req_fe_${rand}`;
 }
 
