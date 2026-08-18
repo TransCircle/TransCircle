@@ -56,7 +56,7 @@ const ClientNewPage = () => {
   const [clientUri, setClientUri] = useState("");
   const [redirectUris, setRedirectUris] = useState<string[]>([]);
   const [scopes, setScopes] = useState<string[]>(["openid", "profile", "email"]);
-  const [trusted, setTrusted] = useState(true);
+  const [trusted, setTrusted] = useState(false);
   const [stepUp, setStepUp] = useState(false);
   const [result, setResult] = useState<AdminClientCreated | null>(null);
   const action = useAdminAction();
