@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# pnpm is the sole package manager; npm's lockfile only causes dual-lock drift
+package-lock.json
+
 # Build output
 dist/
 
