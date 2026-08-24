@@ -237,6 +237,22 @@
       </article>
     </noscript>
     <div id="root"></div>
+    <!-- 旧浏览器（不支持 ES modules，如 Android 4.4 WebView / Chrome 30）会整体跳过 type="module" 脚本，
+         使本 SPA 不执行而白屏。此 non-module 脚本仅在无模块支持的浏览器上运行，补交一个友好提示。 -->
+    <script nomodule>
+      (function () {
+        var root = document.getElementById('root');
+        if (!root) { return; }
+        root.innerHTML =
+          '<article style="max-width:720px;margin:2rem auto;padding:1rem 1.25rem;font-family:sans-serif;color:#222;line-height:1.7;">' +
+            '<h2>浏览器版本过旧</h2>' +
+            '<p>您当前使用的浏览器（Android 4.4 / Chrome 30）无法运行本站的现代界面，请升级系统或改用较新浏览器后再访问。</p>' +
+            '<p><a href="https://transcircle.org/s/join" rel="noopener">申请表单</a> · ' +
+            '<a href="https://x.com/TransCircleOrg" rel="noopener">X (@TransCircleOrg)</a> · ' +
+            '<a href="https://bsky.app/profile/TransCircle.org" rel="noopener">Bluesky</a></p>' +
+          '</article>';
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
