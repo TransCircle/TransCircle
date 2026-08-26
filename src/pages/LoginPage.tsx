@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, setUserToken } from "../api/client";
+import { api, getIdentityGen, installAccessToken, NON_REJECTING_AUTH_CODES } from "../api/client";
+import { hasStringFields, isNonEmptyString } from "../api/shape";
 import { useSession } from "../context/SessionContext";
+import { readSignoutEpoch } from "../context/signoutEpoch";
 import type { LoginResult, OAuthProviderInfo, WebAuthnRequestOptions } from "../api/types";
 import { performAssertion, isWebAuthnSupported } from "../utils/webauthn";
 import { sanitizeRedirect } from "../utils/url";
@@ -19,6 +21,7 @@ import {
   TextField,
   AdminButton as Button,
   Alert,
+  StatusScreen,
 } from "../components/ui";
 import { TurnstileWidget } from "../components/ui/TurnstileWidget";
 import authStyles from "./Auth.module.css";
@@ -68,7 +71,7 @@ type PendingAction = "login" | "mfa" | "mfaPasskey" | "passkey" | (string & {});
 const LoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, refresh, sessionExpired, clearSessionExpired } = useSession();
+  const { user, status, hint, refresh, sessionExpired, clearSessionExpired } = useSession();
   const [params] = useSearchParams();
 
   const oidcUid = readOidcInteraction(params.get("oidc"));
@@ -79,6 +82,14 @@ const LoginPage = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [mfaToken, setMfaToken] = useState<string | null>(null);
+  /**
+   * 二次验证挑战诞生时的身份代次（`getIdentityGen()`，不是 `getAuthEpoch()`）。
+   *
+   * **完成二次验证时不能重新读当前代次。** 从拿到挑战到用户输完验证码之间可能过去几十秒，
+   * 期间另一个标签页完全可能登录了别的账号；用完成时刻的代次去校验，等于「变化发生了但没人发现」，
+   * 于是这条属于旧身份的挑战换来的令牌会盖掉新身份的会话。代次必须锚在挑战签发的那一刻。
+   */
+  const mfaGenRef = useRef<number | null>(null);
   const [mfaCode, setMfaCode] = useState("");
   // 二次验证可用方式与（如有）Passkey 断言参数——由 /login 的挑战响应下发。
   const [mfaMethods, setMfaMethods] = useState<NonNullable<LoginResult["availableMethods"]>>([]);
@@ -105,6 +116,15 @@ const LoginPage = () => {
   // 旧会话可能被 refresh 恢复，那时二次验证还没做完就跳走等于绕过第二因素。
   const [handoff, setHandoff] = useState<MfaHandoff | null>(null);
   const [handoffPending, setHandoffPending] = useState(hasMfaHandoff());
+  /**
+   * 二次验证交接**失败**了（挑战过期/无效，或期间身份发生了变化）。
+   *
+   * 这是个终态，必须与「还在处理中」区分开。只把 `handoffPending` 置回 false 是不够的：
+   * 那样一来，「已登录就自动续跑」的 effect 会立刻接管 —— 浏览器里若还留着一条旧的
+   * Pass 会话，它就会拿着那条会话去完成 OIDC 交互，而**这次要求的第二因素根本没做**。
+   * 等于用一次第三方登录 + 一个失败的交接，绕开了 2FA。
+   */
+  const [handoffFailed, setHandoffFailed] = useState(false);
   // **消费必须发生在 effect（提交阶段），不能在 render 里**：
   // render 可能被 React 丢弃并重跑（StrictMode 双调用、并发渲染），
   // 而 consumeMfaHandoff() 是破坏性读取 —— 在 render 里调，令牌可能被读掉后丢失。
@@ -120,25 +140,62 @@ const LoginPage = () => {
     handoffConsumed.current = true;
     const data = consumeMfaHandoff();
     if (!data) {
+      // 探测时说有（handoffPending 的初值就来自 hasMfaHandoff()），真去取却取不到：
+      // 数据损坏、写了一半、或被别处清掉了。这同样是「交接失败」，
+      // 必须进终态 —— 只把 pending 置回 false 的话，自动续跑会接管，
+      // 拿浏览器里的旧会话把这次交互完成掉，而第二因素没做。
+      //
+      // 但**保留可用的登录表单**：重新登录正是这里的恢复路径，
+      // 给一块只能看不能动的错误屏反而把出路堵死了。说明原因即可。
+      if (handoffPending) {
+        setHandoffFailed(true);
+        setError(t("login.handoffLost"));
+      }
       setHandoffPending(false);
       return;
     }
     setHandoff(data);
     setPending("mfa");
+    // 身份代次记在**发起挑战查询之前**。在返回之后才读，等于把「这期间发生的登出/换号」
+    // 一起锚进了新代次 —— 那条属于旧身份的挑战反而变成「合法」的了。
+    const handoffGen = getIdentityGen();
     void (async () => {
       const res = await api.post<{
         availableMethods: NonNullable<LoginResult["availableMethods"]>;
         passkey?: { publicKey: WebAuthnRequestOptions };
       }>("/v1/auth/mfa/challenge", { mfaChallengeToken: data.mfaChallengeToken }, { noAuth: true });
       setPending(null);
-      setHandoffPending(false);
       if (!res.ok) {
         // 挑战过期或无效：这时没有任何可继续的上下文，只能请用户重新登录。
+        // 标成终态而不是「不再 pending」—— 否则自动续跑会拿旧会话把这次二次验证跳过去。
         const key = `authError.${res.error.code}`;
         const localized = t(key);
         setError(localized === key ? res.error.message : localized);
+        setHandoffFailed(true);
+        setHandoffPending(false);
         return;
       }
+      // 代次在这期间变了：这条挑战属于已经被终结的身份，直接丢弃，
+      // **绝不能**重新锚定到新代次上。
+      if (getIdentityGen() !== handoffGen) {
+        setError(t("login.identityChanged"));
+        setHandoffFailed(true);
+        setHandoffPending(false);
+        return;
+      }
+      // 挑战确实拿到了，才解除等待 —— 顺序要紧：先落 mfaToken 再解 pending 的话
+      // 中间那一帧两者皆假，自动续跑 effect 会插进来。
+      // 2xx 也可能没有 data、或 data 里没有 availableMethods（网关吐了个空壳 200）。
+      // 直接解引用会抛 TypeError 穿透出去，而此刻页面正停在中性等待屏上 ——
+      // 用户会一直对着它，既没有说明也没有出路。归到「交接失败」终态。
+      if (!Array.isArray(res.data?.availableMethods)) {
+        setError(t("login.handoffLost"));
+        setHandoffFailed(true);
+        setHandoffPending(false);
+        return;
+      }
+      mfaGenRef.current = handoffGen;
+      setHandoffPending(false);
       setMfaToken(data.mfaChallengeToken);
       setMfaMethods(res.data.availableMethods);
       setMfaPasskey(res.data.passkey?.publicKey ?? null);
@@ -155,20 +212,71 @@ const LoginPage = () => {
    * 用 ref 保证一次性交互 POST 只执行一次，避免双发竞态。
    */
   const finished = useRef(false);
-  const finish = async () => {
+  /** OIDC 交互续跑失败：终态，需要用户回业务站重新发起授权。 */
+  const [interactionFailed, setInteractionFailed] = useState(false);
+  /** OIDC 交互续跑遇到瞬态错误：交互本身多半还有效，给重试。 */
+  const [interactionRetryable, setInteractionRetryable] = useState(false);
+  /**
+   * @param anchorGen 这次续跑所依据的身份代次。
+   *
+   * **必须由调用方给**，不能在这里现取。`onTokens()` 那条路上，取锚（提交登录时）
+   * 与走到这里之间隔着一整个「拉档案 + 退避重试」—— 那段时间里别的标签页完全可能
+   * 登录/登出，把浏览器换成了另一个人。现取等于把这段变化一起锚了进去，闸门形同虚设：
+   * 请求照发，后端照样消费掉那笔 interaction 并写下 `_session`，
+   * 而它属于的是**上一个**身份。
+   * 由效果/重试触发（没有登录流程在跑）时，调用方现取即可 —— 那时「此刻」就是它的起点。
+   */
+  const finish = async (anchorGen: number) => {
     if (finished.current) return;
     finished.current = true;
     if (oidcUid) {
       const res = await api.post<{ redirectTo?: string }>(
         `/oauth2/interaction/${encodeURIComponent(oidcUid)}/login`,
+        undefined,
+        // 后端在这一步会 ensureSsoSession()，也就是**写 `_session`**。
+        // 与登录同属「响应会写会话 cookie」，同样要能被认证边界掐掉。
+        { authWrite: true, requireIdentityGen: anchorGen },
       );
-      if (res.ok && res.data?.redirectTo) {
+      // 跳转地址必须是**非空字符串**。只判 truthy 的话，`redirectTo: {}` 会一路走到
+      // `location.href = {}`，浏览器把它转成字符串 "[object Object]" 当相对路径跳过去 ——
+      // 用户落在一个 404，而屏幕上没有任何东西说明刚才发生了什么。
+      if (res.ok && isNonEmptyString(res.data?.redirectTo)) {
         clearOidcInteraction();
         window.location.href = res.data.redirectTo;
         return;
       }
+      // 交互续跑失败。区分两类，不能一概而论：
+      //
+      //  - **确定性失败**（4xx，最常见 INTERACTION_INVALID：授权请求过期，
+      //    或它引用的那条 SSO 会话已被吊销 —— oidc-provider 直接判 SessionNotFound，
+      //    没有原地自愈的余地）：这条路走不通了，进终态。
+      //  - **不确定**（断网 / 5xx / 限流）：交互本身很可能还好好的，
+      //    把它清掉并宣布「授权请求已失效」是在替一次网关抖动做终审。留着 uid，给重试。
+      //
+      // 顺带一提，原先这里统一 `navigate("/login")` —— 而此刻用户是**登录着的**，
+      // 登录页会立刻把他转去账户中心：一次授权请求就这么无声无息地消失了。
+      // 分类要**先看错误码**：`auth_refresh_transient` / `auth_epoch_stale` 会原样保留
+      // 原始的 401，只看状态码就会把「令牌过期 + 续期恰好撞上网关抖动」判成确定性失败，
+      // 于是一次抖动就宣布「授权请求已失效」并把 uid 清掉 —— 而交互本身好好的。
+      // `res` 也可能是「成功但没给 redirectTo」（上面的 if 只在两者都满足时返回），
+      // 那种情况没有 error 可读，按确定性失败处理即可。
+      const errorCode = res.ok ? "" : res.error.code;
+      const indeterminate =
+        NON_REJECTING_AUTH_CODES.includes(errorCode) ||
+        res.status === 0 ||
+        res.status >= 500 ||
+        res.status === 429;
+      if (indeterminate) {
+        // 允许再试一次：把一次性守卫放开，uid 也留着。
+        // 必须同时置 `interactionRetryable` —— 否则「已登录 + 有 oidcUid」的渲染门控
+        // 会继续画「正在跳转」的加载屏，把错误文案整个盖住，用户对着一个永远转圈的
+        // 页面既看不到原因、也没有重试入口。
+        finished.current = false;
+        setInteractionRetryable(true);
+        return;
+      }
       clearOidcInteraction();
-      navigate("/login", { replace: true });
+      setInteractionFailed(true);
       return;
     }
     navigate(redirectTo, { replace: true });
@@ -177,26 +285,97 @@ const LoginPage = () => {
   /** 已登录：带 oidc 直接续跑交互；普通访问不再展示登录表单，直接跳转目的地。 */
   useEffect(() => {
     if (!user) return;
+    // 交接已经失败：这条路彻底走不通了，绝不能拿浏览器里那条旧会话替它把交互完成掉。
+    if (handoffFailed) return;
+    // **本次登录已经失败过并给出了错误，同样不能自动往下走。**
+    //
+    // 典型：二次验证通过、令牌也装上了，但随后取档案撞上 503 —— `onTokens()` 会清掉
+    // MFA 状态并报错。此时浏览器内存里可能还留着同账号的旧 `user`，effect 一重跑就发现
+    // 「已登录且没有待处理的二次验证」，于是替用户把 OIDC 交互完成掉 ——
+    // 而这次登录的结果**根本没有确认过**。有错误在屏幕上，就该由用户决定下一步。
+    if (error) return;
+    // 交互已进入可重试终态：等用户点「重试」，别自作主张再跑一遍 ——
+    // 那会绕过他刚看到的那个按钮，而失败原因（网关抖动）多半还没消失。
+    if (interactionRetryable || interactionFailed) return;
     // 有待处理的二次验证交接时**必须让路**。
     // 第三方登录往返期间，旧会话可能被静默续期恢复；此时若按「已登录」直接跳走，
     // 后端刚签发的第二因素挑战就被跳过了 —— 等于用一次第三方登录绕开了 2FA。
     if (handoffPending || mfaToken) return;
     if (oidcUid) {
-      void finish();
+      // 这条路没有在跑的登录流程，「此刻」就是它的起点，现取即可。
+      void finish(getIdentityGen());
       return;
     }
     navigate(redirectTo, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, oidcUid, handoffPending, mfaToken]);
+  }, [user, oidcUid, handoffPending, mfaToken, handoffFailed, error, interactionRetryable, interactionFailed]);
 
-  const onTokens = async (data: LoginResult) => {
+  /** 清掉本次二次验证流程的全部残留（挑战已被服务端消费，不能再让用户对着它提交）。 */
+  const clearMfaFlow = () => {
+    setMfaToken(null);
+    setMfaPasskey(null);
+    setMfaMethods([]);
+    setMfaRecoveryMode(false);
+    setMfaCode("");
+    mfaGenRef.current = null;
+  };
+
+  const onTokens = async (data: LoginResult | undefined, identityGen: number) => {
+    // `data` 在 2xx 下仍可能整个缺失（网关返回了个空壳 200）。
+    // 直接往下走会在 `data.accessToken` 处抛 TypeError 穿透出去 ——
+    // 调用方的 finally 收不了尾，MFA 状态也不会被清理，页面就停在那张已被消费的表单上。
+    if (!data) {
+      clearMfaFlow();
+      setError(t("login.identityChanged"));
+      return;
+    }
     // 登录成功即消掉「会话已过期」提示。
     // 远端此处还调了 clearAdminAuth()——那是旧双平面模型的管理员令牌，已随管理平面移除。
     clearSessionExpired();
-    if (data.accessToken) setUserToken(data.accessToken);
+    // 走到这里就是「登录成功、无需二次验证」，响应**必须**带令牌。
+    // 没带说明协议出了岔子；此时若照常往下走，用的会是浏览器里**上一个人**的旧令牌 ——
+    // 一次异常响应就变成了「以别人的身份完成了这次登录」。协议异常一律 fail closed。
+    // 缺令牌与装不上，两者都必须**先把已被消费的挑战状态清掉**再报错。
+    // 留着的话，页面会继续显示那张二次验证表单 —— 而服务端那边挑战已经用掉了，
+    // 用户再提交一次只会拿到「无效/已使用」，看起来像是自己输错了。
+    if (!data.accessToken) {
+      clearMfaFlow();
+      setError(t("login.identityChanged"));
+      return;
+    }
+    // 带代次安装：请求在途时用户可能已经登出或换号登进来，
+    // 这时把迟到的令牌装上就是「登出之后又被旧请求登了回去」。
+    if (!installAccessToken(data.accessToken, identityGen)) {
+      clearMfaFlow();
+      setError(t("login.identityChanged"));
+      return;
+    }
     setTurnstileToken(null);
-    await refresh();
-    await finish();
+    // **确认档案真的到手了才往下走。** refresh() 在 5xx / 限流 / 断网 / 身份已变时返回 null
+    // 并且**不改状态**；此时若照常 finish()，会话状态还停在 unknown，
+    // 跳过去的账户页只会一直转圈（或被弹回登录页），而令牌其实已经装好了。
+    // 拉档案带退避重试，与身份变化处理同款。
+    //
+    // 只试一次是不够的：会话上下文那边的重试是**它自己的**，而 single-flight 只合并
+    //「同一时刻的第一发」—— 第一发撞上 503 时这里立刻判失败，几秒后那边重试成功、
+    // 状态落定，本页却已经停在错误上，而 OIDC 交互还悬着没完成。
+    let profile = await refresh();
+    if (!profile) {
+      for (const delay of [800, 2400]) {
+        await new Promise((r) => setTimeout(r, delay));
+        profile = await refresh();
+        if (profile) break;
+      }
+    }
+    if (!profile) {
+      // 挑战在服务端已经被消费掉了 —— 留着这套 MFA 状态，用户点「重试」只会
+      // 再提交一次同样的挑战，拿到「无效/已使用」，看起来像是自己输错了。
+      // 会话其实已经建立，缺的只是档案：清掉流程、如实说明，让他重来一次登录即可。
+      clearMfaFlow();
+      setError(t("login.profileFetchFailed"));
+      return;
+    }
+    await finish(identityGen);
   };
 
   /** 邮箱未验证：跳转门户「重发验证邮件」页（带上邮箱以预填表单）。 */
@@ -208,6 +387,9 @@ const LoginPage = () => {
   };
 
   const handleSubmit = async (e: FormEvent) => {
+    // 记下本次登录流程开始时的身份代次：请求在途时用户可能登出或换号，
+    // 迟到的令牌不能装到已经换了人的会话上。
+    const identityGen = getIdentityGen();
     e.preventDefault();
     if (busy) return;
     setError(null);
@@ -216,7 +398,16 @@ const LoginPage = () => {
     try {
       const body: Record<string, unknown> = { identifier, password };
       if (turnstileToken) body.turnstileToken = turnstileToken;
-      const res = await api.post<LoginResult>("/v1/auth/login", body, { noAuth: true });
+      const res = await api.post<LoginResult>("/v1/auth/login", body, {
+        noAuth: true,
+        // 响应会写会话 cookie：在途期间若发生认证边界必须掐掉它，见 authWrite。
+        authWrite: true,
+        // 锚就在上面几行同步取的，这道闸此刻恒真 —— 带上它是为了**统一不变量**：
+        // 「每一个 authWrite 都随身带着自己的身份锚」。哪天有人把取锚那行往上挪
+        // （挪进 useMemo、挪到组件顶层、挪进某个 hook），窗口就出现了，
+        // 而那时不会有人记得回来补这个参数。
+        requireIdentityGen: identityGen,
+      });
       if (!res.ok) {
         if (res.error.code === "EMAIL_NOT_VERIFIED") {
           goVerifyEmail(res.error.data?.email);
@@ -237,25 +428,42 @@ const LoginPage = () => {
         setError(res.error.message);
         return;
       }
+      // 2xx 也可能整个没有 data（网关吐了个空壳 200）。直接解引用会抛 TypeError，
+      // 用户看不到任何反馈。归到与「协议异常」同一条路径。
+      if (!res.data) {
+        setError(t("login.identityChanged"));
+        return;
+      }
       if (res.data.mfaRequired) {
         if (!res.data.mfaChallengeToken) {
           // 服务端声明需要 MFA 却未下发挑战令牌：显式报错，而非静默停留。
           setError(t("login.mfaChallengeMissing"));
           return;
         }
+        // 与交接路径同样的校验：非数组会在后面 `.length` / `.includes()` 处抛 TypeError，
+        // 而那时挑战已经签发出去了，页面却没有任何可操作的恢复路径。
+        // 字段缺失按空数组兼容（后端可能确实没有可选方式），但类型不对必须 fail closed。
+        const methods = res.data.availableMethods;
+        if (methods !== undefined && !Array.isArray(methods)) {
+          setError(t("login.identityChanged"));
+          return;
+        }
+        mfaGenRef.current = identityGen;
         setMfaToken(res.data.mfaChallengeToken);
-        setMfaMethods(res.data.availableMethods ?? []);
+        setMfaMethods(methods ?? []);
         setMfaPasskey(res.data.passkey?.publicKey ?? null);
         setMfaRecoveryMode(false);
         return;
       }
-      await onTokens(res.data);
+      await onTokens(res.data, identityGen);
     } finally {
       setPending(null);
     }
   };
 
   const handleMfa = async (e: FormEvent) => {
+    // 用**挑战签发时**的身份代次，不是此刻的（见 mfaGenRef）。
+    const identityGen = mfaGenRef.current ?? getIdentityGen();
     e.preventDefault();
     if (busy) return;
     setError(null);
@@ -265,7 +473,9 @@ const LoginPage = () => {
       const res = await api.post<LoginResult>(
         "/v1/auth/mfa/totp/verify",
         { mfaChallengeToken: mfaToken, code: mfaCode },
-        { noAuth: true },
+        // 二次验证表单会在页面上停留很久（用户去翻验证码）。
+        // 期间别的标签页换了号的话，这一发根本不该出门 —— 见 requireIdentityGen。
+        { noAuth: true, authWrite: true, requireIdentityGen: identityGen },
       );
       if (!res.ok) {
         if (res.error.code === "EMAIL_NOT_VERIFIED") {
@@ -275,7 +485,7 @@ const LoginPage = () => {
         setError(res.error.message);
         return;
       }
-      await onTokens(res.data);
+      await onTokens(res.data, identityGen);
     } finally {
       setPending(null);
     }
@@ -283,6 +493,8 @@ const LoginPage = () => {
 
   /** 密码通过后以 Passkey 完成二次验证（仅有 Passkey / 或与 TOTP 并存时可选）。 */
   const handleMfaPasskey = async () => {
+    // 用**挑战签发时**的身份代次，不是此刻的（见 mfaGenRef）。
+    const identityGen = mfaGenRef.current ?? getIdentityGen();
     if (busy || !mfaToken || !mfaPasskey) return;
     setError(null);
     setPendingDeletion(false);
@@ -294,7 +506,7 @@ const LoginPage = () => {
       const res = await api.post<LoginResult>(
         "/v1/auth/mfa/passkey/verify",
         { mfaChallengeToken: mfaToken, credential },
-        { noAuth: true },
+        { noAuth: true, authWrite: true, requireIdentityGen: identityGen },
       );
       if (!res.ok) {
         if (res.error.code === "EMAIL_NOT_VERIFIED") {
@@ -304,7 +516,7 @@ const LoginPage = () => {
         setError(res.error.message);
         return;
       }
-      await onTokens(res.data);
+      await onTokens(res.data, identityGen);
     } catch (err) {
       if ((err as DOMException)?.name !== "NotAllowedError") setError(t("login.passkeyFailed"));
     } finally {
@@ -327,7 +539,9 @@ const LoginPage = () => {
         "/v1/auth/oauth/providers",
         { noAuth: true },
       );
-      if (res.ok) setProviders(res.data.providers);
+      // 同样要校验形状：不是数组就当作没取到（下面那条注释说的退化路径），
+      // 而不是让 `res.data.providers` 在 effect 里抛异常。
+      if (res.ok && Array.isArray(res.data?.providers)) setProviders(res.data.providers);
       // 取不到就退化为「只有密码 / 通行密钥」，不阻塞登录。
     })();
   }, []);
@@ -345,7 +559,10 @@ const LoginPage = () => {
         `/v1/auth/oauth/${provider}/start?redirectAfter=${encodeURIComponent(next)}`,
         { noAuth: true },
       );
-      if (res.ok && res.data.authorizationUrl) {
+      // 跳转地址必须是**非空字符串**。只判 truthy 的话，`redirectTo: {}` 会一路走到
+      // `location.href = {}`，浏览器把它转成字符串 "[object Object]" 当相对路径跳过去 ——
+      // 用户落在一个 404，而屏幕上没有任何东西说明刚才发生了什么。
+      if (res.ok && isNonEmptyString(res.data?.authorizationUrl)) {
         // 保持 pending 直到整页跳转，避免离开前按钮短暂恢复可点。
         window.location.href = res.data.authorizationUrl;
         return;
@@ -359,6 +576,9 @@ const LoginPage = () => {
   };
 
   const loginWithPasskey = async () => {
+    // 记下本次登录流程开始时的身份代次：请求在途时用户可能登出或换号，
+    // 迟到的令牌不能装到已经换了人的会话上。
+    const identityGen = getIdentityGen();
     if (busy) return;
     setError(null);
     setPendingDeletion(false);
@@ -377,7 +597,7 @@ const LoginPage = () => {
       const finishRes = await api.post<LoginResult>(
         "/v1/auth/passkey/login/finish",
         { challengeId: start.data.challengeId, credential },
-        { noAuth: true },
+        { noAuth: true, authWrite: true, requireIdentityGen: identityGen },
       );
       if (!finishRes.ok) {
         if (finishRes.error.code === "EMAIL_NOT_VERIFIED") {
@@ -387,7 +607,7 @@ const LoginPage = () => {
         setError(finishRes.error.message);
         return;
       }
-      await onTokens(finishRes.data);
+      await onTokens(finishRes.data, identityGen);
     } catch (err) {
       if ((err as DOMException)?.name !== "NotAllowedError") setError(t("login.passkeyFailed"));
     } finally {
@@ -399,7 +619,81 @@ const LoginPage = () => {
   // **但有待处理的二次验证交接时不能返回空**：那时上面的跳转 effect 已经让路，
   // 这里再返回 null 就是一片永久空白 —— 用户既看不到二次验证界面，也走不下去。
   // 两处的让路条件必须一致。
-  if (user && !oidcUid && !handoffPending && !mfaToken) return null;
+  // `!error`：有错要说时不能返回空 —— 那会得到一个**彻底空白**的页面，
+  // 既没有错误、没有重试入口，也没有登录表单。
+  if (user && !oidcUid && !error && !handoffPending && !mfaToken && !handoffFailed) return null;
+
+  /**
+   * 会话尚未问出结果时**绝不能画登录表单**。
+   *
+   * 这正是「OAuth 登录先跳到 Pass 登录页、过一会才反应过来已经登录」的直接来源：
+   * 旧代码只看 `user`，而 `user === null` 在启动阶段的真实含义是「还不知道」。
+   * 于是已登录用户会先看到一整屏登录表单，几百毫秒后才被跳走 —— 界面明确地
+   * 传达了一件假事（「你需要重新登录」）。
+   *
+   * 两种等待文案分开：带交互 uid（或有身份提示）时说的是「就要跳转了」，
+   * 没有任何依据时才说「正在检查登录状态」。
+   */
+  // ⚠️ **终态必须排在所有 loading 门控之前。**
+  // 排在后面的话，`status === "unknown"` 或「已登录 + 有 oidcUid」这两个加载屏会先命中，
+  // 把错误说明与重试入口整个盖住 —— 用户对着一个永远转圈的页面，既不知道发生了什么，
+  // 也没有下一步可点。
+  // 交互续跑失败：给出说明与出路，而不是把人静默送去账户中心。
+  if (interactionFailed) {
+    return (
+      <StatusScreen
+        kind="error"
+        title={t("login.interactionFailedTitle")}
+        description={t("login.interactionFailedDesc")}
+        actions={[{ label: t("account.title"), to: "/account" }]}
+      />
+    );
+  }
+
+  // 交互续跑撞上瞬态错误：交互多半还有效，给说明和重试，别继续假装在跳转。
+  if (interactionRetryable) {
+    return (
+      <StatusScreen
+        kind="error"
+        title={t("login.interactionRetryableTitle")}
+        description={t("login.interactionRetryable")}
+        actions={[
+          {
+            label: t("mfa.done.retry"),
+            onClick: () => {
+              setInteractionRetryable(false);
+              void finish(getIdentityGen());
+            },
+          },
+          { label: t("account.title"), variant: "ghost" as const, to: "/account" },
+        ]}
+      />
+    );
+  }
+
+  // `!error`：有话要对用户说的时候就别再画加载屏了 —— 否则错误文案会被整个盖住，
+  // 页面看起来只是一直在转圈。
+  if (status === "unknown" && !error && !handoffPending && !mfaToken && !handoffFailed) {
+    return (
+      <StatusScreen
+        kind="loading"
+        title={oidcUid || hint ? t("login.continuing") : t("login.checkingSession")}
+      />
+    );
+  }
+
+  // 第三方登录带回了二次验证交接、但挑战还没取回来（handoffPending 且尚无 mfaToken）：
+  // 这时**同样不能画密码登录表单**。用户刚在 GitHub/统一身份那边验完，
+  // 眼前突然出现一个要密码的表单，读起来就是「刚才那一步白做了」。
+  if (handoffPending && !mfaToken) {
+    return <StatusScreen kind="loading" title={t("login.continuing")} />;
+  }
+
+  // 已登录 + 带交互 uid：上方 effect 正在续跑 OIDC 交互，马上就会整页跳走。
+  // 这里同样不能画表单 —— 那一瞬间的表单会让人以为「又要登录一次」。
+  if (user && oidcUid && !error && !handoffPending && !mfaToken && !handoffFailed) {
+    return <StatusScreen kind="loading" title={t("login.continuing")} />;
+  }
 
   return (
     <CenteredCard>
@@ -558,12 +852,30 @@ const LoginPage = () => {
               setError(localized === key ? res.error.message : localized);
               return;
             }
-            saveIamMfaHandoff({
+            // 2xx ≠ 响应成形。少了 verifyUrl 就会 `location.href = undefined`
+            //（浏览器当成相对路径，跳到一个不存在的页面）；少了 verificationId
+            // 则是带着空 id 回来，向后端回查权威结果时必然失败 —— 两种都得在跳走之前拦下。
+            if (!hasStringFields(res.data, ["verificationId", "verifyUrl"])) {
+              setError(t("authError.MALFORMED_RESPONSE"));
+              return;
+            }
+            // 存不下就别跳：验证做完回来也找不到交接，等于让用户白跑一趟统一身份。
+            const saved = saveIamMfaHandoff({
               mfaChallengeToken: mfaToken,
               verificationId: res.data.verificationId,
               redirect: redirectTo,
               oidc: oidcUid ?? undefined,
+              // 出发时这个浏览器是谁。回来时要拿它比对，见 IamMfaHandoff.priorUserId。
+              // 一般是 null（正在登录，还没有身份）；重新认证的场景下是当前用户。
+              priorUserId: user?.id ?? null,
+              // 出去这一趟期间若有人登出，回来时浏览器是 anonymous ——
+              // 那时 priorUserId 那道判断恒为 false，拦不住。见 signoutEpoch.ts。
+              priorSignoutEpoch: readSignoutEpoch(),
             });
+            if (!saved) {
+              setError(t("callback.handoffUnavailable"));
+              return;
+            }
             window.location.href = res.data.verifyUrl;
           };
 

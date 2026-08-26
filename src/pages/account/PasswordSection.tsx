@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { api, setUserToken } from "../../api/client";
-import { useSession } from "../../context/SessionContext";
+import { abortInflightRefresh, api, getIdentityGen, installAccessToken, setUserToken } from "../../api/client";
+import { useAuthenticatedUser, useSession } from "../../context/SessionContext";
 import { checkPasswordStrength } from "../../utils/string";
 import { StepUpDialog } from "../../components/StepUpDialog";
 import {
@@ -34,8 +34,9 @@ export interface PasswordSectionProps {
 /** 登录密码分区:一行状态 + 弹窗内修改/设置密码;成功后用轮换的 accessToken 续期会话。 */
 export function PasswordSection({ openRequest = 0, mustChange = false }: PasswordSectionProps = {}) {
   const { t } = useTranslation();
-  const { user, refresh } = useSession();
-  const hasPassword = user?.passwordSet ?? true;
+  const { refresh } = useSession();
+  const user = useAuthenticatedUser();
+  const hasPassword = user.passwordSet;
 
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -79,9 +80,19 @@ export function PasswordSection({ openRequest = 0, mustChange = false }: Passwor
   }, [openRequest]);
 
   const send = async (body: Record<string, unknown>) => {
+    // 记下代次：改密会轮换令牌，而请求在途时用户可能登出或换号。
+    const identityGen = getIdentityGen();
     setBusy(true);
     try {
-      const res = await api.post<ChangeResult>("/v1/me/password", body);
+      // 改密会轮换会话并下发新的 refresh cookie，同样归入 authWrite。
+      const res = await api.post<ChangeResult>("/v1/me/password", body, {
+        authWrite: true,
+        // 锚就在上面几行同步取的，这道闸此刻恒真 —— 带上它是为了**统一不变量**：
+        // 「每一个 authWrite 都随身带着自己的身份锚」。哪天有人把取锚那行往上挪
+        // （挪进 useMemo、挪到组件顶层、挪进某个 hook），窗口就出现了，
+        // 而那时不会有人记得回来补这个参数。
+        requireIdentityGen: identityGen,
+      });
       if (!res.ok) {
         // 无密码账户首次设置密码需先完成二次验证。
         if (res.status === 403 && res.error.code === "STEP_UP_REQUIRED") {
@@ -92,8 +103,29 @@ export function PasswordSection({ openRequest = 0, mustChange = false }: Passwor
         setError(res.error.message);
         return;
       }
-      if (res.data?.accessToken) setUserToken(res.data.accessToken);
+      // 改密会轮换令牌，并把 `tokenVersion` 自增 —— 也就是说**旧令牌此刻已经作废**。
+      //
+      // 无条件走一遍安装（它自己会校验令牌合法性与代次）。装不上分两种：
+      //  - 代次变了：这枚令牌属于上一个身份，装上去就把新会话顶掉了 → 报错收手。
+      //  - 响应没带令牌（协议异常）：把内存里那枚**已知失效**的旧令牌清掉，
+      //    让下一个请求直接走续期（refresh cookie 已在同一响应里轮换过），
+      //    而不是先发一个注定 401 的请求。
+      if (!installAccessToken(res.data?.accessToken, identityGen)) {
+        if (getIdentityGen() !== identityGen) {
+          setError(t("login.identityChanged"));
+          return;
+        }
+        // 改密已经轮换了 refresh cookie，手里这枚 access token 也随 tokenVersion 作废。
+        // 除了清掉它，还要掐掉在途续期：那次续期用的是**轮换前**的 cookie，
+        // 落地时会把它写回浏览器，超过后端的 race-grace 窗口就会被判成令牌重用、
+        // 连整条会话一起吊销 —— 一次成功的改密反而把人踢下线。
+        abortInflightRefresh();
+        setUserToken(null);
+      }
       // 刷新会话资料:首次设密码后 passwordSet 变更,避免安全页仍走「无密码」分支。
+      //
+      // 这里**不因 refresh 失败而报错**：密码确实已经改成功了，报「失败」是不实的。
+      // 拉不到最新档案只影响本页的展示，下一次请求会自行续期并纠正。
       await refresh();
       setCurrent("");
       setNext("");

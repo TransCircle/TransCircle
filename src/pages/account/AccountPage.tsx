@@ -32,11 +32,11 @@ const PencilIcon = () => (
 
 /**
  * 单页账户中心:身份头(可点击头像 → 更换弹窗)+ 分组卡片,所有编辑均走弹窗。
- * Pass 会话门控(loading → 加载屏;未登录 → 跳转登录)在此收口。
+ * Pass 会话门控(unknown → 加载屏;anonymous → 跳转登录)在此收口。
  */
 const AccountPage = () => {
   const { t } = useTranslation();
-  const { user, loading, sessionExpired } = useSession();
+  const { user, status, sessionExpired } = useSession();
   const location = useLocation();
   const [avatarOpen, setAvatarOpen] = useState(false);
   /** 递增即让「登录密码」分区打开修改弹窗（供强制改密提示调用）。 */
@@ -44,7 +44,10 @@ const AccountPage = () => {
 
   usePageTitle(t("account.title"));
 
-  if (loading) {
+  // 三态各自有明确的落点：还没问出结果 → 加载屏；确定未登录 → 送去登录页；
+  // 确定登录 → 往下渲染。`user` 在 status === "authenticated" 时必有值，
+  // 下面那个 `!user` 只是给编译器的收窄。
+  if (status === "unknown") {
     return <StatusScreen kind="loading" title={t("account.verifying")} />;
   }
   if (!user) {

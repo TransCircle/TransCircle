@@ -89,12 +89,42 @@ function useMenuKeyboard(
  */
 export function AppNav() {
   const { t } = useTranslation();
-  const { user, logout: sessionLogout } = useSession();
+  const { user, status, hint, logout: sessionLogout } = useSession();
   // 管理员就是普通用户：控制台复用同一条会话，因此导航身份只有 user 一个来源，
   // 「有没有管理权限」只决定要不要多显示一个入口，不再是第二种登录态。
   const { state: adminState } = useAdmin();
   const adminAuthed = adminState === "ready";
-  const navUser = user;
+  /**
+   * 导航栏要显示的身份。
+   *
+   * 会话还没问出结果时（status === "unknown"）退回上次登录留下的身份提示 ——
+   * 否则每次冷启动导航栏都会先画出「登录」按钮，几百毫秒后再跳成头像，
+   * 而绝大多数情况下用户本来就是登录着的。提示只影响这一处渲染：
+   * 猜错了会在 status 落定时立刻改回「登录」，且它带不出任何权限
+   *（adminAuthed 另有来源，且必须等真实接口）。
+   */
+  const navIdentity =
+    user ?? (status === "unknown" && hint ? { displayName: hint.displayName, avatarUrl: hint.avatarUrl } : null);
+  const navUser = navIdentity;
+  /**
+   * 身份还只是「提示」时，头像只作占位、不可交互。
+   *
+   * 提示可能已经失效（登录早已过期、或在别处登出过）。此时把账户菜单一起画出来，
+   * 用户点「退出登录」会撞上 401、点「账户中心」会被门控弹回登录页 ——
+   * 展示一个还没证实的身份是可以接受的取舍，让人对着它做操作则不是。
+   * 状态一落定（几百毫秒内）菜单即可用。
+   */
+  const identityUnconfirmed = !user && navIdentity !== null;
+  /**
+   * 会话还没问出结果、且本地也没有身份提示。
+   *
+   * 这时**既不能显示头像**（不知道是谁），**也不能显示「登录」入口**——
+   * 后者是把「还不知道」当成了「没登录」，正是这次改造要消灭的那个错误。
+   * 典型场景：用户的 HttpOnly refresh cookie 还在，但 localStorage 被清过
+   *（换设备、隐私模式、清理过站点数据）；首屏画出「登录」会诱导他点进去重登一次，
+   * 而探测结束后发现本来就登着。宁可这一小段时间什么都不画。
+   */
+  const identityPending = status === "unknown" && navIdentity === null;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -255,11 +285,21 @@ export function AppNav() {
   useMenuKeyboard(linksOpen, closeLinks, linksMenuRef, linksBtnRef);
   useMenuKeyboard(acctOpen, closeAcct, acctMenuRef, acctBtnRef, acctAutoFocus);
 
+  // 身份一旦变得不确定（别的标签页换了号、会话正在重新确认），**已经展开的账户菜单
+  // 必须立刻收起来**。只把触发按钮 disabled 是不够的：菜单是独立渲染的，
+  // 展开状态会原样留在屏幕上，用户点里面的「退出登录」或「账户中心」时，
+  // 身份其实还没确认 —— 那次操作会带着旧令牌和已经换过的共享 cookie 发出去。
+  useEffect(() => {
+    if (identityUnconfirmed || identityPending) setAcctOpen(false);
+  }, [identityUnconfirmed, identityPending]);
+
   // 用事件的 pointerType(而非 matchMedia)判定是否为真实鼠标悬停:触屏笔记本的主指针也报告为
   // 可 hover 的 fine 指针,若按媒体查询判定,手指点击会先触发兼容鼠标事件(pointerenter 开 → click 关)
   // 造成菜单"点开即关、触屏点不开"。改看 pointerType 后,触屏 tap 不再误触发 hover 打开。
   const openAcctHover = (e: React.PointerEvent) => {
     if (e.pointerType !== "mouse") return;
+    // 身份未证实时头像只是占位：悬停也不该展开菜单（disabled 按钮挡不住父容器的悬停）。
+    if (identityUnconfirmed) return;
     if (acctCloseTimer.current !== null) {
       clearTimeout(acctCloseTimer.current);
       acctCloseTimer.current = null;
@@ -296,8 +336,9 @@ export function AppNav() {
     }
   };
 
-  const displayName = navUser ? navUser.displayName || navUser.username || "" : "";
-  const avatarUrl = navUser ? navUser.avatarUrl : null;
+  // user 的 displayName 可能为空串，回落用户名；hint 在写入时已经做过同样的回落。
+  const displayName = user ? user.displayName || user.username || "" : navIdentity?.displayName ?? "";
+  const avatarUrl = navIdentity?.avatarUrl ?? null;
   const logoutLabel = loggingOut ? t("nav.loggingOut") : t("nav.logout");
 
   // 触发器上按 ArrowDown/ArrowUp 也应打开菜单(菜单按钮键盘惯例);
@@ -374,7 +415,7 @@ export function AppNav() {
 
           <div className={styles.right}>
             <ThemeToggle />
-            {navUser ? (
+            {identityPending ? null : navUser ? (
               <div
                 ref={acctRef}
                 className={styles.dropdown}
@@ -385,6 +426,7 @@ export function AppNav() {
                   ref={acctBtnRef}
                   type="button"
                   className={styles.acctBtn}
+                  disabled={identityUnconfirmed}
                   aria-haspopup="menu"
                   aria-expanded={acctOpen}
                   aria-label={adminAuthed ? `${displayName} · ${t("nav.admin")}` : `${displayName} · ${t("nav.account")}`}
@@ -419,7 +461,7 @@ export function AppNav() {
                 >
                   <Avatar name={displayName} src={avatarUrl} size={34} />
                 </button>
-                {acctOpen && (
+                {acctOpen && !identityUnconfirmed && (
                   <ul ref={acctMenuRef} className={cx(styles.menu, styles.menuRight)} role="menu">
                     {adminAuthed ? (
                       <>
@@ -488,7 +530,11 @@ export function AppNav() {
             <a key={l.href} href={l.href} target="_blank" rel="nofollow noopener noreferrer" className={styles.drawerLink}>{l.label}<ExternalIcon /></a>
           ))}
           <hr className={styles.drawerDivider} />
-          {navUser ? (
+          {identityUnconfirmed || identityPending ? (
+            // 抽屉里没有「只显示头像」的位置：身份未证实或还没问出结果时索性不给任何
+            // 账户操作，而不是给一组点了会失败、或干脆指错方向的入口。
+            null
+          ) : navUser ? (
             <>
               {adminAuthed ? (
                 <Link to="/admin" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.admin")}</Link>

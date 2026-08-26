@@ -17,12 +17,21 @@ export interface MfaHandoff {
   redirectAfter: string;
 }
 
-export function saveMfaHandoff(data: MfaHandoff): void {
+/**
+ * 落地交接数据，**返回是否真的存下了**。
+ *
+ * 返回值不是装饰：存不下（隐私模式、禁用站点数据）时若照常跳去登录页，
+ * 那边 `hasMfaHandoff()` 会返回 false —— 于是页面既不知道有过一次交接、
+ * 也不会进入失败终态，「已登录就自动续跑」可能拿浏览器里的旧会话把这次
+ * OIDC 交互直接完成掉，而这次要求的第二因素根本没做。
+ * 调用方必须检查返回值，存不下就地报错，不要往下走。
+ */
+export function saveMfaHandoff(data: MfaHandoff): boolean {
   try {
     sessionStorage.setItem(KEY, JSON.stringify(data));
+    return true;
   } catch {
-    // 隐私模式等场景下写不进去。调用方会因为拿不到交接而回落到「请重新登录」，
-    // 这是安全的失败方向。
+    return false;
   }
 }
 

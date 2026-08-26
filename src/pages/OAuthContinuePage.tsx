@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, setUserToken, getCsrfToken, saveCsrfToken, clearCsrfToken } from "../api/client";
+import { api, getIdentityGen, installAccessToken, getCsrfToken, saveCsrfToken, clearCsrfToken } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { sanitizeRedirect } from "../utils/url";
 import { usePageTitle } from "../utils/usePageTitle";
@@ -55,7 +55,11 @@ const OAuthContinuePage = () => {
         providers: Array<{ provider: string; label?: string; permanent: boolean }>;
       }>("/v1/auth/oauth/providers", { noAuth: true });
       if (!alive) return;
-      if (res.ok) setProviders(res.data.providers);
+      // 必须校验形状。2xx 但 `data` 缺失或 `providers` 不是数组时，
+      // `res.data.providers` 会抛 TypeError —— 而它发生在 effect 里，
+      // `providersFailed` 仍是 false、`providers` 仍是 null，
+      // 于是提交按钮永久禁用，用户既看不到错误也没有重试入口。
+      if (res.ok && Array.isArray(res.data?.providers)) setProviders(res.data.providers);
       else setProvidersFailed(true);
     })();
     return () => {
@@ -143,6 +147,9 @@ const OAuthContinuePage = () => {
   }
 
   const submit = async (e: FormEvent) => {
+    // 记下本次流程开始时的身份代次：兑换往返期间用户可能登出或换号，
+    // 迟到的令牌不能装到已经换了人的会话上。
+    const identityGen = getIdentityGen();
     e.preventDefault();
     // 硬门控，不能只靠按钮 disabled：回车隐式提交、requestSubmit()、以后新增的提交控件
     // 都绕得过 UI。名单没到手时 permanent 恒为 false，提交出去就是缺 acknowledgedPermanent
@@ -162,13 +169,31 @@ const OAuthContinuePage = () => {
         // 不可解绑的提供商（统一身份）：后端要求先拿到不可逆确认。
         // 这一页上面已经把「绑定后无法自行解除」摆出来了，用户点提交即视为确认。
         { username, email, password, displayName, ...(permanent ? { acknowledgedPermanent: true } : {}) },
-        { noAuth: true, headers: csrfToken ? { "X-CSRF-Token": csrfToken } : undefined },
+        // 第三方邮箱已验证时，这一步后端就会写 refresh cookie 并建立 SSO ——
+        // 不只是拿个 loginCode，所以同样要能被认证边界掐掉。
+        {
+          noAuth: true,
+          authWrite: true,
+        // 锚就在上面几行同步取的，这道闸此刻恒真 —— 带上它是为了**统一不变量**：
+        // 「每一个 authWrite 都随身带着自己的身份锚」。哪天有人把取锚那行往上挪
+        // （挪进 useMemo、挪到组件顶层、挪进某个 hook），窗口就出现了，
+        // 而那时不会有人记得回来补这个参数。
+          requireIdentityGen: identityGen,
+          headers: csrfToken ? { "X-CSRF-Token": csrfToken } : undefined,
+        },
       );
       if (!res.ok) {
         setError(res.error.message);
         return;
       }
       clearCsrfToken();
+      // 2xx 也可能整个没有 data（网关吐了个空壳 200）。此刻注册**很可能已经成功、
+      // 一次性凭据已被消费**，让用户重提表单只会拿到「已使用」。当作「没拿到 loginCode」
+      // 走下面那条既有的引导路径，而不是抛异常穿透出去。
+      if (!res.data) {
+        setError(t("login.profileFetchFailed"));
+        return;
+      }
       // 邮箱未由 provider 验证：不自动登录，引导到「重发/完成邮箱验证」页（验证邮件已发出）。
       if (res.data.requiresEmailVerification || !res.data.loginCode) {
         navigate(
@@ -181,14 +206,33 @@ const OAuthContinuePage = () => {
       const ex = await api.post<OAuthExchangeResult>(
         "/v1/auth/oauth/exchange",
         { loginCode: res.data.loginCode },
-        { noAuth: true },
+        { noAuth: true, authWrite: true, requireIdentityGen: identityGen },
       );
       if (!ex.ok) {
         setError(ex.error.message);
         return;
       }
-      setUserToken(ex.data.accessToken);
-      await refresh();
+      // 2xx 也可能没有 data（见 AuthCallbackPage 同处注释）。
+      if (!installAccessToken(ex.data?.accessToken, identityGen)) {
+        setError(t("login.identityChanged"));
+        return;
+      }
+      if ((await refresh()) === null) {
+        // 注册与兑换都已经成功、会话也建立了，缺的只是档案。
+        // **不能让用户重新提交这张表单** —— pending 凭据是一次性的，
+        // 再交一次只会拿到「已使用」。直接在这里重试拉档案；
+        // 成功后仍走 `redirectAfter`（它可能是 `/login?oidc=...`，
+        // 跳去别处等于把一次仍然有效的授权请求丢掉）。
+        for (const delay of [600, 1800]) {
+          await new Promise((r) => setTimeout(r, delay));
+          if (await refresh()) {
+            navigate(redirectAfter, { replace: true });
+            return;
+          }
+        }
+        setError(t("login.profileFetchFailed"));
+        return;
+      }
       // 续跑目标：OIDC 登录经首次注册时为 /login?oidc=...，否则回账户中心。
       navigate(redirectAfter, { replace: true });
     } finally {

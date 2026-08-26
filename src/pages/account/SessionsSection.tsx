@@ -29,6 +29,9 @@ const LOGIN_METHOD_KEYS: Record<string, string> = {
   oauth: "account.sessions.method.oauth",
   github: "account.sessions.method.github",
   x: "account.sessions.method.x",
+  // 后端对「第一因素不可考」的历史会话如实记 'unknown'（见 Pass 迁移 0011），
+  // 不给标签的话这里会把裸字符串 unknown 直接显示给用户。
+  unknown: "account.sessions.method.unknown",
 };
 
 /** 登录设备与会话分区(契约修正:device/ipPrefix/lastUsedAt + 注销确认)。 */

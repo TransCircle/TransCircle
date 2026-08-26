@@ -14,26 +14,38 @@ export type AccountStatus =
   | string;
 
 /** GET /v1/me —— C 端当前用户资料 */
+/**
+ * `GET /v1/me` 与 `POST /v1/auth/refresh` 共同下发的用户档案。
+ *
+ * **形状以后端 `TransCircle-Pass/src/utils/profile.ts` 的 `MeProfile` 为准**，
+ * 两处必须逐字段对齐。曾经这里把 `email` 写成必填、`displayName` 写成可空，
+ * 恰好和后端反了 —— 第三方登录未回传邮箱的用户会带着 `email: null` 回来，
+ * 而 TypeScript 一路放行到 `user.email.trim()` 才在运行时炸。
+ */
 export interface MeProfile {
   id: string;
   username: string;
-  email: string;
-  displayName: string | null;
+  /** 后端可空：第三方登录未回传邮箱时为 null。 */
+  email: string | null;
+  /** 后端非空（库上 NOT NULL）；可能是空串，展示时按 `displayName || username` 回落。 */
+  displayName: string;
   avatarUrl: string | null;
   emailVerified: boolean;
   status: AccountStatus;
   passwordSet: boolean;
+  /** 两步验证是否已交给统一身份接管。 */
+  iamMfaDelegated: boolean;
   security: {
     hasPassword: boolean;
     totpEnabled: boolean;
     passkeyCount: number;
     oauthProviders: string[];
   };
-  createdAt?: number;
-  updatedAt?: number;
-  lastLoginAt?: number | null;
+  createdAt: number;
+  updatedAt: number;
+  lastLoginAt: number | null;
   /** 管理员置过新密码，下次登录必须修改；改完后端自动清零。 */
-  mustChangePassword?: boolean;
+  mustChangePassword: boolean;
 }
 
 /** WebAuthn 断言请求参数（登录 MFA / step-up 共用形状） */

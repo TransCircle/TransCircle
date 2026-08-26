@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../api/client";
-import { useSession } from "../../context/SessionContext";
+import { useAuthenticatedUser, useSession } from "../../context/SessionContext";
 import { AdminButton as Button, Alert } from "../../components/ui";
 import { Dialog } from "../../components/ui/Dialog";
 import { ImageCropper } from "./ImageCropper";
@@ -26,7 +26,8 @@ const UploadIcon = () => (
  */
 export function AvatarDialog({ open, onClose }: AvatarDialogProps) {
   const { t } = useTranslation();
-  const { user, refresh } = useSession();
+  const { refresh } = useSession();
+  const user = useAuthenticatedUser();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -42,7 +43,6 @@ export function AvatarDialog({ open, onClose }: AvatarDialogProps) {
     }
   }, [open]);
 
-  if (!user) return null;
 
   // 选好文件后不直接上传,先进入编辑器裁剪;裁剪产出的 dataURL 再上传。
   const onFile = (e: ChangeEvent<HTMLInputElement>) => {

@@ -18,7 +18,7 @@ const OAuthBindConfirmPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { user, loading } = useSession();
+  const { user, status } = useSession();
   /**
    * URL 参数在挂载时一次性取定。
    *
@@ -122,7 +122,9 @@ const OAuthBindConfirmPage = () => {
   };
 
   useEffect(() => {
-    if (loading || ran.current) return;
+    // 会话未问出结果前什么都不做：此时把 `!user` 当成未登录会把用户踢去登录页，
+    // 而他其实是登录着的 —— 一次毫无必要的往返，还会中断绑定流。
+    if (status === "unknown" || ran.current) return;
     if (!user) {
       // 登录后必须回到本页：pending 绑定 Cookie 只有经由本页 complete-binding 才会被消费，
       // 跳去 /account/oauth 会让绑定永远无法完成。
@@ -133,7 +135,7 @@ const OAuthBindConfirmPage = () => {
     ran.current = true;
     void complete();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, user]);
+  }, [status, user]);
 
   if (done) {
     return (

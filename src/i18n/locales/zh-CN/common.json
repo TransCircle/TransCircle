@@ -104,6 +104,15 @@
   "login": {
     "title": "登录 TransCircle Pass",
     "oidcTitle": "登录以继续授权",
+    "checkingSession": "正在检查登录状态…",
+    "continuing": "正在跳转…",
+    "identityChanged": "登录状态在此期间发生了变化（可能在其它标签页登出或切换了账号），本次操作已取消，请重新开始。",
+    "profileFetchFailed": "登录已经完成，但读取账户信息失败（可能是网络或服务暂时不可用）。请重试。",
+    "interactionRetryableTitle": "授权暂时没能完成",
+    "interactionRetryable": "网络或服务暂时不可用，这次授权还没能完成。授权请求本身多半还有效，请重试。",
+    "handoffLost": "二次验证的临时数据已丢失，无法接着上一步继续。请重新登录。",
+    "interactionFailedTitle": "授权请求已失效",
+    "interactionFailedDesc": "这次授权请求已经过期或不再有效。你的登录状态没有受影响，请回到刚才那个应用重新发起登录。",
     "email": "邮箱",
     "identifier": "邮箱或用户名",
     "identifierPlaceholder": "you@example.com 或 用户名",
@@ -221,6 +230,7 @@
     "failed": "登录回调处理失败",
     "title": "完成登录",
     "invalid": "回调链接无效或已过期，请重新登录。",
+    "handoffUnavailable": "浏览器不允许本站保存临时数据（可能处于隐私模式），无法继续二次验证。请在普通窗口中重新登录。",
     "retryLogin": "重新登录"
   },
   "authError": {
@@ -239,7 +249,8 @@
     "OAUTH_ALREADY_LINKED": "该第三方账号已被占用。",
     "PROVIDER_ALREADY_BOUND": "您已绑定该第三方提供商。",
     "WRONG_APP": "应用配置不匹配，请联系管理员。",
-    "IAM_NOT_CONFIGURED": "统一身份登录未启用。"
+    "IAM_NOT_CONFIGURED": "统一身份登录未启用。",
+    "MALFORMED_RESPONSE": "服务器返回的数据不完整，请稍后重试。"
   },
   "account": {
     "title": "账户中心",
@@ -421,7 +432,8 @@
         "passkey": "Passkey 登录",
         "oauth": "第三方账号登录",
         "github": "GitHub 登录",
-        "x": "X 登录"
+        "x": "X 登录",
+        "unknown": "登录方式未记录"
       }
     },
     "danger": {
@@ -506,7 +518,9 @@
         "MFA_IAM_NOT_STARTED": "本次登录尚未发起统一身份验证，请回到登录页重新开始。",
         "MFA_CHALLENGE_EXHAUSTED": "尝试次数过多，本次登录已作废，请重新登录。",
         "MFA_IAM_NOT_DELEGATED": "该账户未开启由统一身份接管两步验证，请回到登录页用原有方式完成验证。"
-      }
+      },
+      "sessionSettling": "正在确认当前登录状态，请稍候再试。",
+      "sessionUnknown": "暂时无法确认当前的登录状态，可能是网络不稳定。请重试，或重新登录。"
     }
   },
   "stepUp": {
@@ -637,7 +651,8 @@
       "timeout": "验证等待超时（5 分钟）。请重新发起二次验证。",
       "donePageTitle": "二次验证完成",
       "doneTitle": "二次验证已完成",
-      "doneDesc": "可以关闭本标签页，回到原来的页面继续操作。"
+      "doneDesc": "可以关闭本标签页，回到原来的页面继续操作。",
+      "failed": "发起二次验证失败，请重试。"
     },
     "danger": {
       "reasonLabel": "原因（写进审计，至少 {{min}} 个字）",
@@ -1401,7 +1416,10 @@
   "errors": {
     "networkFailed": "网络请求失败",
     "unknown": "未知错误",
-    "requestFailed": "请求失败 ({{status}})"
+    "requestFailed": "请求失败 ({{status}})",
+    "identityChanged": "登录身份在请求期间发生了变化，本次结果已作废，请重试。",
+    "authBoundaryAborted": "登录状态在此期间发生了变化，本次操作已取消，请重新尝试。",
+    "requestTimeout": "请求超时，请检查网络后重试。"
   },
   "auth": {
     "password": {

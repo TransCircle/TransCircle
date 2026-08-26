@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { CopyField } from "../admin/shared/CopyField";
 import { useTranslation } from "react-i18next";
 import { api } from "../../api/client";
-import { useSession } from "../../context/SessionContext";
+import { useAuthenticatedUser } from "../../context/SessionContext";
 import { StepUpDialog } from "../../components/StepUpDialog";
 import {
   Card,
@@ -21,8 +21,8 @@ const CONFIRM_PHRASE = "DELETE-MY-ACCOUNT";
 /** 账户注销分区:确认短语 + 密码(若已设)+ step-up。 */
 export function DangerSection() {
   const { t } = useTranslation();
-  const { user } = useSession();
-  const hasPassword = user?.passwordSet ?? false;
+  const user = useAuthenticatedUser();
+  const hasPassword = user.passwordSet;
 
   const [requested, setRequested] = useState(false);
   /**

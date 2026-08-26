@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../api/client";
 import type { MeProfile } from "../../api/types";
-import { useSession } from "../../context/SessionContext";
+import { isMeProfile, useAuthenticatedUser, useSession } from "../../context/SessionContext";
 import { useFormatTs } from "../../utils/datetime";
 import {
   Card,
@@ -26,7 +26,8 @@ const PencilIcon = () => (
 export function ProfileSection() {
   const { t } = useTranslation();
   const fmt = useFormatTs();
-  const { user, setUser } = useSession();
+  const { setUser } = useSession();
+  const user = useAuthenticatedUser();
 
   const [notice, setNotice] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -36,7 +37,6 @@ export function ProfileSection() {
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  if (!user) return null;
 
   const openEdit = () => {
     setDisplayName(user.displayName ?? "");
@@ -61,7 +61,10 @@ export function ProfileSection() {
         setError(res.error.message);
         return;
       }
-      setUser(res.data);
+      // 与其它落定档案的入口同一道校验：半截档案写进上下文会让账户中心的
+      // `user.security.*` 之类在别处炸掉，而故障现场离真正的原因已经很远。
+      // 保存本身是成功的，所以照常提示成功；档案交给下一次拉取补齐。
+      if (isMeProfile(res.data)) setUser(res.data);
       setNotice(t("account.profile.saved"));
       setEditOpen(false);
     } finally {
