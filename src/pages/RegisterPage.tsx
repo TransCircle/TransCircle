@@ -93,6 +93,11 @@ const RegisterPage = () => {
     }
   };
 
+  // 加载中：先不渲染表单，等注册状态确定后再展示正确内容，避免表单闪现后跳变。
+  if (registrationEnabled === null) {
+    return <StatusScreen kind="loading" title={t("common.loading")} />;
+  }
+
   // 注册已关闭：只展示提示与返回登录，不渲染注册表单。
   if (registrationEnabled === false) {
     return (
