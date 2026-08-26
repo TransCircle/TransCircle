@@ -82,10 +82,11 @@ const SecurityPage = () => {
 
   const commitPolicy = async () => {
     if (!policy.data) return;
-    const data = await save.run<AdminPolicy>("policy", () =>
+    const data = await save.run<AdminPolicy>("policy", (idem) =>
       api.patch<AdminPolicy>("/v1/admin/policy", edit.patchFor(POLICY_KEYS), {
         plane: "user",
         ifMatch: policy.data!.updatedAt,
+        idempotent: idem,
       }),
     );
     if (data) {
