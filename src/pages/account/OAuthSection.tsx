@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../api/client";
+import { isNonEmptyString } from "../../api/shape";
 import type { OAuthBinding } from "../../api/types";
 import { useFormatTs } from "../../utils/datetime";
 import { StepUpDialog } from "../../components/StepUpDialog";
@@ -130,7 +131,9 @@ export function OAuthSection() {
     setNotice(null);
     setBindingId(provider);
     const res = await api.get<BindStart>(`/v1/me/oauth/${encodeURIComponent(provider)}/bind/start`);
-    if (res.ok && res.data.authorizationUrl) {
+    // 2xx ≠ 响应成形：`res.data` 缺失时读 `.authorizationUrl` 直接抛，而 bindingId
+    // 已经置上了 —— 按钮永久转圈，用户既没有错误提示也没有重试入口。
+    if (res.ok && isNonEmptyString(res.data?.authorizationUrl)) {
       if (res.data.permanent === true) {
         // 不可逆绑定：先弹确认框讲清后果，用户点「继续」才真正发起跳转（换一条带确认
         // 标记的新地址，见下方 confirmPermanentBind）。这次拿到的 authorizationUrl 不用，
@@ -166,7 +169,7 @@ export function OAuthSection() {
     const res = await api.get<BindStart>(
       `/v1/me/oauth/${encodeURIComponent(provider)}/bind/start?ack=true`,
     );
-    if (res.ok && res.data.authorizationUrl) {
+    if (res.ok && isNonEmptyString(res.data?.authorizationUrl)) {
       setBindingId(provider);
       window.location.href = res.data.authorizationUrl;
       return;

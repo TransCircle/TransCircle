@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../api/client";
+import { hasStringFields } from "../../../api/shape";
 import type { AdminStepUpStart } from "../../../api/types";
 import { AdminButton as Button, Alert, Spinner } from "../../../components/ui";
 import styles from "../Admin.module.css";
@@ -55,6 +56,12 @@ export function StepUpPanel({ what, onVerified, onCancel }: StepUpPanelProps) {
       setError(res.error.message);
       return;
     }
+    // 2xx ≠ 响应成形。缺字段的话，下面会把用户送去一个 `undefined` 的地址，
+    // 再拿着空 verificationId 轮询到超时 —— 全程没有一句能说明白发生了什么。
+    if (!hasStringFields(res.data, ["verificationId", "verifyUrl"])) {
+      setError(t("admin.stepup.failed"));
+      return;
+    }
     setInfo(res.data);
   };
 
@@ -96,7 +103,7 @@ export function StepUpPanel({ what, onVerified, onCancel }: StepUpPanelProps) {
         { plane: "user" },
       );
       if (!alive || doneRef.current) return;
-      if (res.ok && res.data.verified) {
+      if (res.ok && res.data?.verified === true) {
         fireOnce();
         return;
       }
@@ -124,7 +131,7 @@ export function StepUpPanel({ what, onVerified, onCancel }: StepUpPanelProps) {
       { plane: "user" },
     );
     setPolling(false);
-    if (res.ok && res.data.verified) {
+    if (res.ok && res.data?.verified === true) {
       fireOnce();
       return;
     }

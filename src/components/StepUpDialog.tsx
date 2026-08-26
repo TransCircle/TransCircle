@@ -1,6 +1,7 @@
 import { useEffect, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
+import { isNonEmptyString } from "../api/shape";
 import type { StepUpStart } from "../api/types";
 import { performAssertion } from "../utils/webauthn";
 import { RadioGroup, TextField, AdminButton as Button, Alert, Spinner } from "./ui";
@@ -47,6 +48,14 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
       if (!alive) return;
       if (!res.ok) {
         setError(res.error.message);
+        setLoading(false);
+        return;
+      }
+      // 2xx ≠ 响应成形。`res.data` 是 `{}` 时，下一行读 `availableMethods[0]` 直接抛 ——
+      // 而抛点在 `setLoading(false)` 之前，弹窗就此**永久转圈**，用户既没有错误提示、
+      // 也没有重试入口，只能整页刷新。
+      if (!isNonEmptyString(res.data?.challengeId) || !Array.isArray(res.data?.availableMethods)) {
+        setError(t("stepUp.failed"));
         setLoading(false);
         return;
       }

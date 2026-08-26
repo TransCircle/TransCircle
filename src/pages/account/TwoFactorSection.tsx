@@ -152,8 +152,13 @@ export function TwoFactorSection() {
       setSetup(null);
       setCode("");
       await load();
-      // 有一次性恢复码时,把会话刷新推迟到用户「我已保存」关闭弹窗之后(见 RecoveryCodesDialog onDismiss)：
-      // refresh() 若瞬时失败会清空会话→跳登录→弹窗卸载,恢复码永久丢失。无码时(已有其它 2FA)才立即同步。
+      // 有一次性恢复码时，把会话刷新推迟到用户「我已保存」关闭弹窗之后
+      //（见 RecoveryCodesDialog 的 onDismiss）：刷新可能把页面导向别处
+      //（档案回来发现会话已失效 → 跳登录），弹窗随之卸载，而这批码只出现这一次。
+      // 无码时（已有其它 2FA）才立即同步。
+      //
+      // 注：瞬态失败（网络/5xx/429）**不会**清空会话 —— 那是 api/client 里
+      // REFRESH_TRANSIENT_CODE 那套在管。这里防的是「明确的会话失效」那一档。
       if (!newCodes) await refresh();
     } finally {
       setBusy(false);

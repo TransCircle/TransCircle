@@ -108,8 +108,9 @@ export function PasskeysSection() {
       const newCodes = finish.data?.recoveryCodes?.length ? finish.data.recoveryCodes : null;
       setRecoveryCodes(newCodes);
       await load();
-      // 有一次性恢复码时把会话刷新推迟到弹窗关闭后(见 onDismiss)——避免 refresh 失败清空会话、
-      // 弹窗被卸载丢码;无码时立即同步 passkeyCount 让「恢复码」分区随之显隐。
+      // 有一次性恢复码时把会话刷新推迟到弹窗关闭后（见下方 onDismiss）：
+      // 刷新可能把页面导向别处（档案回来发现会话已失效 → 跳登录），弹窗随之卸载，
+      // 而这批码只出现这一次。无码时立即同步 passkeyCount 让「恢复码」分区随之显隐。
       if (!newCodes) await refresh();
     } catch (err) {
       if ((err as DOMException)?.name !== "NotAllowedError") setAddError(t("account.passkeys.registerFailed"));
@@ -306,8 +307,17 @@ export function PasskeysSection() {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      {/* 首次注册 Passkey 时一并下发的共享恢复码（与「恢复码」分区共用展示组件）。 */}
-      <RecoveryCodesDialog codes={recoveryCodes} onDismiss={() => setRecoveryCodes(null)} />
+      {/* 首次注册 Passkey 时一并下发的共享恢复码（与「恢复码」分区共用展示组件）。
+          关闭（用户已保存）后**必须刷新会话** —— 上面那次注册刻意跳过了 refresh，
+          档案里的 passkeyCount 还是旧值 0，「恢复码」分区据此判断显隐，
+          不刷新它就一直藏着，用户以为自己没有恢复码。 */}
+      <RecoveryCodesDialog
+        codes={recoveryCodes}
+        onDismiss={() => {
+          setRecoveryCodes(null);
+          void refresh();
+        }}
+      />
     </section>
   );
 }
