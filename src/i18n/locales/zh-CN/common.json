@@ -816,7 +816,23 @@
         "last": "最后活动"
       },
       "unnamed": "（未命名账户）",
-      "noEmail": "（无邮箱）"
+      "noEmail": "（无邮箱）",
+      "create": {
+        "title": "新建用户",
+        "desc": "手动创建一个 C 端账户。创建后立即可用；邮箱（如填写）视为主动背书，用户首次登录需修改临时密码。",
+        "username": "用户名",
+        "usernameHint": "3–32 位，以小写字母开头，可含数字、下划线、短横线。",
+        "displayName": "显示名称",
+        "email": "邮箱",
+        "emailHint": "可选；留空的账户无法通过邮箱找回密码。",
+        "password": "临时密码",
+        "passwordHint": "至少 12 位、含三类字符；用户首次登录会被要求修改。",
+        "generate": "随机生成",
+        "note": "管理备注",
+        "noteHint": "可选，仅管理员可见（最长 1000 字）。",
+        "submit": "创建用户",
+        "stepUpWhat": "创建该用户"
+      }
     },
     "userDetail": {
       "tabsLabel": "用户详情分区",
@@ -1345,6 +1361,9 @@
         "emailGate": "邮箱未验证禁止登录",
         "emailGateLabel": "邮箱未验证则禁止登录",
         "emailGateHint": "作用于全部登录方式，包括第三方绑定登录。",
+        "registrationEnabled": "开放自助注册",
+        "registrationEnabledLabel": "开放自助注册",
+        "registrationEnabledHint": "关闭后，密码与第三方注册均不可用；管理员仍可在用户管理中手动添加用户。",
         "lockAfter": "密码错误锁定阈值",
         "lockAfterLabel": "连续密码错误多少次后锁定",
         "lockAfterHint": "锁定 30 分钟；通行密钥登录不受此限制。",

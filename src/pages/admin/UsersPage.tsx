@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 import { api, type OffsetPage } from "../../api/client";
 import type { AdminUserListItem } from "../../api/types";
 import { Avatar } from "../../components/Avatar";
-import { Alert, Pill, SearchField, Spinner, StatusBadge } from "../../components/ui";
+import { AdminButton as Button, Alert, Pill, SearchField, Spinner, StatusBadge } from "../../components/ui";
 import { useFormatTs } from "../../utils/datetime";
 import { useAdmin } from "../../context/AdminContext";
-import { accountStatusTone } from "./shared/constants";
+import { accountStatusTone, PERM } from "./shared/constants";
 import { ChipSet } from "./shared/ChipSet";
 import { DataTable, type Column } from "./shared/DataTable";
 import { Pager } from "./shared/Pager";
@@ -15,6 +15,7 @@ import { adminErrorText } from "./shared/errors";
 import { useAdminPageHeader } from "./shared/header";
 import { useListQuery } from "./shared/useListQuery";
 import { IconChevron } from "./shared/icons";
+import { CreateUserDialog } from "./user/CreateUserDialog";
 import styles from "./Admin.module.css";
 
 const SORT_KEYS = ["last", "name", "status", "sessions"] as const;
@@ -24,7 +25,7 @@ const UsersPage = () => {
   const { t } = useTranslation();
   const fmt = useFormatTs();
   const navigate = useNavigate();
-  const { me } = useAdmin();
+  const { me, hasPermission } = useAdmin();
   useAdminPageHeader({ title: t("admin.head.users.title"), subtitle: t("admin.head.users.sub") });
 
   const { query, setPage, setPageSize, setFilter, toggleSort, requestSearch } = useListQuery({
@@ -36,6 +37,7 @@ const UsersPage = () => {
   const [page, setPageData] = useState<OffsetPage<AdminUserListItem> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   // 搜索框保留本地草稿，防抖后再写地址栏 —— 每敲一个字都推一条 URL + 一次请求，
   // 既刷屏历史记录也打后端。
@@ -186,6 +188,13 @@ const UsersPage = () => {
             ...STATUS_FILTERS.map((s) => ({ value: s, label: t(`status.${s}`) })),
           ]}
         />
+        {hasPermission(PERM.userWrite) && (
+          <div className={styles.filtersEnd}>
+            <Button variant="primary" size="sm" onClick={() => setCreating(true)}>
+              {t("admin.users.create.title")}
+            </Button>
+          </div>
+        )}
       </div>
 
       {error && <Alert tone="error">{error}</Alert>}
@@ -217,6 +226,16 @@ const UsersPage = () => {
             ariaLabel={t("admin.users.pagerLabel")}
           />
         </>
+      )}
+
+      {creating && (
+        <CreateUserDialog
+          onClose={() => setCreating(false)}
+          onCreated={(id) => {
+            setCreating(false);
+            navigate(`/admin/users/${id}`);
+          }}
+        />
       )}
     </div>
   );

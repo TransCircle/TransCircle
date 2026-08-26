@@ -27,6 +27,7 @@ import styles from "./Admin.module.css";
 const POLICY_KEYS = [
   "requireStaffMfa",
   "emailVerificationGate",
+  "registrationEnabled",
   "lockAfterFailedAttempts",
 ] as const;
 
@@ -59,6 +60,12 @@ const SecurityPage = () => {
       {
         key: "emailVerificationGate",
         label: t("admin.security.policy.emailGate"),
+        risky: true,
+        format: (v) => (v ? t("common.yes") : t("common.no")),
+      },
+      {
+        key: "registrationEnabled",
+        label: t("admin.security.policy.registrationEnabled"),
         risky: true,
         format: (v) => (v ? t("common.yes") : t("common.no")),
       },
@@ -174,6 +181,13 @@ const SecurityPage = () => {
                 disabled={!canPolicy}
                 hint={t("admin.security.policy.emailGateHint")}
                 onChange={(e) => edit.setField("emailVerificationGate", e.target.checked)}
+              />
+              <Checkbox
+                label={t("admin.security.policy.registrationEnabledLabel")}
+                checked={!!edit.value("registrationEnabled")}
+                disabled={!canPolicy}
+                hint={t("admin.security.policy.registrationEnabledHint")}
+                onChange={(e) => edit.setField("registrationEnabled", e.target.checked)}
               />
               <Select
                 label={t("admin.security.policy.lockAfterLabel")}

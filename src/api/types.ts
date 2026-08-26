@@ -610,6 +610,8 @@ export interface AdminPolicy {
   requireStaffMfa: boolean;
   /** 邮箱未验证则禁止登录。 */
   emailVerificationGate: boolean;
+  /** 是否开放自助注册（密码 / OAuth）。 */
+  registrationEnabled: boolean;
   /** 连续密码错误多少次后锁定；0 = 不锁，其余取 3–20。 */
   lockAfterFailedAttempts: number;
   updatedAt: number;
