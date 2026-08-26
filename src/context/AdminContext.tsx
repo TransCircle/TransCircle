@@ -84,7 +84,14 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     }
 
     let alive = true;
-    setState("loading");
+    // 已就绪 / 已落定终态下，后台重新拉取 /v1/admin/me 时**不回退到 loading**。
+    //
+    // AdminLayout 按 state 渲染：一回退到 loading，整个管理端外壳就会卸载重挂，
+    // 正在编辑的草稿（如安全策略卡片的改动）与进行中的 step-up 保存流程全部被冲掉。
+    // 后台刷新期间保持现状即可——拉取失败（会话失效/无权限）会在下方落定到对应终态。
+    setState((prev) =>
+      prev === "ready" || prev === "no-access" || prev === "needs-mfa" ? prev : "loading",
+    );
     setError(null);
 
     // 登录成功后紧跟着的这次探测，最容易撞上会话/令牌刚建立还没完全稳定的窗口
