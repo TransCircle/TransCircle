@@ -159,18 +159,13 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [sessionStatus, userId, attempt]);
 
-  /**
-   * 手里这份管理员信息是否**属于当前登录的人**。
-   *
-   * 换号后清理是在 effect 里做的，而 effect 跑在渲染之后 —— 中间那一帧，
-   * `me` 还是上一个人的、`state` 还是 `ready`，控制台会照着**前一个管理员**的
-   * 身份与权限渲染一整帧（导航入口、角色、乃至子页面的数据）。
-   * 服务端会各自重新鉴权，所以这不是后端越权；但让用户看见并可能点到
-   * 另一个账号的管理入口，本身就不该发生。
-   *
-   * 渲染时同步比一次，不匹配就当作「还在加载」——一帧都不给。
-   */
-  const identitySettled = !me || (!!userId && me.userId === userId);
+  // 身份是否已落定（渲染时同步比一次，避免把旧身份的界面多渲染一帧）：
+  // - me 为 null（首次加载），由上层的 state 负责展示 loading，不挡；
+  // - userId 为 null（会话广播对齐期间临时清空），me 已有数据则保持现状——
+  //   否则每轮对齐都把整个管理端外壳卸载重挂，正在编辑的草稿与进行中的
+  //   step-up 保存流程全被冲掉（换号由服务端各自鉴权兜底，界面层只防旧身份闪现）；
+  // - 两者都有则比对是否一致：换号时一帧都不给旧身份。
+  const identitySettled = !me || (!userId && me !== null) || (!!userId && me.userId === userId);
 
   const hasPermission = useCallback(
     (perm: string) =>
