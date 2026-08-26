@@ -157,7 +157,9 @@
     "doneTitle": "注册成功",
     "doneDesc": "我们已向 {{email}} 发送验证邮件，请查收并完成邮箱验证。",
     "captchaRequired": "请完成人机验证",
-    "captchaFailed": "人机验证失败，请重试"
+    "captchaFailed": "人机验证失败，请重试",
+    "disabledTitle": "注册功能已关闭",
+    "disabledDesc": "请联系管理员"
   },
   "forgot": {
     "title": "找回密码",

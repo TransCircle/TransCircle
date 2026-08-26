@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
@@ -33,8 +33,29 @@ const RegisterPage = () => {
   const [done, setDone] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [captchaError, setCaptchaError] = useState(false);
+  // 注册总开关：页面打开时读一次公开状态；关闭则只展示提示，不渲染表单。
+  const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
 
   usePageTitle(t("register.title"));
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get<{ registrationEnabled: boolean }>(
+          "/v1/auth/register/status",
+          { noAuth: true },
+        );
+        if (!cancelled) setRegistrationEnabled(res.ok ? res.data.registrationEnabled : true);
+      } catch {
+        // 读不到状态时按「开放」处理，提交阶段后端仍会以 403 兜底。
+        if (!cancelled) setRegistrationEnabled(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const strength = password ? checkPasswordStrength(password) : 0;
   const mismatch = confirm.length > 0 && confirm !== password;
@@ -71,6 +92,23 @@ const RegisterPage = () => {
       setBusy(false);
     }
   };
+
+  // 注册已关闭：只展示提示与返回登录，不渲染注册表单。
+  if (registrationEnabled === false) {
+    return (
+      <StatusScreen
+        kind="info"
+        title={t("register.disabledTitle")}
+        description={t("register.disabledDesc")}
+        actions={[
+          {
+            label: t("nav.login"),
+            to: oidcUid ? `/login?oidc=${encodeURIComponent(oidcUid)}` : "/login",
+          },
+        ]}
+      />
+    );
+  }
 
   if (done) {
     return (
