@@ -198,6 +198,83 @@
         }
       })();
     </script>
+    <style id="legacy-browser-styles">
+      /* 仅作用于 #legacy-fallback（旧浏览器回退页）：
+         - 现代浏览器里该 div 保持 display:none，不参与渲染；
+         - IE 11 不支持 CSS 自定义属性(var())，且应用打包 CSS 的 var() 在 IE 下全部失效，
+           因此这里必须写成字面量，不能引用 --primary-pink 等 token。 */
+      #legacy-fallback {
+        background: #fff9fb;
+        min-height: 100vh;
+      }
+      #legacy-fallback .legacy-splash {
+        display: block;
+        max-width: 720px;
+        margin: 2rem auto;
+        padding: 1.5rem 1.75rem;
+        background: #ffffff;
+        border: 1px solid #f6d9e0;
+        border-radius: 14px;
+        color: #333333;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.7;
+      }
+      #legacy-fallback .legacy-brand {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+      }
+      #legacy-fallback .legacy-brand img {
+        margin-right: 0.5rem;
+        display: block;
+      }
+      #legacy-fallback .legacy-title {
+        margin: 1rem 0 0.5rem;
+        font-size: 1.35rem;
+        line-height: 1.3;
+        color: #1a1a1a;
+      }
+      #legacy-fallback .legacy-body {
+        margin: 0 0 0.5rem;
+        color: #333333;
+      }
+      #legacy-fallback .legacy-upgrade {
+        margin: 1.1rem 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      #legacy-fallback .legacy-upgrade li {
+        margin: 0 0 0.5rem;
+      }
+      #legacy-fallback .legacy-upgrade a,
+      #legacy-fallback .legacy-links a {
+        color: #b2475c;
+        font-weight: 600;
+        text-decoration: underline;
+      }
+      #legacy-fallback .legacy-links {
+        margin: 1.1rem 0 0;
+        color: #666666;
+        font-size: 0.95rem;
+      }
+      #legacy-fallback a:focus {
+        outline: 2px solid #ec9eb0;
+        outline-offset: 2px;
+      }
+      @media (prefers-color-scheme: dark) {
+        #legacy-fallback { background: #12121a; }
+        #legacy-fallback .legacy-splash {
+          background: #1e1e2e;
+          border-color: #3a3a4e;
+          color: #c0c0d0;
+        }
+        #legacy-fallback .legacy-title { color: #f0f0f5; }
+        #legacy-fallback .legacy-body { color: #c0c0d0; }
+        #legacy-fallback .legacy-upgrade a,
+        #legacy-fallback .legacy-links a { color: #ff9fb4; }
+        #legacy-fallback .legacy-links { color: #a0a0b0; }
+      }
+    </style>
   </head>
   <body>
     <noscript>
@@ -237,20 +314,51 @@
       </article>
     </noscript>
     <div id="root"></div>
-    <!-- 旧浏览器（不支持 ES modules，如 Android 4.4 WebView / Chrome 30）会整体跳过 type="module" 脚本，
-         使本 SPA 不执行而白屏。此 non-module 脚本仅在无模块支持的浏览器上运行，补交一个友好提示。 -->
+    <!-- 旧浏览器（不支持 ES modules，如 IE 11 / Android 4.4 WebView / Chrome 30）会整体跳过
+         type="module" 脚本，使本 SPA 不执行而白屏。此静态标记 + nomodule 脚本仅在无模块支持的
+         浏览器上可见：默认 display:none，由下方脚本在检测到无模块支持时置为可见。
+         IE 11 不支持 CSS 变量，样式见头部 #legacy-browser-styles（字面色值）。 -->
+    <div id="legacy-fallback" style="display:none">
+      <main class="legacy-splash">
+        <header class="legacy-brand">
+          <img src="/logo-mark.svg" width="28" height="28" alt="" aria-hidden="true" />
+          TransCircle Project
+        </header>
+        <h1 class="legacy-title" id="legacy-title">浏览器版本过旧</h1>
+        <p class="legacy-body" id="legacy-body">您当前使用的浏览器无法运行本站的现代界面，登录与账户功能不可用。请升级系统或改用较新浏览器后再访问。</p>
+        <ul class="legacy-upgrade">
+          <li><a href="https://www.microsoft.com/edge" target="_blank" rel="noopener noreferrer">Microsoft Edge</a></li>
+          <li><a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer">Google Chrome</a></li>
+          <li><a href="https://www.mozilla.org/firefox/" target="_blank" rel="noopener noreferrer">Mozilla Firefox</a></li>
+        </ul>
+        <p class="legacy-links">
+          <a href="https://transcircle.org/s/join" target="_blank" rel="noopener noreferrer">申请表单</a>
+          &nbsp;·&nbsp;
+          <a href="https://x.com/TransCircleOrg" target="_blank" rel="noopener noreferrer">X (@TransCircleOrg)</a>
+          &nbsp;·&nbsp;
+          <a href="https://bsky.app/profile/TransCircle.org" target="_blank" rel="noopener noreferrer">Bluesky</a>
+        </p>
+      </main>
+    </div>
     <script nomodule>
       (function () {
-        var root = document.getElementById('root');
-        if (!root) { return; }
-        root.innerHTML =
-          '<article style="max-width:720px;margin:2rem auto;padding:1rem 1.25rem;font-family:sans-serif;color:#222;line-height:1.7;">' +
-            '<h2>浏览器版本过旧</h2>' +
-            '<p>您当前使用的浏览器（Android 4.4 / Chrome 30）无法运行本站的现代界面，请升级系统或改用较新浏览器后再访问。</p>' +
-            '<p><a href="https://transcircle.org/s/join" rel="noopener">申请表单</a> · ' +
-            '<a href="https://x.com/TransCircleOrg" rel="noopener">X (@TransCircleOrg)</a> · ' +
-            '<a href="https://bsky.app/profile/TransCircle.org" rel="noopener">Bluesky</a></p>' +
-          '</article>';
+        var fallback = document.getElementById('legacy-fallback');
+        if (!fallback) { return; }
+        // 识别 IE / 旧版 Edge(EdgeHTML)：IE 11 及以下 UA 含 MSIE / Trident / rv:11，旧版 Edge 含 Edge/。
+        var ua = navigator.userAgent;
+        var isIE = /MSIE|Trident|Edge\//.test(ua);
+        var title = document.getElementById('legacy-title');
+        var body = document.getElementById('legacy-body');
+        if (isIE) {
+          if (title) { title.textContent = 'Internet Explorer 不再受支持，无法登录'; }
+          if (body) {
+            body.textContent = '主站的登录、两步验证与通行密钥等账户功能需要现代浏览器才能安全运行。' +
+              '为保障你的账户安全，我们不再支持 Internet Explorer。' +
+              '请使用较新的 Microsoft Edge、Google Chrome 或 Mozilla Firefox 登录。';
+          }
+        }
+        // 非 IE 的无模块浏览器（如 Android 4.4 WebView / Chrome 30）沿用默认文案，无需改写。
+        fallback.style.display = 'block';
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
