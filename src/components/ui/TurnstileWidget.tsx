@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+import { useTheme } from "../../context/ThemeContext";
+
 export interface TurnstileWidgetProps {
   onToken: (token: string) => void;
   onError?: () => void;
@@ -20,6 +22,7 @@ declare global {
         },
       ) => string;
       reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
     };
   }
 }
@@ -33,11 +36,14 @@ const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
  * - Returns null when `VITE_TURNSTILE_SITE_KEY` is unset (dev fallback).
  * - Exposes the rendered widget ID via `data-turnstile-widget` attribute on the
  *   container div, so callers can call `window.turnstile.reset(...)` externally.
- * - Uses `theme: "auto"` to follow the system colour scheme.
+ * - Follows the page theme (ThemeContext) instead of `theme: "auto"` — auto only
+ *   tracks the OS colour scheme and would not react to a manual theme toggle.
+ *   On theme change the old widget is removed and re-rendered.
  */
 export const TurnstileWidget = ({ onToken, onError, onExpire }: TurnstileWidgetProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scriptReady, setScriptReady] = useState(false);
+  const { theme } = useTheme();
 
   // Keep the latest callbacks in refs so the render effect never re-runs when
   // the parent passes inline arrow functions that change every render.
@@ -107,7 +113,7 @@ export const TurnstileWidget = ({ onToken, onError, onExpire }: TurnstileWidgetP
       "expired-callback": () => {
         onExpireRef.current?.();
       },
-      theme: "auto",
+      theme,
     });
 
     // Expose the widget ID so callers can call window.turnstile.reset().
@@ -116,13 +122,16 @@ export const TurnstileWidget = ({ onToken, onError, onExpire }: TurnstileWidgetP
     return () => {
       if (window.turnstile) {
         try {
-          window.turnstile.reset(widgetId);
+          // Destroy the old widget on unmount/theme change: a mere reset would
+          // leave the old iframe in the container and the re-render would stack
+          // a second widget on top of it.
+          window.turnstile.remove(widgetId);
         } catch {
-          // Widget was already removed from the DOM – nothing to reset.
+          // Widget was already removed from the DOM – nothing to remove.
         }
       }
     };
-  }, [scriptReady, SITE_KEY]);
+  }, [scriptReady, theme]);
 
   if (!SITE_KEY) return null;
 
