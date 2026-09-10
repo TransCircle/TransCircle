@@ -61,10 +61,7 @@ export function StepUpPanel({ what, onVerified, onCancel }: StepUpPanelProps) {
     startingRef.current = false;
     setStarting(false);
     if (!res.ok) {
-      // 已有进行中的挑战：给一句能自救的指引（关其它验证页/完成旧挑战），不是干巴巴的后端报错。
-      setError(res.error.code === "STEP_UP_CHALLENGE_ACTIVE"
-        ? t("admin.errors.STEP_UP_CHALLENGE_ACTIVE")
-        : res.error.message);
+      setError(res.error.message);
       return;
     }
     // 2xx ≠ 响应成形。缺字段的话，下面会把用户送去一个 `undefined` 的地址，
