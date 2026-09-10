@@ -27,6 +27,7 @@ const EXPLAINED_CODES = new Set([
   "PRECONDITION_REQUIRED",
   "STAFF_MFA_REQUIRED",
   "IAM_REJECTED",
+  "STEP_UP_CHALLENGE_ACTIVE",
 ]);
 
 /** 把接口错误翻成控制台文案；未收录的码回落后端 message。 */

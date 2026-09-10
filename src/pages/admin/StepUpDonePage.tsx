@@ -19,10 +19,14 @@ export default function StepUpDonePage() {
   usePageTitle(t("admin.stepup.donePageTitle"));
 
   useEffect(() => {
-    // 由脚本打开的标签页才允许 close()；用户手动打开的会被浏览器拒绝，
-    // 拒绝也没关系，下面的文案已经说明要手动关闭。
-    const timer = window.setTimeout(() => window.close(), 1200);
-    return () => window.clearTimeout(timer);
+    // 只在「确实是脚本弹出的新标签页」才自动关闭：window.opener 非空说明是 window.open 开的。
+    // 若验证页是在原标签页（弹窗被拦）或用户手动开的主标签里完成的，window.close() 会被
+    // 浏览器拒绝 —— 但更要紧的是不该把用户正在用的主标签页突然关掉。其余情况交给文案提示手动关。
+    if (window.opener) {
+      const timer = window.setTimeout(() => window.close(), 1200);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
   }, []);
 
   return (

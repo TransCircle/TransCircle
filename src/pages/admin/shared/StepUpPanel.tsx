@@ -38,6 +38,8 @@ export function StepUpPanel({ what, onVerified, onCancel }: StepUpPanelProps) {
    * 而每个请求带的是新的幂等键 —— 放行两次就会创建两个客户端、轮两次密钥。
    */
   const doneRef = useRef(false);
+  /** start 并发守卫：startedRef 只挡「挂载时的自动发起」，挡不住 starting 期间的重复触发。 */
+  const startingRef = useRef(false);
 
   const fireOnce = () => {
     if (doneRef.current) return;
@@ -46,14 +48,23 @@ export function StepUpPanel({ what, onVerified, onCancel }: StepUpPanelProps) {
   };
 
   const start = async (): Promise<void> => {
+    // 发起中直接拒：连点「验证并保存」/「重试」会并发创建多个 verificationId，
+    // 面板只轮询最后一个，而用户打开的往往是先拿到的那个 verifyUrl —— 串号后
+    // 无论怎么验证，轮询的目标都永远 pending，PATCH 永远不发（本次事故的根因）。
+    if (startingRef.current) return;
+    startingRef.current = true;
     setStarting(true);
     setError(null);
     const res = await api.post<AdminStepUpStart>("/v1/admin/step-up/iam/start", undefined, {
       plane: "user",
     });
+    startingRef.current = false;
     setStarting(false);
     if (!res.ok) {
-      setError(res.error.message);
+      // 已有进行中的挑战：给一句能自救的指引（关其它验证页/完成旧挑战），不是干巴巴的后端报错。
+      setError(res.error.code === "STEP_UP_CHALLENGE_ACTIVE"
+        ? t("admin.errors.STEP_UP_CHALLENGE_ACTIVE")
+        : res.error.message);
       return;
     }
     // 2xx ≠ 响应成形。缺字段的话，下面会把用户送去一个 `undefined` 的地址，
@@ -107,6 +118,12 @@ export function StepUpPanel({ what, onVerified, onCancel }: StepUpPanelProps) {
         fireOnce();
         return;
       }
+      // 404 / 410：挑战已过期或不存在（含串号——用户完成的是另一个 verificationId）。
+      // 继续盲等没有意义，立即停轮并给一句能自救的提示，而不是静默退避到超时。
+      if (!res.ok && (res.error.code === "IAM_MFA_NOT_FOUND" || res.error.code === "IAM_MFA_ALREADY_USED" || res.status === 404 || res.status === 410)) {
+        setError(t("admin.stepup.expired"));
+        return;
+      }
       // 未通过就退避；请求本身失败（网络/5xx）退得更快，避免打垮正在恢复的后端。
       delay = Math.min(res.ok ? delay + 1000 : delay * 2, 15_000);
       timer = window.setTimeout(() => void tick(), delay);
@@ -151,26 +168,38 @@ export function StepUpPanel({ what, onVerified, onCancel }: StepUpPanelProps) {
         </span>
       )}
       {info ? (
-        <div className={styles.row}>
-          {/* 用户手势打开，避免被浏览器拦截弹窗。 */}
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => window.open(info.verifyUrl, "_blank", "noopener,noreferrer")}
-          >
-            {t("admin.stepup.open")}
-          </Button>
-          <Button variant="secondary" size="sm" loading={polling} onClick={() => void pollNow()}>
-            {t("admin.stepup.poll")}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
-            {t("common.cancel")}
-          </Button>
-        </div>
+        <>
+          <div className={styles.row}>
+            {/* 用户手势打开，避免被浏览器拦截弹窗。 */}
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                // window.open 返回 null = 被浏览器拦了弹窗。这种时候绝不能静默，
+                // 否则用户会以为验证页已开、在原地干等；明确提示改用手动复制链接。
+                const w = window.open(info.verifyUrl, "_blank", "noopener,noreferrer");
+                if (!w) setError(t("admin.stepup.popupBlocked"));
+              }}
+            >
+              {t("admin.stepup.open")}
+            </Button>
+            <Button variant="secondary" size="sm" loading={polling} onClick={() => void pollNow()}>
+              {t("admin.stepup.poll")}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onCancel}>
+              {t("common.cancel")}
+            </Button>
+          </div>
+          {/* 显示本次挑战尾 4 位：出问题时让用户能对号「完成的是不是这一页」。 */}
+          <p className={styles.note}>
+            {t("admin.stepup.challengeTag", { tag: info.verificationId.slice(-4) })}
+          </p>
+        </>
       ) : (
         !starting && (
           <div className={styles.row}>
-            <Button variant="secondary" size="sm" onClick={() => void start()}>
+            {/* starting 期间禁用重试：start 无并发守卫时连点会建出多个挑战导致串号。 */}
+            <Button variant="secondary" size="sm" disabled={starting} onClick={() => void start()}>
               {t("common.retry")}
             </Button>
             <Button variant="ghost" size="sm" onClick={onCancel}>
