@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, getIdentityGen, NON_REJECTING_AUTH_CODES } from "../api/client";
-import { isNonEmptyString } from "../api/shape";
-import { useSession } from "../context/SessionContext";
+import { api } from "../api/client";
 import { checkPasswordStrength } from "../utils/string";
 import { usePageTitle } from "../utils/usePageTitle";
-import { clearOidcInteraction, readOidcInteraction } from "../utils/oidcInteraction";
+import { readOidcInteraction } from "../utils/oidcInteraction";
 import {
   CenteredCard,
   PageHeader,
@@ -23,7 +21,6 @@ import authStyles from "./Auth.module.css";
 const RegisterPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, status } = useSession();
   const [params] = useSearchParams();
   const oidcUid = readOidcInteraction(params.get("oidc"));
   const [displayName, setDisplayName] = useState("");
@@ -38,57 +35,8 @@ const RegisterPage = () => {
   const [captchaError, setCaptchaError] = useState(false);
   // 注册总开关：页面打开时读一次公开状态；关闭则只展示提示，不渲染表单。
   const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
-  // 交互续跑的终态/可重试标记（仅 oidc 路径用），语义与 LoginPage 一致。
-  const [interactionFailed, setInteractionFailed] = useState(false);
-  const [interactionRetryable, setInteractionRetryable] = useState(false);
-  const finished = useRef(false);
 
   usePageTitle(t("register.title"));
-
-  /**
-   * 已登录 + 带 OIDC 交互：完成这次授权并跳回发起方，而不是展示注册表单。
-   * 与 LoginPage 的 finish() 同一模式：POST interaction/login，拿到 redirectTo 整页跳走。
-   * 失败分类也一致——4xx 判确定性失败进终态，瞬态（断网/5xx/429）给重试。
-   */
-  const finishOidc = async (anchorGen: number) => {
-    if (finished.current || !oidcUid) return;
-    finished.current = true;
-    const res = await api.post<{ redirectTo?: string }>(
-      `/oauth2/interaction/${encodeURIComponent(oidcUid)}/login`,
-      undefined,
-      { authWrite: true, requireIdentityGen: anchorGen },
-    );
-    if (res.ok && isNonEmptyString(res.data?.redirectTo)) {
-      clearOidcInteraction();
-      window.location.href = res.data.redirectTo;
-      return;
-    }
-    const errorCode = res.ok ? "" : res.error.code;
-    const indeterminate =
-      NON_REJECTING_AUTH_CODES.includes(errorCode) ||
-      res.status === 0 ||
-      res.status >= 500 ||
-      res.status === 429;
-    if (indeterminate) {
-      finished.current = false;
-      setInteractionRetryable(true);
-      return;
-    }
-    clearOidcInteraction();
-    setInteractionFailed(true);
-  };
-
-  /**
-   * 已登录用户的两个分流都在 effect 里（render 可能被丢弃重跑，跳转是副作用）：
-   * 带 oidc → 续跑交互；不带 → 渲染「已登录」状态屏（见下方门控），不跳走、不画表单。
-   */
-  useEffect(() => {
-    if (!user) return;
-    if (error || interactionRetryable || interactionFailed) return;
-    if (oidcUid) void finishOidc(getIdentityGen());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, oidcUid, error, interactionRetryable, interactionFailed]);
-
 
   useEffect(() => {
     let cancelled = false;
@@ -144,66 +92,6 @@ const RegisterPage = () => {
       setBusy(false);
     }
   };
-
-  // ── 已登录门控 ────────────────────────────────────────────────────────────
-  // 历史 bug：本页此前完全不读会话，已登录 PASS 用户经论坛「注册」链接 / signup 拦截器
-  // 打开本页时照样看到注册表单（右上角还挂着头像），看起来就像「点登录却到了注册页」。
-  // 这里按三态处理（对齐 LoginPage 的顺序：终态 → loading → 已登录分流）：
-  //   · 已登录 + 带 oidc：由上面的 effect 续跑 OIDC 交互并整页跳回发起方；
-  //   · 已登录 + 无 oidc：显示「已登录」状态屏，提供账户中心出口，不画注册表单；
-  //   · status === "unknown"：会话还没问出结果，绝不能先画表单再跳变。
-  // 终态必须先于 loading 门控，否则错误说明会被永远转圈的加载屏盖住。
-  if (interactionFailed) {
-    return (
-      <StatusScreen
-        kind="error"
-        title={t("login.interactionFailedTitle")}
-        description={t("login.interactionFailedDesc")}
-        actions={[{ label: t("account.title"), to: "/account" }]}
-      />
-    );
-  }
-  if (interactionRetryable) {
-    return (
-      <StatusScreen
-        kind="error"
-        title={t("login.interactionRetryableTitle")}
-        description={t("login.interactionRetryable")}
-        actions={[
-          {
-            label: t("mfa.done.retry"),
-            onClick: () => {
-              setInteractionRetryable(false);
-              void finishOidc(getIdentityGen());
-            },
-          },
-          { label: t("account.title"), variant: "ghost" as const, to: "/account" },
-        ]}
-      />
-    );
-  }
-  if (status === "unknown" && !error) {
-    return (
-      <StatusScreen
-        kind="loading"
-        title={oidcUid ? t("login.continuing") : t("common.loading")}
-      />
-    );
-  }
-  if (user && oidcUid && !error) {
-    // effect 正在续跑交互，马上整页跳走；这一帧不画注册表单。
-    return <StatusScreen kind="loading" title={t("login.continuing")} />;
-  }
-  if (user) {
-    return (
-      <StatusScreen
-        kind="info"
-        title={t("register.alreadyLoggedInTitle")}
-        description={t("register.alreadyLoggedInDesc")}
-        actions={[{ label: t("register.goAccount"), to: "/account" }]}
-      />
-    );
-  }
 
   // 加载中：先不渲染表单，等注册状态确定后再展示正确内容，避免表单闪现后跳变。
   if (registrationEnabled === null) {

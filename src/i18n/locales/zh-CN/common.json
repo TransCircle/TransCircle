@@ -159,10 +159,7 @@
     "captchaRequired": "请完成人机验证",
     "captchaFailed": "人机验证失败，请重试",
     "disabledTitle": "注册功能已关闭",
-    "disabledDesc": "请联系管理员",
-    "alreadyLoggedInTitle": "你已登录",
-    "alreadyLoggedInDesc": "当前账户已登录，无需重新注册。",
-    "goAccount": "前往账户中心"
+    "disabledDesc": "请联系管理员"
   },
   "forgot": {
     "title": "找回密码",
