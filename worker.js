@@ -21,24 +21,30 @@ export default {
       url.pathname.startsWith('/oauth2/') ||
       url.pathname.startsWith('/.well-known/')
     ) {
-      const backend = env.PASS_API_URL;
+      const backend = env.PASS_API_URL?.replace(/\/+$/, '');
       if (!backend) {
-        return new Response(
-          JSON.stringify({ error: 'PASS_API_URL not configured' }),
-          { status: 502, headers: { 'Content-Type': 'application/json' } },
-        );
+        // 用 Pass 的 {error:{code,message},requestId} 信封：门户 apiFetch 按信封解析，
+        // 裸 {error:string} 会让错误提示渲染成 undefined。
+        return jsonError('UPSTREAM_UNCONFIGURED', 'PASS_API_URL not configured');
       }
 
       // Forward request to Pass backend, preserving all headers and cookies
-      const backendResponse = await fetch(
-        `${backend}${url.pathname}${url.search}`,
-        {
-          method: request.method,
-          headers: request.headers,
-          body: request.body,
-          redirect: 'manual',
-        },
-      );
+      let backendResponse;
+      try {
+        backendResponse = await fetch(
+          `${backend}${url.pathname}${url.search}`,
+          {
+            method: request.method,
+            headers: request.headers,
+            body: request.body,
+            redirect: 'manual',
+          },
+        );
+      } catch {
+        // Pass 不可达时 fetch 抛异常 → Workers 返回 1101 HTML 错误页，门户解析 JSON 即崩。
+        // 统一成 502 信封，登录/注册流程能看到可行动的「服务不可用」提示。
+        return jsonError('UPSTREAM_UNREACHABLE', 'Pass backend is unreachable');
+      }
 
       // 直接透传后端响应。之前用 new Headers(backendResponse.headers) 重建响应头，
       // 但 Fetch 规范禁止迭代 Set-Cookie，导致 refresh token 轮换后的新 cookie 丢失，
@@ -52,3 +58,11 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
+
+/** 502 信封；requestId 用 Workers 原生 crypto，不手写弱随机。 */
+function jsonError(code, message) {
+  return new Response(
+    JSON.stringify({ error: { code, message }, requestId: 'req_' + crypto.randomUUID() }),
+    { status: 502, headers: { 'Content-Type': 'application/json' } },
+  );
+}
