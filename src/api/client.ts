@@ -38,10 +38,10 @@ export function setUserToken(token: string | null): void {
  * 就是「登出之后又被旧请求登了回去」，或者把 B 的会话换成 A 的令牌。
  *
  * 用法：流程**开始前**记下 `getIdentityGen()`，拿到令牌时把它传进来。
- * 返回是否真的装上了 —— 没装上说明这次流程的结果已经作废，调用方不该再往下走。
+ * 返回是否真的装上了，没装上说明这次流程的结果已经作废，调用方不该再往下走。
  *
- * 比的是**身份代次**而不是认证代次：期间若只是某条旧会话过期作废（没有新身份上位），
- * 这次登录仍然有效，不该被连坐。理由见 `getIdentityGen()` 的说明。
+ * 比的是**身份代次**不是认证代次：期间若只是某条旧会话过期作废而没有新身份上位，
+ * 则这次登录仍然有效，不该被连坐。理由见 `getIdentityGen()` 的说明。
  */
 export function installAccessToken(token: unknown, identityGen: number): boolean {
   // 收 `unknown` 并在运行时校验：类型声明说这里是 string，但它描述的是**契约**，
