@@ -2,23 +2,23 @@
   /* 文档流静态页脚:由 RootLayout(flex column + main flex:1)推至内容底部,
      不再 fixed 悬浮,正文无需预留 --footer-h 底部空间。 */
   width: 100%;
-  border-top: 1px solid var(--divider-color);
-  background-color: var(--bg-color);
+  /* 顶部分界由旗帜条纹（§3.1）承担，不再额外描边。 */
+  background-color: var(--bg);
 }
 
 .bar {
-  max-width: var(--width-content);
+  max-width: var(--w-content);
   margin: 0 auto;
-  padding: 0.6rem clamp(1rem, 0.4rem + 3vw, 3rem);
+  padding: var(--s-4) var(--page-x);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem 1.25rem;
+  gap: var(--s-2) var(--s-5);
   flex-wrap: wrap;
-  /* 法律/许可信息也要可读:不低于 0.78rem。 */
-  font-size: 0.78rem;
+  /* 辅助信息下限 12px（§2.7）。 */
+  font-size: var(--fs-xs);
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: var(--lh-caption);
 }
 
 .license {
@@ -31,8 +31,9 @@
 }
 
 .heading {
-  color: var(--primary-pink);
-  font-weight: 600;
+  color: var(--pink-700);
+  font-family: var(--font-tech);
+  font-weight: var(--fw-semibold);
   letter-spacing: 0.06em;
   flex-shrink: 0;
 }

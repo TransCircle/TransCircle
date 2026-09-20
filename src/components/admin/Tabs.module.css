@@ -10,30 +10,44 @@
   display: none;
 }
 
+/* §5.9：激活标签 --ink --fw-semibold，其余 --text-secondary。 */
 .tab {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   padding: 0.55rem 1rem;
   font-family: inherit;
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  transition: color var(--dur-1) var(--ease-standard),
+    background-color var(--dur-1) var(--ease-standard),
+    border-color var(--dur-2) var(--ease-out);
+}
+
+.tab:active {
+  background-color: var(--pink-100);
+}
+
+/* §4：触屏命中 ≥44px。 */
+@media (any-pointer: coarse) {
+  .tab {
+    min-height: var(--tap-min);
+  }
 }
 
 .tab:hover {
-  color: var(--text-main);
+  color: var(--ink);
 }
 
 /* 横向滚动容器会裁剪向外偏移的焦点环；改用内描边（负偏移）避免被裁剪 */
 .tab:focus-visible {
   outline-offset: -2px;
-  border-radius: var(--radius-xs);
+  border-radius: var(--r-xs);
 }
 
 .tabLabel {
@@ -47,34 +61,37 @@
   min-width: 1.2rem;
   height: 1.2rem;
   padding: 0 0.35rem;
-  border-radius: var(--radius-pill);
-  background-color: var(--hover-bg);
-  color: var(--text-secondary);
-  font-size: 0.72rem;
-  font-weight: 600;
+  border-radius: var(--r-xs);
+  background-color: var(--pink-100);
+  color: var(--pink-700);
+  font-family: var(--font-tech);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
 }
 
 /* ── Underline variant ───────────────────────────────────── */
 
 .underline {
-  border-bottom: 1px solid var(--divider-color);
+  border-bottom: 1px solid var(--line);
 }
 
 .underline .tab {
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
-  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  border-radius: var(--r-xs) var(--r-xs) 0 0;
 }
 
+/* §5.9：指示条 = 2px 高 --pink-600；激活标签文字为 --ink --fw-semibold。 */
 .underline .tab.active {
-  color: var(--accent-pink);
-  border-bottom-color: var(--accent-pink);
+  color: var(--ink);
+  font-weight: var(--fw-semibold);
+  border-bottom-color: var(--pink-600);
 }
 
 .underline .tab.active .badge {
-  background-color: var(--accent-pink);
-  /* accent-pink 上的计数徽章文字用 --on-accent。 */
-  color: var(--on-accent);
+  background-color: var(--pink-600);
+  /* accent-pink 上的计数徽章文字用 --on-pink。 */
+  color: var(--on-pink);
 }
 
 /* ── Segmented variant ───────────────────────────────────── */
@@ -82,9 +99,9 @@
 .segmented {
   gap: 0.25rem;
   padding: 0.25rem;
-  background-color: var(--hover-bg);
-  border: 1px solid var(--divider-color);
-  border-radius: var(--radius-md);
+  background-color: var(--pink-100);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
   width: fit-content;
   max-width: 100%;
 }
@@ -92,13 +109,14 @@
 /* 内层圆角 = 外层 md 圆角减去容器内边距，保持同心视觉。 */
 .segmented .tab {
   padding: 0.4rem 0.9rem;
-  border-radius: calc(var(--radius-md) - 0.25rem);
+  border-radius: calc(var(--r-md) - 0.25rem);
 }
 
 .segmented .tab.active {
-  color: var(--accent-pink);
-  background-color: var(--surface-card);
-  box-shadow: var(--shadow-card);
+  color: var(--ink);
+  font-weight: var(--fw-semibold);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-2);
 }
 
 /* 窄屏下标签条可横向滚动：右缘渐隐提示「还有更多」（同 SectionShell 移动端标签条先例）。 */

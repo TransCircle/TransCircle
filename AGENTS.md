@@ -273,7 +273,7 @@ audit:read                查看审计日志
 
 ### 6.1 核心原则
 
-- **可及性优先**：对比度由 `light` / `dark` 两套主题令牌的色值本身保证（独立高对比度模式已废止，详见 `DESIGN.md` §2.3）
+- **可及性优先**：对比度由 `light` / `dark` 两套主题令牌保证；独立高对比度模式已废止（见外层 `docs/DESIGN.md` §7）
 - **键盘可访问**：所有交互支持完整键盘导航
 - **屏幕阅读器友好**：语义化标签、ARIA 属性
 - **尊重用户偏好**：适配 `prefers-reduced-motion`
@@ -288,7 +288,7 @@ audit:read                查看审计日志
 - 焦点指示器统一使用：
   ```css
   :focus-visible {
-    outline: 2px solid var(--primary-pink);
+    outline: 2px solid var(--pink-600);
     outline-offset: 2px;
   }
   ```
@@ -331,28 +331,30 @@ audit:read                查看审计日志
 
 ## 8. 设计系统
 
-> 完整的设计系统定义见 `DESIGN.md`。以下为关键提醒：
+> 唯一规范源是外层 `docs/DESIGN.md` v3.0「Spectrum / 光谱」。本仓令牌落地在 `src/index.css`，取值必须与全局规范保持一致。
 
 ### 8.1 主题模式
 
-- 支持两种主题：`light`、`dark`（独立高对比度模式已废止，对比度由令牌色值保证）
-- 通过 `data-theme` 属性切换；切换瞬时生效，禁止圆形揭示、遮罩、翻转等切换动画（详见 `DESIGN.md` §2.4）
-- 自动检测 `prefers-color-scheme`
+- 支持 `light` / `dark` 双主题；独立高对比度模式已移除
+- 通过 `data-theme` 切换，并保留 `prefers-color-scheme` 无脚本回退；两套暗色声明必须逐条一致
+- 主题切换允许规范定义的 300ms 配色与 `clip-path` 过渡，并须在 `prefers-reduced-motion` 下关闭
 - 用户偏好存储于 `localStorage`（键名：`transcircle-theme`）
 
 ### 8.2 核心 Token
 
-- 颜色 / 圆角 / 阴影 / 布局一律使用 CSS 变量（如 `var(--primary-pink)`、`var(--radius-lg)`、`var(--shadow-card)`），严禁硬编码（含 `rgba(0,0,0,…)` 阴影）
+- 颜色、圆角、间距、阴影、时长一律使用 CSS 变量，如 `var(--pink-600)`、`var(--blue-600)`、`var(--r-md)`、`var(--s-4)`、`var(--shadow-2)`
+- 粉色文字只用 `--pink-700`；链接与信息文字用 `--blue-600`
+- 圆角：`--r-xs(4px)`、`--r-sm(8px)`、`--r-md(12px)`、`--r-lg(16px)`；`--r-pill` 仅用于头像与进度轨道，禁止 pill 按钮
+- 禁止渐变填充、emoji 装饰和彩色左边框卡片；玻璃只用于浮动层，并提供无 `backdrop-filter` 回退
 - 不以颜色单独承载语义：状态恒为「圆点 / 图标 + 文字」（WCAG 1.4.1），色盲用户不依赖色相即可区分
-- `color-mix()` 实现悬停态，同时提供硬编码回退
-- 圆角（五档）：`--radius-xs(6px)` 内联 chip/标签/徽标、`--radius-sm(10px)` 输入/下拉、`--radius-md(12px)` 行/弹层、`--radius-lg(14px)` 卡片、`--radius-pill(999px)` 按钮/徽章
 - 优先复用 `@/components/ui` 现成原语，不要重造原生 `<select>` / checkbox / `confirm`
 
-### 8.3 排版
+### 8.3 排版与响应式
 
-- 字体栈：`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`
-- 基础单位：`rem`（基于 16px）
-- 响应式断点（宽度，桌面优先递减，完整定义见 `DESIGN.md` §22.1）：`1100px`（访客导航 AppNav 转抽屉）、`1024px`（后台主内容回收内边距）、`768px`（后台侧栏转分段工具栏、双栏塌陷单列）、`640px`（列表 sticky 头关闭）、`480px`（弹层页脚按钮满宽堆叠）；`1280px` 为内容轨上限 `--width-content`，非断点
+- 中文走 `--font-sans` 系统栈；Nunito Brand 仅用于 TransCircle 品牌词，Space Grotesk 用于标签和数字
+- 字阶和间距必须走 token；公共正文最小 16px
+- 响应式断点：`1200px`、`1024px`、`768px`、`480px`；`--w-content: 1280px` 是内容轨上限，不是断点
+- 页面水平内边距统一使用 `var(--page-x)`
 
 ---
 

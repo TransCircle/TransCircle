@@ -4,7 +4,15 @@
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  background-color: var(--bg-color);
+  background-color: var(--bg);
+}
+
+/* §1.5：旗帜条纹在同一视口只允许出现一处。
+   页面自带签名条纹（登录/注册的品牌面板）时，页脚的通栏条纹让位。
+   :has() 不支持时最坏情况是两处条纹并存，属可接受的渐进降级。
+   导航当前项的 24×3px 迷你条纹是 §3.1 单列的另一类场景，不参与此判定。 */
+.app:has([data-flag-stripe="page"]) [data-flag-stripe="footer"] {
+  display: none;
 }
 
 .main {
@@ -23,17 +31,17 @@
   position: fixed;
   top: 0.5rem;
   left: 0.5rem;
-  z-index: 100;
+  z-index: var(--z-skip);
   padding: 0.55rem 1rem;
-  background-color: var(--accent-pink);
-  color: var(--on-accent);
-  border-radius: var(--radius-sm);
-  font-size: 0.88rem;
-  font-weight: 600;
+  background-color: var(--pink-600);
+  color: var(--on-pink);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
   text-decoration: none;
-  box-shadow: var(--shadow-pop);
+  box-shadow: var(--shadow-3);
   transform: translateY(-150%);
-  transition: transform 0.15s ease;
+  transition: transform var(--dur-1) var(--ease-out);
 }
 
 .skipLink:focus {

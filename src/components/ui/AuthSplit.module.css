@@ -1,0 +1,172 @@
+/* 登录/注册左右分栏 — DESIGN.md §8「TransCircle（Pass 门户）」
+   ≥900px：左 45% 深色品牌面板 + 右侧玻璃表单卡；≤900px 堆叠为顶部品牌带 + 表单。 */
+
+.split {
+  display: flex;
+  width: 100%;
+  min-height: 60vh;
+  min-height: 60dvh;
+  align-items: stretch;
+}
+
+/* ── 左侧品牌面板 ─────────────────────────────────────────────
+   面板恒为深色（§8「深李紫底 --ink 反白」）。但 --ink 在暗色主题下翻转成近白，
+   直接拿它当底色会让面板在暗色下变成一块白板，因此这里用局部变量把
+   「面板底 / 面板前景」显式绑定到各主题下确实为深/浅的那一档。 */
+.brand {
+  --brand-bg: var(--ink);
+  --brand-fg: var(--surface);
+  /* 面板恒为深底，粉字必须取「浅粉」那一档才够对比：
+     亮色主题用 --pink-300，暗色主题的 --pink-700 本身就是浅粉（#FF8FBB）。 */
+  --brand-accent: var(--pink-300);
+
+  position: relative;
+  flex: 0 0 45%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--brand-bg);
+  color: var(--brand-fg);
+  overflow: hidden;
+}
+
+:global([data-theme="dark"]) .brand {
+  --brand-bg: var(--surface);
+  --brand-fg: var(--ink);
+  --brand-accent: var(--pink-700);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme])) .brand {
+    --brand-bg: var(--surface);
+    --brand-fg: var(--ink);
+    --brand-accent: var(--pink-700);
+  }
+}
+
+.brandInner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  gap: var(--s-5);
+  padding: var(--s-8) clamp(var(--s-5), 4vw, var(--s-7));
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  width: 132px;
+}
+
+.logoImage {
+  display: block;
+  width: 132px;
+  height: auto;
+}
+
+.brandEyebrow {
+  font-family: var(--font-tech);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-accent);
+  margin: 0;
+}
+
+/* 一句品牌语：中文 → 系统栈 700（§2.6） */
+.brandLine {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-display);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  letter-spacing: 0;
+  color: var(--brand-fg);
+}
+
+/* ── 右侧表单区 ───────────────────────────────────────────── */
+
+.formSide {
+  flex: 1 1 55%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-7) var(--page-x);
+  min-width: 0;
+}
+
+.holder {
+  width: 100%;
+  max-width: var(--w-form);
+}
+
+/* 玻璃表单卡（§2.5）：浮动层允许玻璃；必须带 @supports 实色回退。 */
+.card {
+  width: 100%;
+  padding: var(--s-6);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .card {
+    background-color: var(--surface);
+  }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+/* ── ≤900px：堆叠为顶部品牌带 + 下方表单 ──────────────────── */
+
+@media (max-width: 900px) {
+  .split {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .brand {
+    flex: none;
+  }
+
+  .brandInner {
+    padding: var(--s-5) var(--page-x);
+    gap: var(--s-2);
+  }
+
+  /* 顶部品牌带只保留 Logo + 一行短语，标语降到副标级别免得挤掉表单。 */
+  .brandLine {
+    font-size: var(--fs-lg);
+  }
+
+  .formSide {
+    padding: var(--s-6) var(--page-x) var(--s-7);
+  }
+}
+
+@media (max-width: 640px) {
+  /* 窄屏下表单卡退化为平铺，留白统一收敛到 .formSide（与 CenteredCard 同策）。 */
+  .card {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 0;
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .card {
+      background-color: transparent;
+    }
+  }
+}

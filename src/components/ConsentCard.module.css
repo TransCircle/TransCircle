@@ -4,8 +4,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  gap: var(--s-4);
+  margin-bottom: var(--s-5);
 }
 
 .arrow {
@@ -14,41 +14,41 @@
 }
 
 .title {
-  margin: 0 0 0.5rem;
-  font-size: 1.15rem;
-  font-weight: 700;
-  line-height: 1.45;
-  letter-spacing: -0.01em;
+  margin: 0 0 var(--s-2);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  letter-spacing: 0;
   text-align: center;
-  color: var(--text-main);
+  color: var(--ink);
 }
 
 .asUser {
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--s-5);
   text-align: center;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-secondary);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--s-1);
   overflow-wrap: anywhere;
 }
 
 .scopes {
-  border: 1px solid var(--divider-color);
-  border-radius: var(--radius-md);
-  padding: 1rem;
-  margin-bottom: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--s-4);
+  margin-bottom: var(--s-5);
 }
 
 .scopesHead {
   display: block;
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--s-3);
 }
 
 .scopeList {
@@ -57,23 +57,23 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--s-3);
 }
 
 .scopeList li {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  font-size: 0.875rem;
+  gap: var(--s-3);
+  font-size: var(--fs-sm);
   color: var(--text-body);
-  line-height: 1.5;
+  line-height: var(--lh-caption);
 }
 
 .tick {
   display: inline-flex;
   flex: none;
   margin-top: 0.25rem;
-  color: var(--soft-success-text);
+  color: var(--success-text);
 }
 
 .actions {

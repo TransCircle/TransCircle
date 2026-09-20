@@ -1,39 +1,42 @@
+/* §5.1：高 40px（移动端 44px），padding 0 20px，--r-sm，--fw-semibold --fs-sm。
+   **禁止 pill 按钮** —— 原先的 --r-pill 已按规范改为 --r-sm。 */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
   font-family: inherit;
-  font-weight: 500;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
-  border-radius: var(--radius-pill);
+  border-radius: var(--r-sm);
   border: 1.5px solid transparent;
   white-space: nowrap;
   line-height: 1.2;
   /* 链接形态（to/href）与按钮共用本类，需显式去掉下划线。 */
   text-decoration: none;
   transition:
-    background-color 0.18s ease,
-    color 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background-color var(--dur-1) var(--ease-standard),
+    color var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-1) var(--ease-standard),
+    transform var(--dur-1) var(--ease-spring);
 }
 
 .btn:not(:disabled):not([aria-disabled='true']):active {
-  transform: scale(0.92);
+  transform: scale(0.97);
   transition-duration: 0.06s;
 }
 
 .md {
-  min-height: 40px;
-  padding: 0.55rem 1.25rem;
-  font-size: 0.88rem;
+  min-height: var(--btn-h);
+  padding: 0 20px;
+  font-size: var(--fs-sm);
 }
 
 .sm {
-  padding: 0.4rem 0.9rem;
-  font-size: 0.82rem;
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: var(--fs-sm);
 }
 
 .fullWidth {
@@ -55,38 +58,54 @@
 
 /* ── Primary ─────────────────────────────────────────────── */
 
-/* 主 CTA（docs 7.4）：全站唯一实心底 + 阴影 + hover 抬升。--cta-bg 底 + --cta-color 前景，
-   hover 转 --cta-hover 并升 --shadow-card-hover。 */
+/* §5.1 Primary：--pink-600 底 + --on-pink 墨字；hover 底色加深 + translateY(-1px)，
+   亮色只在 hover 时补 --glow-pink（默认态干净，§3.2），暗色改 --glow-pink-dark。 */
 .primary {
-  background-color: var(--cta-bg);
-  color: var(--cta-color);
-  box-shadow: var(--shadow-card);
+  background-color: var(--pink-600);
+  color: var(--on-pink);
 }
 
 .primary:not(:disabled):not([aria-disabled='true']):hover {
-  background-color: var(--cta-hover);
+  background-color: var(--pink-600-hover);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-card-hover);
+  box-shadow: var(--glow-pink);
+}
+
+:global([data-theme='dark']) .primary:not(:disabled):not([aria-disabled='true']):hover {
+  box-shadow: var(--glow-pink-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme])) .primary:not(:disabled):not([aria-disabled='true']):hover {
+    box-shadow: var(--glow-pink-dark);
+  }
 }
 
 /* ── Secondary ───────────────────────────────────────────── */
 
-/* 次行动（docs 7.4）：透明底 + --accent-pink 文字 + --primary-pink 描边，
-   hover 描边加深到 --accent-pink 并铺 --hover-bg 淡底。 */
+/* §5.1 Secondary：透明底 + 1.5px --line-strong 描边 + --ink 字；
+   hover 时描边与文字一起转粉（暗色转 --pink-500）。 */
 .secondary {
   background-color: transparent;
-  color: var(--accent-pink);
-  border-color: var(--primary-pink);
+  color: var(--ink);
+  border-color: var(--line-strong);
 }
 
 .secondary:not(:disabled):not([aria-disabled='true']):hover {
-  border-color: var(--accent-pink);
-  background-color: var(--hover-bg);
+  border-color: var(--pink-600);
+  color: var(--pink-700);
+  background-color: var(--pink-100);
 }
 
-@supports (background-color: color-mix(in srgb, red 15%, white)) {
-  .secondary:not(:disabled):not([aria-disabled='true']):hover {
-    background-color: var(--hover-bg-mix);
+:global([data-theme='dark']) .secondary:not(:disabled):not([aria-disabled='true']):hover {
+  border-color: var(--pink-400);
+  color: var(--pink-400);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme])) .secondary:not(:disabled):not([aria-disabled='true']):hover {
+    border-color: var(--pink-500);
+    color: var(--pink-500);
   }
 }
 
@@ -95,46 +114,46 @@
 /* 与 danger 样式一致：红文字 + 红边框 + 浅红 hover 背景。 */
 .softError {
   background-color: transparent;
-  color: var(--soft-error-text);
-  border-color: var(--soft-error-border);
+  color: var(--error-text);
+  border-color: var(--error-border);
 }
 
 .softError:not(:disabled):not([aria-disabled='true']):hover {
-  border-color: var(--soft-error-border);
-  background-color: var(--soft-error-bg);
+  border-color: var(--error-border);
+  background-color: var(--error-bg);
 }
 
 /* ── Ghost ───────────────────────────────────────────────── */
 
 .ghost {
   background: transparent;
-  color: var(--accent-pink);
+  color: var(--pink-700);
 }
 
 .ghost:not(:disabled):not([aria-disabled='true']):hover {
-  background-color: var(--hover-bg);
+  background-color: var(--pink-100);
 }
 
 /* ── Danger ──────────────────────────────────────────────── */
 
-/* 危险行动（docs 7.4）：透明底 + --soft-error-* 三件套，随主题（含系统暗色）取值，
-   组件层零 dark 分支。hover 补 --soft-error-bg 淡底，描边不变。 */
+/* §5.1 Danger：--error-text 描边/文字，hover 铺 --error-bg。语义色随主题取值，
+   组件层零 dark 分支。 */
 .danger {
   background-color: transparent;
-  color: var(--soft-error-text);
-  border-color: var(--soft-error-border);
+  color: var(--error-text);
+  border-color: var(--error-border);
 }
 
 .danger:not(:disabled):not([aria-disabled='true']):hover {
-  border-color: var(--soft-error-border);
-  background-color: var(--soft-error-bg);
+  border-color: var(--error-border);
+  background-color: var(--error-bg);
 }
 
 /* Comfortable touch targets on touch devices.
    any-pointer（而非 pointer）：带触屏的笔记本主指针是鼠标，但手指也会点。 */
 @media (any-pointer: coarse) {
   .btn {
-    min-height: 44px;
+    min-height: var(--tap-min);
   }
 }
 

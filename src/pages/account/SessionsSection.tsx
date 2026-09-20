@@ -12,7 +12,6 @@ import {
   StatusBadge,
 } from "../../components/ui";
 import { ConfirmDialog } from "../../components/ui/Dialog";
-import page from "../Page.module.css";
 import s from "./Account.module.css";
 
 const DeviceIcon = () => (
@@ -153,7 +152,7 @@ export function SessionsSection() {
           )}
 
           {cursor && (
-            <div className={page.loadMoreWrap}>
+            <div className={s.loadMoreWrap}>
               <Button variant="secondary" loading={loadingMore} onClick={() => void load(cursor)}>
                 {t("common.loadMore")}
               </Button>

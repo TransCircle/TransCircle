@@ -12,7 +12,6 @@ import {
   TextField,
 } from "../../components/ui";
 import { Dialog } from "../../components/ui/Dialog";
-import page from "../Page.module.css";
 import s from "./Account.module.css";
 
 const PencilIcon = () => (
@@ -132,7 +131,7 @@ export function ProfileSection() {
               <div className={s.rowText}>
                 <span className={s.rowTitle}>{t("account.profile.accountId")}</span>
                 <span className={s.rowMeta}>
-                  <code className={page.code}>{user.id}</code>
+                  <code className={s.code}>{user.id}</code>
                 </span>
               </div>
             </div>

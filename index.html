@@ -17,11 +17,11 @@
     <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large" />
     <meta name="bingbot" content="index, follow" />
 
-    <!-- 与 index.css 的 --bg-color(light: #fff9fb / dark: #12121a)保持一致,浏览器 UI 融入页面背景 -->
-    <meta name="theme-color" content="#fff9fb" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#12121a" media="(prefers-color-scheme: dark)" />
+    <!-- 与 index.css 的 --bg(light: #FDF9FB / dark: #0C0A13)保持一致,浏览器 UI 融入页面背景 -->
+    <meta name="theme-color" content="#fdf9fb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c0a13" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="msapplication-TileColor" content="#904A49" />
+    <meta name="msapplication-TileColor" content="#efa8c0" />
 
     <link rel="canonical" href="https://transcircle.org/" />
     <link rel="alternate" hreflang="zh-CN" href="https://transcircle.org/" />
@@ -47,6 +47,23 @@
     <meta name="twitter:description" content="归档跨性别社群故事、记录抗争历史、团结同伴、争取跨性别权利。我们的存在，就是对恶意最大的反抗。" />
     <meta name="twitter:image" content="https://transcircle.org/og-cover.png" />
     <meta name="twitter:image:alt" content="跨环 TransCircle Project — 中文 MtF 跨性别社群史官工程" />
+
+    <!-- 自托管展示字体（latin 子集可变字体）：DESIGN.md §2.6 / §9。
+         中文由系统栈兜底，故仅预载拉丁子集，避免阻塞首屏。 -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/space-grotesk-latin.woff2"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/nunito-brand-latin.woff2"
+      crossorigin="anonymous"
+    />
 
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
@@ -204,7 +221,7 @@
          - IE 11 不支持 CSS 自定义属性(var())，且应用打包 CSS 的 var() 在 IE 下全部失效，
            因此这里必须写成字面量，不能引用 --primary-pink 等 token。 */
       #legacy-fallback {
-        background: #fff9fb;
+        background: #fdf9fb;
         min-height: 100vh;
       }
       #legacy-fallback .legacy-splash {
@@ -213,30 +230,29 @@
         margin: 2rem auto;
         padding: 1.5rem 1.75rem;
         background: #ffffff;
-        border: 1px solid #f6d9e0;
-        border-radius: 14px;
-        color: #333333;
+        border: 1px solid #eedfe6;
+        border-radius: 12px;
+        color: #3e3646;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         line-height: 1.7;
       }
       #legacy-fallback .legacy-brand {
-        display: flex;
-        align-items: center;
-        font-weight: 600;
+        display: block;
       }
       #legacy-fallback .legacy-brand img {
-        margin-right: 0.5rem;
         display: block;
+        width: 132px;
+        height: auto;
       }
       #legacy-fallback .legacy-title {
         margin: 1rem 0 0.5rem;
         font-size: 1.35rem;
         line-height: 1.3;
-        color: #1a1a1a;
+        color: #1a1420;
       }
       #legacy-fallback .legacy-body {
         margin: 0 0 0.5rem;
-        color: #333333;
+        color: #3e3646;
       }
       #legacy-fallback .legacy-upgrade {
         margin: 1.1rem 0 0;
@@ -248,39 +264,39 @@
       }
       #legacy-fallback .legacy-upgrade a,
       #legacy-fallback .legacy-links a {
-        color: #b2475c;
+        color: #c22e68;
         font-weight: 600;
         text-decoration: underline;
       }
       #legacy-fallback .legacy-links {
         margin: 1.1rem 0 0;
-        color: #666666;
+        color: #6f6678;
         font-size: 0.95rem;
       }
       #legacy-fallback a:focus {
-        outline: 2px solid #ec9eb0;
+        outline: 2px solid #efa8c0;
         outline-offset: 2px;
       }
       @media (prefers-color-scheme: dark) {
-        #legacy-fallback { background: #12121a; }
+        #legacy-fallback { background: #0c0a13; }
         #legacy-fallback .legacy-splash {
-          background: #1e1e2e;
-          border-color: #3a3a4e;
-          color: #c0c0d0;
+          background: #17131f;
+          border-color: #2b2438;
+          color: #cfc9da;
         }
-        #legacy-fallback .legacy-title { color: #f0f0f5; }
-        #legacy-fallback .legacy-body { color: #c0c0d0; }
+        #legacy-fallback .legacy-title { color: #f5f2f8; }
+        #legacy-fallback .legacy-body { color: #cfc9da; }
         #legacy-fallback .legacy-upgrade a,
-        #legacy-fallback .legacy-links a { color: #ff9fb4; }
-        #legacy-fallback .legacy-links { color: #a0a0b0; }
+        #legacy-fallback .legacy-links a { color: #ff8fbb; }
+        #legacy-fallback .legacy-links { color: #9c94ac; }
       }
     </style>
   </head>
   <body>
     <noscript>
-      <article lang="zh-CN" style="max-width:720px;margin:2rem auto;padding:1rem 1.25rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#222;line-height:1.7;">
+      <article lang="zh-CN" style="max-width:720px;margin:2rem auto;padding:1rem 1.25rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1420;line-height:1.7;">
         <header>
-          <h1 style="display:flex;align-items:center;gap:0.5rem;"><img src="/logo-mark.svg" width="28" height="28" alt="" aria-hidden="true" style="display:block;flex-shrink:0;" />TransCircle Project</h1>
+          <h1><img src="/brand/transcircle-horizontal-on-light.svg" width="132" height="40" alt="TransCircle" style="display:block;" /></h1>
           <p><strong>中文 MtF 跨性别社群史官工程。</strong>我们的存在，就是对恶意最大的反抗。</p>
         </header>
         <section>
@@ -321,8 +337,7 @@
     <div id="legacy-fallback" style="display:none">
       <main class="legacy-splash">
         <header class="legacy-brand">
-          <img src="/logo-mark.svg" width="28" height="28" alt="" aria-hidden="true" />
-          TransCircle Project
+          <img src="/brand/transcircle-horizontal-on-light.svg" width="132" height="40" alt="TransCircle" />
         </header>
         <h1 class="legacy-title" id="legacy-title">浏览器版本过旧</h1>
         <p class="legacy-body" id="legacy-body">您当前使用的浏览器无法运行本站的现代界面，登录与账户功能不可用。请升级系统或改用较新浏览器后再访问。</p>

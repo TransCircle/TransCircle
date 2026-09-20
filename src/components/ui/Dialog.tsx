@@ -380,7 +380,7 @@ export function Dialog({
       panel.style.transform = "";
     } else {
       // 回弹到原位,随后清掉内联样式交还给 CSS。
-      panel.style.transition = "transform 220ms var(--ease-emphasized)";
+      panel.style.transition = "transform 220ms var(--ease-out)";
       panel.style.transform = "translateY(0px)";
       springTimer.current = window.setTimeout(() => {
         if (panelRef.current) {

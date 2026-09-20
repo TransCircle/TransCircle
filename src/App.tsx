@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from './utils/usePageTitle';
@@ -22,13 +22,62 @@ const BlueskyIcon = () => (
   </svg>
 );
 
+/**
+ * 光标光晕（DESIGN.md §3.3）：hero 区内跟随指针的 420px 实色圆 + blur(90px)。
+ * 指针离开 hero 或滚出 hero 范围即隐藏（pointerleave），不残留。
+ */
+function useCursorAura(
+  heroRef: React.RefObject<HTMLElement | null>,
+  auraRef: React.RefObject<HTMLDivElement | null>,
+): void {
+  useEffect(() => {
+    const hero = heroRef.current;
+    const aura = auraRef.current;
+    if (!hero || !aura || typeof window.matchMedia !== 'function') return;
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (!window.matchMedia('(prefers-reduced-motion: no-preference)').matches) return;
+
+    let raf = 0;
+    let x = 0;
+    let y = 0;
+    const paint = () => {
+      raf = 0;
+      aura.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    };
+    const onMove = (e: PointerEvent) => {
+      const rect = hero.getBoundingClientRect();
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
+      hero.dataset.aura = 'on';
+      if (raf === 0) raf = window.requestAnimationFrame(paint);
+    };
+    const onLeave = () => {
+      hero.dataset.aura = 'off';
+    };
+
+    hero.dataset.aura = 'off';
+    hero.addEventListener('pointermove', onMove);
+    hero.addEventListener('pointerleave', onLeave);
+    return () => {
+      hero.removeEventListener('pointermove', onMove);
+      hero.removeEventListener('pointerleave', onLeave);
+      if (raf !== 0) window.cancelAnimationFrame(raf);
+      delete hero.dataset.aura;
+    };
+  }, [heroRef, auraRef]);
+}
+
 const App = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const heroRef = useRef<HTMLElement>(null);
+  const auraRef = useRef<HTMLDivElement>(null);
 
   // 主页沿用 index.html 的默认站点标题(usePageTitle 不传参即恢复默认),
   // 同时保证从子页返回时标题被复位。
   usePageTitle();
+
+  useCursorAura(heroRef, auraRef);
 
   // 顶栏锚点(如 /#about)经 SPA 路由到达时浏览器不会自动滚动到目标分区,
   // 这里补齐;各 section 的 scroll-margin-top 已抵消吸顶导航高度。
@@ -38,25 +87,19 @@ const App = () => {
   }, [location.hash]);
 
   return (
-    <>
-      <div className={styles.mainContent}>
-        <header className={styles.contentHeader}>
-          <h1 id="landing-title" className={styles.mainTitle}>{t('landing.title')}</h1>
-          <p className={styles.subTitle}>{t('landing.subtitle')}</p>
-        </header>
-
-        <section id="about" aria-labelledby="landing-title" className={styles.introSection}>
-          <p className={styles.greeting}>{t('landing.greeting')}</p>
-          <div className={styles.readmeContent}>
-            <p>{t('landing.intro1')}</p>
-            <p>{t('landing.intro2')}</p>
-            <p>{t('landing.intro3')}</p>
-          </div>
-          <p className={styles.emphasis}>{t('landing.emphasis')}</p>
-        </section>
-
-        <section id="join" className={styles.actionSection}>
-          <h2 className={styles.sectionHeading}>{t('landing.joinHeading')}</h2>
+    <div className={styles.page}>
+      {/* ── Hero（§3.3 光晕 + §3.4 展示字体时刻）───────────────── */}
+      <section ref={heroRef} className={styles.hero} aria-labelledby="landing-title">
+        <div ref={auraRef} className={styles.aura} aria-hidden="true" />
+        <div className={styles.heroInner}>
+          <p className={styles.eyebrow}>{t('landing.heroEyebrow')}</p>
+          <h1 id="landing-title" className={styles.heroTitle}>
+            {/* 品牌词用与正式字标同源的圆润字体；中文行保持系统栈。 */}
+            <span className={styles.heroDisplay}>TransCircle</span>
+            <span className={styles.heroCn}>中文 MtF 跨性别社群史官工程</span>
+          </h1>
+          <p className={styles.heroTagline}>{t('landing.subtitle')}</p>
+          <p className={styles.heroLede}>{t('landing.heroLede')}</p>
           <div className={styles.ctaRow}>
             <a href="https://transcircle.org/s/join" className={styles.ctaPrimary} target="_blank" rel="nofollow noopener noreferrer">
               {t('landing.joinForm')}
@@ -65,10 +108,25 @@ const App = () => {
               {t('landing.joinChat')}
             </a>
           </div>
-        </section>
 
-        <section id="follow" className={styles.followSection}>
-          <h2 className={styles.sectionHeading}>{t('landing.followHeading')}</h2>
+          {/* 「加入项目」不是下一张页面卡片，而是 hero 的叙事延续：
+              光晕只属于这一个完整场域，鼠标移动时不会在标题与自述之间硬切断。 */}
+          <section id="about" className={styles.aboutSection} aria-labelledby="about-heading">
+            <h2 id="about-heading" className={styles.sectionHeading}>{t('landing.joinHeading')}</h2>
+            <p className={styles.greeting}>{t('landing.greeting')}</p>
+            <div className={styles.aboutGrid}>
+              <div className={styles.readmeContent}>
+                <p>{t('landing.intro1')}</p>
+                <p>{t('landing.intro2')}</p>
+                <p>{t('landing.intro3')}</p>
+              </div>
+              <p className={styles.emphasis}>{t('landing.emphasis')}</p>
+            </div>
+          </section>
+
+          {/* 关注入口是社群叙事的收束，而非下一张割裂页面：与 hero/自述同场。 */}
+          <section id="follow" className={styles.followSection} aria-labelledby="follow-heading">
+          <h2 id="follow-heading" className={styles.sectionHeading}>{t('landing.followHeading')}</h2>
           {/* GitHub / X (Twitter) / Bluesky 为品牌与社媒专有名词，豁免 i18n。 */}
           <ul className={styles.socialList}>
             <li>
@@ -94,8 +152,9 @@ const App = () => {
             </li>
           </ul>
         </section>
-      </div>
-    </>
+        </div>
+      </section>
+    </div>
   );
 };
 

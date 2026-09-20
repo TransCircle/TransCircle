@@ -2,9 +2,9 @@
 
 .wrap {
   width: 100%;
-  max-width: 760px;
+  max-width: var(--w-reading);
   margin: 0 auto;
-  padding: 2.5rem 4rem;
+  padding: var(--s-7) var(--page-x);
   box-sizing: border-box;
   /* 垂直居中落地,同时兜底移动端浏览器工具栏伸缩。 */
   min-height: 50vh;
@@ -17,50 +17,50 @@
 
 /* 主页同款小节标签尺度的大页 eyebrow。 */
 .eyebrow {
-  margin: 0 0 0.6rem 0;
-  font-size: 0.68rem;
-  font-weight: 600;
+  margin: 0 0 var(--s-2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
 }
 
 .title {
-  margin: 0 0 0.4rem 0;
-  font-size: var(--fs-title);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  color: var(--text-main);
+  margin: 0 0 var(--s-2);
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0;
+  line-height: var(--lh-heading);
+  color: var(--ink);
 }
 
 .desc {
   margin: 0;
-  font-size: var(--fs-subtitle);
-  line-height: 1.55;
-  color: var(--text-muted);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--text-secondary);
 }
 
 /* 细分隔线分区后接动作,呼应主页的 section 划分。 */
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--divider-color);
+  gap: var(--s-2);
+  margin-top: var(--s-5);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--line);
   align-self: stretch;
 }
 
 @media (max-width: 1024px) {
   .wrap {
-    padding: 2rem 2.5rem;
+    padding-block: var(--s-6);
   }
 }
 
 @media (max-width: 640px) {
   .wrap {
-    padding: 2rem 1.25rem;
+    padding-block: var(--s-5);
   }
-  /* 标题字号交给 --fs-title(clamp)在小视口自动收敛到 ~1.5rem,无需断点硬切。 */
+  /* 标题字号交给 --fs-h1(clamp)在小视口自动收敛到 ~1.5rem,无需断点硬切。 */
 }

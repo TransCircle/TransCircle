@@ -1,51 +1,51 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--s-2);
   width: 100%;
 }
 
 .label {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
   color: var(--text-secondary);
 }
 
-/* Container mirrors Field .input, lights the pink ring on inner focus. */
 .box {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--s-2);
   width: 100%;
-  min-height: 40px;
-  padding: 0.35rem 0.5rem;
-  border: 1.5px solid var(--divider-color);
-  border-radius: var(--radius-sm);
-  background-color: var(--surface-card);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-height: var(--control-h);
+  padding: var(--s-1) var(--s-2);
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background-color: var(--surface-2);
+  transition: border-color var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-1) var(--ease-standard);
 }
 
 .box:focus-within {
-  border-color: var(--primary-pink);
-  box-shadow: 0 0 0 3px var(--focus-ring);
+  border-color: var(--pink-600);
+  box-shadow: 0 0 0 3px var(--focus-halo);
 }
 
 .box.invalid {
-  border-color: var(--error-border);
+  border-color: var(--error-text);
 }
 
-/* Chip — matches the Pill visual language (pill radius, hover-bg surface). */
+/* Chip — §5.6：--r-xs、--pink-100 底 + --pink-700 字、--fs-sm。 */
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.15rem;
-  padding: 0.1rem 0.2rem 0.1rem 0.6rem;
-  border-radius: var(--radius-pill);
-  background-color: var(--hover-bg);
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-  font-weight: 500;
+  gap: var(--s-1);
+  padding: var(--s-1) var(--s-1) var(--s-1) var(--s-2);
+  border-radius: var(--r-xs);
+  background-color: var(--pink-100);
+  color: var(--pink-700);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   max-width: 100%;
 }
 
@@ -65,11 +65,12 @@
   height: 20px;
   padding: 0;
   border: none;
-  border-radius: 50%;
+  border-radius: var(--r-pill);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color var(--dur-1) var(--ease-standard),
+    color var(--dur-1) var(--ease-standard);
 }
 
 /* Expand the tap target to >=40px without bloating the chip visually. */
@@ -80,12 +81,12 @@
 }
 
 .remove:hover {
-  background-color: var(--surface-card);
-  color: var(--text-main);
+  background-color: var(--surface);
+  color: var(--ink);
 }
 
 .remove:focus-visible {
-  outline: 2px solid var(--primary-pink);
+  outline: 2px solid var(--pink-600);
   outline-offset: 1px;
 }
 
@@ -95,10 +96,10 @@
   border: none;
   outline: none;
   background: transparent;
-  color: var(--text-main);
+  color: var(--ink);
   font-family: inherit;
-  font-size: 0.9rem;
-  padding: 0.2rem 0.3rem;
+  font-size: var(--fs-sm);
+  padding: var(--s-1);
 }
 
 .input::placeholder {
@@ -106,12 +107,12 @@
 }
 
 .hint {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
 .hintError {
-  color: var(--error-color);
+  color: var(--error-text);
 }
 
 .srOnly {
@@ -131,6 +132,11 @@
 @media (any-pointer: coarse) {
   .box {
     min-height: 44px;
+  }
+
+  /* §5.4：触屏输入字号 16px 防 iOS 聚焦缩放 */
+  .input {
+    font-size: var(--fs-body);
   }
 
   /* 20px 可视按钮 + 四周 12px 触控扩展 = 44px 命中区。 */

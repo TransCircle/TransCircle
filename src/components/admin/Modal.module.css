@@ -1,13 +1,16 @@
+/* §5.7 Modal：遮罩 --overlay + blur(4px)。 */
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 1100;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background-color: var(--overlay-bg);
-  animation: adminOverlayIn 0.2s ease;
+  background-color: var(--overlay);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: adminOverlayIn var(--dur-2) var(--ease-out);
 }
 
 .panel {
@@ -16,12 +19,12 @@
   /* dvh：移动端浏览器工具栏收展时保持面板完整可见，vh 会被工具栏吃掉。 */
   max-height: calc(100dvh - 3rem);
   overflow-y: auto;
-  background-color: var(--surface-card);
-  border: 1px solid var(--divider-color);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-pop);
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
   padding: 1.5rem;
-  animation: adminPanelIn 0.2s ease;
+  animation: adminPanelIn var(--dur-2) var(--ease-out);
 }
 
 .panelMd {
@@ -30,15 +33,15 @@
 
 .title {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-main);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-bold);
+  color: var(--ink);
 }
 
 .desc {
-  margin: 0.6rem 0 0;
-  font-size: 0.9rem;
-  line-height: 1.6;
+  margin: var(--s-2) 0 0;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-body);
   color: var(--text-secondary);
 }
 
@@ -53,7 +56,7 @@
   margin-top: 1.5rem;
   display: flex;
   justify-content: flex-end;
-  gap: 0.6rem;
+  gap: var(--s-2);
   flex-wrap: wrap;
 }
 
@@ -63,10 +66,15 @@
   }
 }
 
+/* §5.7 入场：opacity 0→1 + scale(.96→1)。 */
 @keyframes adminPanelIn {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.985);
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

@@ -18,14 +18,14 @@
 .title {
   margin: 0;
   font-weight: 700;
-  color: var(--text-main);
-  letter-spacing: -0.02em;
+  color: var(--ink);
+  letter-spacing: 0;
   line-height: 1.2;
 }
 
-/* 对齐主页 .mainTitle 的页级标题尺度:用 --fs-title(clamp)让移动端自动收敛。 */
+/* 对齐主页 .mainTitle 的页级标题尺度:用 --fs-h1(clamp)让移动端自动收敛。 */
 .page .title {
-  font-size: var(--fs-title);
+  font-size: var(--fs-h1);
 }
 
 /* 窄卡片语境(auth/状态页)收敛一档,避免 2rem 在 26rem 卡片里过大。 */
@@ -34,13 +34,13 @@
 }
 
 .section .title {
-  font-size: 1.15rem;
-  letter-spacing: -0.01em;
+  font-size: var(--fs-lg);
+  letter-spacing: 0;
 }
 
 .desc {
   margin: 0;
-  font-size: var(--fs-subtitle);
+  font-size: var(--fs-body);
   color: var(--text-muted);
   line-height: 1.55;
   /* 超长邮箱/URI 等无空格长串可任意断行,防止撑破窄容器。 */
@@ -56,7 +56,7 @@
 }
 
 .eyebrow {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -89,7 +89,7 @@
   .header {
     gap: 0.85rem;
   }
-  /* 标题字号由 --fs-title(clamp)在小视口自动收敛到 ~1.5rem,无需断点硬切。 */
+  /* 标题字号由 --fs-h1(clamp)在小视口自动收敛到 ~1.5rem,无需断点硬切。 */
   .actions {
     width: 100%;
   }

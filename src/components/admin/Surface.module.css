@@ -1,30 +1,34 @@
 /* ── Card ────────────────────────────────────────────────── */
 
+/* §5.5 / §2.8：同类同圆角是铁律 —— 卡片一律 --r-md。
+   浮动层（弹窗/抽屉/玻璃面板）自行覆写为 --r-lg。 */
 .card {
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--divider-color);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
 }
 
 .surface {
-  background-color: var(--surface-card);
-  box-shadow: var(--shadow-card);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-2);
 }
 
 .subtle {
-  background-color: var(--hover-bg);
+  background-color: var(--pink-100);
   box-shadow: none;
 }
 
 .padMd {
-  padding: 1.4rem;
+  padding: var(--s-5);
 }
 
 .padSm {
-  padding: 0.9rem 1.1rem;
+  padding: var(--s-2) var(--s-3);
 }
 
+/* 强调卡：§1.6 / §5.5 禁止「圆角卡 + 彩色左边框」模板，
+   改用整圈粉色描边表达同一层级的注意力，不破坏卡片的同构性。 */
 .accent {
-  border-left: 3px solid var(--accent-pink);
+  border-color: var(--pink-300);
 }
 
 /* ── SectionLabel ────────────────────────────────────────── */
@@ -32,12 +36,13 @@
 /* 与主页 .sectionHeading 完全同规格（0.68rem/600/uppercase/0.1em/muted），
    保持全站小节标签一个声音。 */
 .sectionLabel {
-  font-size: 0.68rem;
-  font-weight: 600;
+  font-family: var(--font-tech);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-muted);
-  margin: 0 0 0.9rem 0;
+  margin: 0 0 var(--s-4) 0;
 }
 
 /* ── Toolbar ─────────────────────────────────────────────── */
@@ -45,7 +50,7 @@
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--s-2);
   flex-wrap: wrap;
 }
 
@@ -75,8 +80,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--divider-color);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--line);
   min-width: 0;
 }
 
@@ -86,7 +91,7 @@
 }
 
 .dt {
-  font-size: 0.74rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -95,7 +100,7 @@
 
 .dd {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--s-4);
   color: var(--text-body);
   word-break: break-word;
 }
@@ -111,30 +116,30 @@
 .vote {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--s-2);
 }
 
 .voteTrack {
   position: relative;
   display: flex;
-  height: 10px;
-  border-radius: var(--radius-pill);
-  background-color: var(--hover-bg);
+  height: 6px;
   overflow: hidden;
-  border: 1px solid var(--divider-color);
+  border-radius: var(--r-pill);
+  background-color: var(--surface-2);
 }
 
-/* 赞成/反对色走语义 token（随主题取值），不再手工写 dark 覆盖。 */
-.voteApprove {
+.voteApprove,
+.voteReject {
   height: 100%;
-  background-color: var(--success-color);
-  transition: width 0.3s ease;
+  transition: width var(--dur-3) var(--ease-out);
+}
+
+.voteApprove {
+  background-color: var(--pink-600);
 }
 
 .voteReject {
-  height: 100%;
-  background-color: var(--error-color);
-  transition: width 0.3s ease;
+  background-color: var(--blue-500);
 }
 
 .voteThreshold {
@@ -142,7 +147,7 @@
   top: -3px;
   bottom: -3px;
   width: 2px;
-  background-color: var(--text-main);
+  background-color: var(--ink);
   opacity: 0.55;
 }
 
@@ -164,15 +169,15 @@
 .voteDot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: var(--r-pill);
 }
 
 .voteDotApprove {
-  background-color: var(--success-color);
+  background-color: var(--success-text);
 }
 
 .voteDotReject {
-  background-color: var(--error-color);
+  background-color: var(--error-text);
 }
 
 

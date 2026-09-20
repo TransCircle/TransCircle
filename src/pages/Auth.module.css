@@ -4,39 +4,55 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--s-4);
 }
 
 .aside {
   margin: 0;
   text-align: center;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
 }
 
 /* Column content inside an Alert (e.g. warning text + a checkbox row). */
 .infoStack {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: var(--s-2);
   width: 100%;
 }
 
+/* §5.2 正文链接：--blue-600 + 下划线偏移 3px，hover 时下划线自左长入。 */
 .link {
-  color: var(--accent-pink);
+  position: relative;
+  color: var(--blue-600);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
+  text-underline-offset: 3px;
 }
 
-.link:hover {
-  text-decoration: underline;
+.link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.link:hover::after {
+  transform: scaleX(1);
 }
 
 /* Field + sub-affordance (e.g. password + "forgot password") hugging together */
 .fieldGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--s-1);
 }
 
 .forgotRow {
@@ -44,14 +60,16 @@
 }
 
 .forgotLink {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
   text-decoration: none;
+  transition: color var(--dur-1) var(--ease-standard);
 }
 
 .forgotLink:hover {
-  color: var(--accent-pink);
+  color: var(--pink-700);
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* Centered MFA code entry：短 TOTP 码用大字距;窄屏下轻微收敛字号防溢出 */
@@ -63,7 +81,7 @@
 
 /* 恢复码等长串：大字距会把内容挤出可视区，降级字距与字号（JS 按输入长度切换） */
 .mfaCodeLong {
-  font-size: 1rem;
+  font-size: var(--fs-body);
   letter-spacing: 0.08em;
 }
 
@@ -72,16 +90,16 @@
   align-self: center;
   background: none;
   border: none;
-  padding: 0.4rem 0.6rem;
+  padding: var(--s-2);
   cursor: pointer;
   font: inherit;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
-  transition: color 0.15s ease;
+  transition: color var(--dur-1) var(--ease-standard);
 }
 
 .mfaAltLink:hover {
-  color: var(--accent-pink);
+  color: var(--pink-700);
   text-decoration: underline;
 }
 
@@ -97,8 +115,8 @@
 
 @media (any-pointer: coarse) {
   .mfaAltLink {
-    padding: 0.85rem 0.9rem;
-    margin: -0.4rem;
+    padding: var(--s-3) var(--s-4);
+    margin: calc(var(--s-1) * -1);
   }
 }
 
@@ -112,34 +130,37 @@
 .oauthSection {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: var(--s-4);
 }
 
 .oauthRow {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--s-2);
 }
 
-/* OAuth 登录按钮：透明底 + 粉色边框 + 粉文字。 */
+/* OAuth 登录按钮：§5.1 Secondary —— 透明底 + --line-strong 描边 + --ink 字，
+   hover 时描边与文字一起转粉。 */
 .oauthBtn {
   background: transparent;
-  color: var(--accent-pink);
-  border-color: var(--divider-color);
+  color: var(--ink);
+  border-color: var(--line-strong);
 }
 
 .oauthBtn:not(:disabled):not([aria-disabled='true']):hover {
-  background-color: var(--hover-bg);
-  border-color: var(--accent-pink);
+  background-color: var(--pink-100);
+  border-color: var(--pink-600);
+  color: var(--pink-700);
 }
 
 /* "or" divider between primary form and OAuth options */
 .divider {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--s-3);
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-family: var(--font-tech);
+  font-size: var(--fs-xs);
 }
 
 .divider::before,
@@ -147,31 +168,31 @@
   content: '';
   flex: 1;
   height: 1px;
-  background-color: var(--divider-color);
+  background-color: var(--line);
 }
 
 /* 管理员登录入口：统一收纳于登录页底部（无独立 /admin/login），样式克制。 */
 .adminEntry {
   display: flex;
   justify-content: center;
-  margin-top: 0.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--divider-color);
+  margin-top: var(--s-1);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line);
 }
 
 .adminLink {
   background: none;
   border: none;
-  padding: 0.2rem 0.4rem;
+  padding: var(--s-1) var(--s-2);
   cursor: pointer;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
-  transition: color 0.15s ease;
+  transition: color var(--dur-1) var(--ease-standard);
 }
 
 .adminLink:hover {
-  color: var(--accent-pink);
+  color: var(--pink-700);
   text-decoration: underline;
 }
 
@@ -190,13 +211,13 @@
 @media (any-pointer: coarse) {
   .forgotLink {
     display: inline-block;
-    padding: 0.85rem 0.75rem;
-    margin: -0.5rem -0.75rem;
+    padding: var(--s-3) var(--s-3);
+    margin: calc(var(--s-2) * -1) calc(var(--s-3) * -1);
   }
 
   .adminLink {
-    padding: 0.85rem 0.9rem;
-    margin: -0.5rem;
+    padding: var(--s-3) var(--s-4);
+    margin: calc(var(--s-2) * -1);
   }
 }
 

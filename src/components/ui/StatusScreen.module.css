@@ -20,16 +20,16 @@
 }
 
 .success .icon {
-  color: var(--soft-success-text);
+  color: var(--success-text);
 }
 
-/* --error-color 已随主题覆写(dark #ef5350),无需局部 dark 分支。 */
+/* --error-text 已随主题覆写，无需局部 dark 分支。 */
 .error .icon {
-  color: var(--error-color);
+  color: var(--error-text);
 }
 
 .info .icon {
-  color: var(--accent-pink);
+  color: var(--pink-700);
 }
 
 /* Cancel PageHeader's bottom margin inside the stacked screen. */

@@ -1,18 +1,19 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: var(--s-1);
   width: 100%;
 }
 
 .row {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: var(--s-2);
+  min-height: var(--control-h);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   color: var(--text-body);
-  line-height: 1.5;
+  line-height: var(--lh-caption);
 }
 
 .row.disabled {
@@ -41,32 +42,34 @@
   justify-content: center;
   width: 18px;
   height: 18px;
-  border: 1.5px solid var(--divider-color);
-  border-radius: var(--radius-xs);
-  background-color: var(--surface-card);
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-xs);
+  background-color: var(--surface);
+  transition: background-color var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard);
 }
 
-/* 选中态底色为 --accent-pink,勾选标记取 --on-accent（docs：accent-pink 上前景用 on-accent）。 */
+/* §5.4：选中态 --pink-600 填充 + 对勾取 --on-pink（粉底上的墨字）。 */
 .check {
-  color: var(--on-accent);
+  color: var(--on-pink);
   opacity: 0;
   transform: scale(0.6);
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: opacity var(--dur-1) var(--ease-standard),
+    transform var(--dur-1) var(--ease-spring);
 }
 
 .dash {
   position: absolute;
   width: 10px;
   height: 2px;
-  border-radius: var(--radius-pill);
-  background-color: var(--on-accent);
+  border-radius: var(--r-pill);
+  background-color: var(--on-pink);
   opacity: 0;
 }
 
 .input:checked + .box {
-  background-color: var(--accent-pink);
-  border-color: var(--accent-pink);
+  background-color: var(--pink-600);
+  border-color: var(--pink-600);
 }
 
 .input:checked + .box .check {
@@ -75,8 +78,8 @@
 }
 
 .input:indeterminate + .box {
-  background-color: var(--accent-pink);
-  border-color: var(--accent-pink);
+  background-color: var(--pink-600);
+  border-color: var(--pink-600);
 }
 
 .input:indeterminate + .box .check {
@@ -88,12 +91,12 @@
 }
 
 .input:focus-visible + .box {
-  border-color: var(--primary-pink);
-  box-shadow: 0 0 0 3px var(--focus-ring);
+  border-color: var(--pink-600);
+  box-shadow: 0 0 0 3px var(--focus-halo);
 }
 
 .invalid .box {
-  border-color: var(--error-border);
+  border-color: var(--error-text);
 }
 
 .labelText {
@@ -101,12 +104,12 @@
 }
 
 .hint {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
 .hintError {
-  color: var(--error-color);
+  color: var(--error-text);
 }
 
 /* any-pointer 而非 pointer:触屏笔记本主指针是鼠标,但触摸仍需 44px 目标。 */

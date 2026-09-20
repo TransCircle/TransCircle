@@ -1,205 +1,287 @@
-:root {
-  /* ── Light Theme (Default) ───────────────────── */
-  --bg-color: #fff9fb;
-  --text-main: #000000;
-  --text-secondary: #666666;
-  --text-muted: #888888;
-  --text-body: #333333;
+/* ============================================================================
+   TransCircle Pass — 设计令牌 v3.0「Spectrum / 光谱」
+   唯一规范源：docs/DESIGN.md v3.0。名称与值必须与该文档逐字一致，改值先改文档。
+   暗色主题双通道声明：[data-theme='dark'](JS) + prefers-color-scheme(无 JS 回退)。
+   ========================================================================== */
 
-  --error-color: #d32f2f;
-  --error-border: #f0c2c2;
-  --success-color: #2e7d32;
-
-  --primary-pink: #ec9eb0;
-  --soft-pink: #ffccd5;
-  --accent-pink: #e67690;
-  --nav-bg: rgba(255, 251, 252, 0.85);
-  --divider-color: #ffdae0;
-  --surface-card: #ffffff;
-
-  --hover-bg: #ffedf1;
-  --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, white);
-  --cta-bg: #ffd8d8;
-  --cta-color: #412a2a;
-  --cta-hover: #f7bcbc;
-  --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, rgb(255, 255, 255));
-  --shadow-color: rgba(255, 255, 255, 0.06);
-  --shadow-color-hover: rgba(240, 98, 146, 0.15);
-  --overlay-bg: rgba(0, 0, 0, 0.3);
-  --select: #ffe2e8;
-
-  /* Soft success surface (light) — used by Alert/StatusScreen success states */
-  --soft-success-bg: #e7f6ec;
-  --soft-success-border: #a9d8b6;
-  --soft-success-text: #1e7d34;
-
-  /* Soft semantic surfaces (light) — Alert/StatusBadge/danger hover states.
-     与 --soft-success-* 同族:浅底、柔边、深文字,dark 主题整组覆写。 */
-  --soft-error-bg: #fff0ee;
-  --soft-error-border: #f0c2c2;
-  --soft-error-text: #c62828;
-  --soft-info-bg: #e9f1ff;
-  --soft-info-border: #b6cdff;
-  --soft-info-text: #1a56c4;
-  --soft-amber-bg: #fff3e0;
-  --soft-amber-border: #f0d9b0;
-  --soft-amber-text: #b26a00;
-
-  /* Focus ring halos — 输入类控件 box-shadow 聚焦环,随主题取值,
-     替代散落各组件的 rgba 字面量回退。 */
-  --focus-ring: rgba(236, 158, 176, 0.28);
-  --focus-ring-error: rgba(211, 47, 47, 0.16);
-
-  /* ── Shared scales (theme-invariant) ─────────────────────── */
-  /* Radius scale: inline chips, inputs/selects, rows/popovers, cards, full pill. */
-  --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius-md: 12px;
-  --radius-lg: 14px;
-  --radius-pill: 999px;
-
-  /* ── Control rhythm (theme-invariant) ─────────────────────
-     全站交互控件统一高度:桌面 34px,粗指针触屏放大到 44px 命中区。 */
-  --control-h: 34px;        /* toggle / hamburger / avatar / login CTA / page CTA */
-  --control-h-cell: 48px;   /* 账户中心移动端分段工具栏单元格 */
-  --tap-min: 44px;          /* 粗指针触控目标下限 */
-
-  /* 语义化圆角别名(映射到原始 radius 刻度),让"控件/浮层/卡片"各成一档。
-     pill 仅保留给:登录/页面 CTA(现已压扁)与圆形头像(50%)。 */
-  --radius-control: var(--radius-sm);  /* 10px — 按钮 / 链接 / 单元格 / 开关 */
-  --radius-pop: var(--radius-md);      /* 12px — 下拉菜单 / 抽屉 / 分段工具栏外壳 */
-
-  /* ── Motion language ───────────────────────────────────── */
-  --ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);  /* 揭示/入场:图标交叉淡入、对话框面板 */
-  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);      /* 悬停/变色/按压 */
-  --dur-fast: 130ms;    /* 悬停、变色、按压 */
-  --dur-base: 200ms;    /* CTA 悬停抬升 */
-
-  /* ── Fluid type scale(移动端字号收敛,桌面像素不变) ──────
-     clamp 下限 ≥ 0.9rem(14.4px),满足"移动端不小于 ~14px"。 */
-  --fs-title: clamp(1.5rem, 1.15rem + 1.55vw, 2rem);       /* 24 → 32px */
-  --fs-subtitle: clamp(0.9rem, 0.85rem + 0.25vw, 1rem);    /* ~14.4 → 16px */
-  --fs-body: clamp(0.9rem, 0.88rem + 0.1vw, 0.95rem);      /* 14.4 → 15.2px */
-  --fs-sm: clamp(0.82rem, 0.8rem + 0.1vw, 0.875rem);
-  --lh-body: 1.65;
-
-  /* Elevation — resolved lazily against the active theme's --shadow-color. */
-  --shadow-card: 0 1px 2px var(--shadow-color);
-  --shadow-card-hover: 0 4px 14px var(--shadow-color-hover);
-  --shadow-pop: 0 8px 24px var(--shadow-color);
-
-  /* Layout rails — fluid: pages fill the viewport up to these caps.
-     content = wide browse/list pages; reading = comfortable measure for
-     long-form text + forms; form = focused auth/status card. */
-  --width-content: 1280px;
-  --width-reading: 60rem;
-  --width-form: 26rem;
-
-  /* 统一导航栏高度：供文档滚动下的 sticky 列表头偏移，避免被吸附在导航栏之后。 */
-  --app-nav-height: 57px;
-
-  /* accent-pink 上的前景色（高对比度下改黑）。 */
-  --on-accent: #412a2a;
+/* ── 自托管字体（latin 子集，中文由系统栈兜底） ──────────────────────────
+   Google Fonts 的 latin 子集为可变字体，单文件覆盖整个字重轴，
+   因此按 DESIGN.md §2.6 所需区间声明 font-weight range。 */
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/space-grotesk-latin.woff2") format("woff2");
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+    U+FFFD;
 }
 
-/* ── Dark Theme (via system preference, JS-less fallback) ── */
+@font-face {
+  font-family: "Nunito Brand";
+  src: url("/fonts/nunito-brand-latin.woff2") format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-024F, U+1E00-1EFF, U+2000-206F;
+}
+
+:root {
+  /* ── §2.1 粉（主色） ───────────────────────────────────────────── */
+  --pink-100: #ffe9f1;
+  --pink-200: #ffd3e2;
+  --pink-300: #ffb3cb;
+  --pink-400: #ec9eb0;
+  --pink-500: #f0aac1;
+  --pink-600: #efa8c0;
+  --pink-700: #c22e68;
+
+  /* ── §2.2 旗蓝（辅色 / 信息） ──────────────────────────────────── */
+  --blue-100: #e3f4fe;
+  --blue-400: #5bcefa;
+  --blue-500: #2fb5f0;
+  --blue-600: #0a6e9e;
+
+  /* ── §2.3 中性 / 表面 / 线 ─────────────────────────────────────── */
+  --bg: #fdf9fb;
+  --surface: #ffffff;
+  --surface-2: #faf0f4;
+  --ink: #1a1420;
+  --text-body: #3e3646;
+  --text-secondary: #6d6478;
+  --text-muted: #6f6678;
+  --line: #eedfe6;
+  --line-strong: #8c7b88;
+
+  /* ── §2.4 语义 ─────────────────────────────────────────────────── */
+  --success-bg: #e2f4ea;
+  --success-border: #bee6cf;
+  --success-text: #1e7a4f;
+  --error-bg: #fcebea;
+  --error-border: #f2c6c2;
+  --error-text: #b3261e;
+  --warning-bg: #fff4dc;
+  --warning-border: #f2e0b0;
+  --warning-text: #8a5a00;
+  --info-bg: var(--blue-100);
+  --info-border: #b9e3f9;
+  --info-text: var(--blue-600);
+
+  /* ── §2.5 玻璃与发光 ───────────────────────────────────────────── */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(26, 18, 32, 0.09);
+  --glass-blur: 16px;
+  --overlay: rgba(12, 10, 19, 0.5);
+  --glow-pink: 0 0 0 1px rgba(239, 168, 192, 0.09), 0 8px 28px -8px rgba(239, 168, 192, 0.16);
+  --glow-pink-dark: 0 0 18px rgba(245, 182, 201, 0.20);
+  --glow-blue: 0 0 0 1px rgba(91, 206, 250, 0.18), 0 8px 32px -6px rgba(91, 206, 250, 0.32);
+
+  /* ── 派生令牌（值逐字取自 DESIGN.md，仅为避免散写 hex 而具名） ──────
+     --on-pink        §5.1/§5.6/§10：粉底上的墨字
+     --pink-600-hover §5.1：Primary hover 加深底色
+     --focus-halo     §5.4：输入框聚焦环（含硬编码回退） */
+  --on-pink: #210a16;
+  --pink-600-hover: #e38faa;
+
+  /* 旗帜条纹（§3.1）三段实色。跨性别旗是固定品牌图案，两主题下取值一致，
+     故不随主题覆写；数值取自 §0（粉 #F5A9B8 / 白 / 蓝 #5BCEFA）。 */
+  --flag-pink: #f5a9b8;
+  --flag-white: #ffffff;
+  --flag-blue: #5bcefa;
+  --focus-halo: rgba(239, 168, 192, 0.5);
+  --focus-halo: color-mix(in srgb, var(--pink-600) 25%, transparent);
+  --focus-halo-error: rgba(179, 38, 30, 0.25);
+  --focus-halo-error: color-mix(in srgb, var(--error-text) 25%, transparent);
+
+  /* ── §2.6 字体 ─────────────────────────────────────────────────── */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-brand: "Nunito Brand", Nunito, "Avenir Next Rounded", var(--font-sans);
+  --font-tech: "Space Grotesk", var(--font-sans);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* ── §2.7 字阶（流体，基准 16px） ──────────────────────────────── */
+  --fs-hero: clamp(2.4rem, 1.8rem + 3vw, 4rem);
+  --fs-display: clamp(1.8rem, 1.45rem + 1.6vw, 2.6rem);
+  --fs-h1: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  --fs-h2: 1.5rem;
+  --fs-h3: 1.25rem;
+  --fs-lg: 1.125rem;
+  --fs-body: 1rem;
+  --fs-sm: 0.875rem;
+  --fs-xs: 0.75rem;
+
+  --lh-display: 1.15;
+  --lh-heading: 1.3;
+  --lh-body: 1.75;
+  --lh-prose: 1.85;
+  --lh-caption: 1.5;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* ── §2.8 间距 / 圆角 / 阴影 / 层级 ────────────────────────────── */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  --shadow-1: 0 1px 2px rgba(26, 18, 32, 0.05);
+  --shadow-2: 0 1px 2px rgba(26, 18, 32, 0.04), 0 8px 24px -12px rgba(26, 18, 32, 0.12);
+  --shadow-3: 0 2px 6px rgba(26, 18, 32, 0.06), 0 16px 40px -16px rgba(26, 18, 32, 0.2);
+
+  --z-sticky: 10;
+  --z-nav: 50;
+  --z-overlay: 80;
+  --z-drawer: 90;
+  --z-modal: 100;
+  --z-toast: 120;
+  --z-skip: 200;
+
+  /* ── §2.9 动效 ─────────────────────────────────────────────────── */
+  --dur-1: 150ms;
+  --dur-2: 250ms;
+  --dur-3: 400ms;
+  --dur-4: 600ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+
+  /* ── §4 布局与响应式 ───────────────────────────────────────────── */
+  --w-content: 1280px;
+  --w-reading: 46rem;
+  --w-form: 26rem;
+  --nav-h: 64px;
+  --tap-min: 44px;
+  --page-x: clamp(16px, 4vw, 48px);
+
+  /* 按钮与表单控件分开：按钮 40px，表单控件 44px。 */
+  --btn-h: 40px;
+  --control-h: 44px;
+  --control-h-cell: 48px;
+}
+
+/* ── 暗色主题（JS 控制） ──────────────────────────────────────────── */
+[data-theme="dark"] {
+  --pink-100: #3a1e2e;
+  --pink-200: #54263c;
+  --pink-300: #a63d68;
+  --pink-400: #f49bbe;
+  --pink-500: #f7bfce;
+  --pink-600: #f5b6c9;
+  --pink-700: #ff8fbb;
+
+  --blue-100: #122b3a;
+  --blue-400: #5bcefa;
+  --blue-500: #37bdf5;
+  --blue-600: #7cd4fa;
+
+  --bg: #0c0a13;
+  --surface: #17131f;
+  --surface-2: #1e1929;
+  --ink: #f5f2f8;
+  --text-body: #cfc9da;
+  --text-secondary: #9c94ac;
+  --text-muted: #8f86a4;
+  --line: #2b2438;
+  --line-strong: #7a7090;
+
+  --success-bg: #12281c;
+  --success-border: #1e4630;
+  --success-text: #6fcf97;
+  --error-bg: #2e1518;
+  --error-border: #57262a;
+  --error-text: #ff8a80;
+  --warning-bg: #2a2113;
+  --warning-border: #4a3a1c;
+  --warning-text: #f2c572;
+  --info-bg: var(--blue-100);
+  --info-border: #1c4257;
+  --info-text: var(--blue-600);
+
+  --glass-bg: rgba(23, 19, 31, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --overlay: rgba(12, 10, 19, 0.62);
+
+  --pink-600-hover: #eea4bc;
+  --focus-halo: rgba(245, 182, 201, 0.25);
+  --focus-halo: color-mix(in srgb, var(--pink-600) 25%, transparent);
+  --focus-halo-error: rgba(255, 138, 128, 0.25);
+  --focus-halo-error: color-mix(in srgb, var(--error-text) 25%, transparent);
+}
+
+/* ── 暗色主题（无 JS 回退，与上方逐条同步） ───────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --bg-color: #12121a;
-    --text-main: #f0f0f5;
-    --text-secondary: #a0a0b0;
-    --text-muted: #808090;
-    --text-body: #c0c0d0;
+    --pink-100: #3a1e2e;
+    --pink-200: #54263c;
+    --pink-300: #a63d68;
+    --pink-400: #f49bbe;
+    --pink-500: #f7bfce;
+    --pink-600: #f5b6c9;
+    --pink-700: #ff8fbb;
 
-    --primary-pink: #ff85a2;
-    --soft-pink: #3a2a35;
-    --accent-pink: #ff6b9d;
-    --nav-bg: rgba(24, 24, 35, 0.85);
-    --divider-color: #363650;
-    --surface-card: #1e1e2e;
+    --blue-100: #122b3a;
+    --blue-400: #5bcefa;
+    --blue-500: #37bdf5;
+    --blue-600: #7cd4fa;
 
-    --hover-bg: #2a1f25;
-    --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, #12121a);
-    --cta-bg: #ff85a2;
-    --cta-color: #412a2a; /* 深字上亮粉 CTA：#412a2a on #ff85a2 = 5.7:1，达 WCAG AA；与浅色主题/--on-accent 统一 */
-    --cta-hover: #cc537c;
-    --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
-    --shadow-color: rgba(255, 107, 156, 0.04);
-    --shadow-color-hover: rgba(255, 107, 157, 0.15);
-    --overlay-bg: rgba(0, 0, 0, 0.5);
-    --select: #664e5e;
+    --bg: #0c0a13;
+    --surface: #17131f;
+    --surface-2: #1e1929;
+    --ink: #f5f2f8;
+    --text-body: #cfc9da;
+    --text-secondary: #9c94ac;
+    --text-muted: #8f86a4;
+    --line: #2b2438;
+    --line-strong: #7a7090;
 
-    --soft-success-bg: rgba(46, 160, 75, 0.12);
-    --soft-success-border: rgba(46, 160, 75, 0.3);
-    --soft-success-text: #66bb6a;
+    --success-bg: #12281c;
+    --success-border: #1e4630;
+    --success-text: #6fcf97;
+    --error-bg: #2e1518;
+    --error-border: #57262a;
+    --error-text: #ff8a80;
+    --warning-bg: #2a2113;
+    --warning-border: #4a3a1c;
+    --warning-text: #f2c572;
+    --info-bg: var(--blue-100);
+    --info-border: #1c4257;
+    --info-text: var(--blue-600);
 
-    --error-color: #ef5350;
-    --error-border: rgba(239, 83, 80, 0.35);
-    --success-color: #66bb6a;
+    --glass-bg: rgba(23, 19, 31, 0.62);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --overlay: rgba(12, 10, 19, 0.62);
 
-    --soft-error-bg: rgba(229, 83, 75, 0.12);
-    --soft-error-border: rgba(229, 83, 75, 0.32);
-    --soft-error-text: #f28b82;
-    --soft-info-bg: rgba(102, 140, 224, 0.14);
-    --soft-info-border: rgba(102, 140, 224, 0.35);
-    --soft-info-text: #8ab4f8;
-    --soft-amber-bg: rgba(240, 160, 50, 0.14);
-    --soft-amber-border: rgba(240, 160, 50, 0.32);
-    --soft-amber-text: #ffb74d;
-
-    --focus-ring: rgba(255, 133, 162, 0.28);
-    --focus-ring-error: rgba(239, 83, 80, 0.28);
+    --pink-600-hover: #eea4bc;
+    --focus-halo: rgba(245, 182, 201, 0.25);
+    --focus-halo: color-mix(in srgb, var(--pink-600) 25%, transparent);
+    --focus-halo-error: rgba(255, 138, 128, 0.25);
+    --focus-halo-error: color-mix(in srgb, var(--error-text) 25%, transparent);
   }
 }
 
-/* ── Dark Theme (JS-controlled) ────────────────── */
-[data-theme="dark"] {
-  --bg-color: #12121a;
-  --text-main: #f0f0f5;
-  --text-secondary: #a0a0b0;
-  --text-muted: #808090;
-  --text-body: #c0c0d0;
-
-  --primary-pink: #ff85a2;
-  --soft-pink: #3a2a35;
-  --accent-pink: #ff6b9d;
-  --nav-bg: rgba(24, 24, 35, 0.85);
-  --divider-color: #363650;
-  --surface-card: #1e1e2e;
-
-  --hover-bg: #2a1f25;
-  --hover-bg-mix: color-mix(in srgb, var(--primary-pink) 15%, #12121a);
-  --cta-bg: #ff85a2;
-  --cta-color: #412a2a; /* 深字上亮粉 CTA：#412a2a on #ff85a2 = 5.7:1，达 WCAG AA；与浅色主题/--on-accent 统一 */
-  --cta-hover: #cc537c;
-  --cta-hover-mix: color-mix(in srgb, var(--accent-pink) 85%, black);
-  --shadow-color: rgba(255, 107, 156, 0.04);
-  --shadow-color-hover: rgba(255, 107, 157, 0.15);
-  --overlay-bg: rgba(0, 0, 0, 0.5);
-  --select: #664e5e;
-
-  --soft-success-bg: rgba(46, 160, 75, 0.12);
-  --soft-success-border: rgba(46, 160, 75, 0.3);
-  --soft-success-text: #66bb6a;
-
-  --error-color: #ef5350;
-  --error-border: rgba(239, 83, 80, 0.35);
-  --success-color: #66bb6a;
-
-  --soft-error-bg: rgba(229, 83, 75, 0.12);
-  --soft-error-border: rgba(229, 83, 75, 0.32);
-  --soft-error-text: #f28b82;
-  --soft-info-bg: rgba(102, 140, 224, 0.14);
-  --soft-info-border: rgba(102, 140, 224, 0.35);
-  --soft-info-text: #8ab4f8;
-  --soft-amber-bg: rgba(240, 160, 50, 0.14);
-  --soft-amber-border: rgba(240, 160, 50, 0.32);
-  --soft-amber-text: #ffb74d;
-
-  --focus-ring: rgba(255, 133, 162, 0.28);
-  --focus-ring-error: rgba(239, 83, 80, 0.28);
+@media (max-width: 768px) {
+  :root {
+    --nav-h: 56px;
+  }
 }
 
+/* ── 基础 ─────────────────────────────────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -207,27 +289,41 @@
 }
 
 body {
-  background-color: var(--bg-color);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   margin: 0;
   padding: 0;
-  color: var(--text-main);
-  scrollbar-color: var(--soft-pink) var(--bg-color);
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  scrollbar-color: var(--pink-200) var(--bg);
   scrollbar-width: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 中文标题使用系统栈；用字重、字号与行高建立层次，不压缩字距。 */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0;
+  line-height: var(--lh-heading);
 }
 
 ::-webkit-scrollbar-track {
-  background-color: var(--bg-color);
+  background-color: var(--bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--soft-pink);
-  border-radius: 999px;
-  border: 1px solid var(--bg-color);
+  background-color: var(--pink-200);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--bg);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--primary-pink);
+  background-color: var(--pink-300);
 }
 
 @media (pointer: fine) {
@@ -245,30 +341,36 @@ html {
   scroll-behavior: auto;
 }
 
-/* 明暗切换瞬时生效:至多允许一次 ≤200ms 的全局 color/background-color 过渡,
-   仅在用户未偏好减少动画时启用。禁止任何圆形揭示/遮罩/翻转/闪烁/涟漪。 */
+/* §6.5 主题切换：全局配色过渡；§6.6 页面转场淡入。 */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color var(--dur-3) var(--ease-standard),
+      color var(--dur-3) var(--ease-standard),
+      border-color var(--dur-3) var(--ease-standard);
+  }
+
+  @view-transition {
+    navigation: auto;
   }
 }
 
+/* §2.9 全局降级 */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
   }
 }
 
+/* §7 焦点可见性 */
 :focus-visible {
-  outline: 2px solid var(--primary-pink);
+  outline: 2px solid var(--pink-700);
   outline-offset: 2px;
 }
 
@@ -277,14 +379,10 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 输入框使用 box-shadow 作为聚焦指示，不需要外边框。 */
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  outline: none;
-}
+/* 组件内输入框（Field/Select 等 CSS Modules）各自声明 outline:none 并自绘 box-shadow 焦点环，
+   不需要全局裸元素规则——全局规则只会误伤没有替代的裸原生控件（如 range 滑块）。 */
 
 ::selection {
-  background-color: var(--select);
-  color: var(--text-main);
+  background-color: var(--pink-100);
+  color: var(--ink);
 }
