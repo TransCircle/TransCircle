@@ -68,11 +68,18 @@
     "intro1": "长此以往，中文 MtF 社群有个很奇怪的现象：我们确实有比较全面的社群 wiki，HRT 指南等，但几乎没有一个能见证我们社群存在与抗争的地方。",
     "intro2": "跨性别社群流动性极大，这里发生过很多故事，但没有人把它们完整地记录下来过。",
     "intro3": "因此，这个女性倾向跨性别社群史官工程应运而生。我们希望，把我们的故事归档记录，团结社群，争取跨性别权利。",
-    "emphasis": "我们深信历史终将向前。这份记录，就是我们走过长夜的铁证。",
+    "emphasis": "我们深信历史终将向前\n这份记录\n就是我们走过长夜的铁证",
     "joinHeading": "加入项目",
     "joinForm": "填写申请表单",
     "joinChat": "加入 X 聊天群",
-    "followHeading": "关注我们"
+    "followHeading": "关注我们",
+    "heroEyebrow": "社群史官工程",
+    "heroLede": "归档社群故事，记录抗争历史，团结同伴，争取跨性别权利。",
+    "portalHeading": "生态入口",
+    "portalStoryDesc": "阅读与投稿社群故事档案。",
+    "portalCommunityDesc": "社群互助论坛与日常交流。",
+    "portalBlogDesc": "项目公告、进展与随笔。",
+    "portalSearchDesc": "检索全站归档内容。"
   },
   "nav": {
     "home": "首页",
@@ -87,7 +94,7 @@
     "blog": "博客",
     "search": "搜索",
     "stories": "故事征集",
-    "archive": "人物归档（开发中）",
+    "archive": "归档计划",
     "community": "社群互助 · 论坛",
     "settings": "偏好设置",
     "theme": "主题"

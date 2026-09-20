@@ -27,6 +27,8 @@ interface PagerProps {
   onPage: (page: number) => void;
   onPageSize: (size: PageSize) => void;
   ariaLabel: string;
+  /** 列表加载中：禁用全部换页按钮，避免连点堆叠请求（与 Frontend Pagination 对齐）。 */
+  loading?: boolean;
 }
 
 /**
@@ -34,12 +36,17 @@ interface PagerProps {
  *
  * 这要求后端是 offset/limit 且返回总数 —— 游标分页只知道「下一段从哪开始」，
  * 跳不到第 5 页。契约变更记在 api-delta.md §二。
+ *
+ * 禁用态用 aria-disabled 而非真 disabled：键盘用户连按「下一页」到末页时，
+ * 真 disabled 会把焦点踢回 body，aria-disabled 保留焦点（handler 内拦截）。
  */
-export function Pager({ total, page, pageSize, onPage, onPageSize, ariaLabel }: PagerProps) {
+export function Pager({ total, page, pageSize, onPage, onPageSize, ariaLabel, loading }: PagerProps) {
   const { t } = useTranslation();
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const first = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const last = Math.min(page * pageSize, total);
+  const prevDisabled = loading || page <= 1;
+  const nextDisabled = loading || page >= pages;
 
   return (
     <nav className={styles.pager} aria-label={ariaLabel}>
@@ -59,9 +66,11 @@ export function Pager({ total, page, pageSize, onPage, onPageSize, ariaLabel }: 
         <button
           type="button"
           className={styles.pageBtn}
-          disabled={page <= 1}
+          aria-disabled={prevDisabled || undefined}
           aria-label={t("common.prevPage")}
-          onClick={() => onPage(page - 1)}
+          onClick={() => {
+            if (!prevDisabled) onPage(page - 1);
+          }}
         >
           ‹
         </button>
@@ -77,7 +86,10 @@ export function Pager({ total, page, pageSize, onPage, onPageSize, ariaLabel }: 
               className={cx(styles.pageBtn, n === page && styles.pageBtnCurrent)}
               aria-current={n === page ? "page" : undefined}
               aria-label={t("common.pageN", { page: n })}
-              onClick={() => onPage(n)}
+              aria-disabled={loading || undefined}
+              onClick={() => {
+                if (!loading && n !== page) onPage(n);
+              }}
             >
               {n}
             </button>
@@ -86,9 +98,11 @@ export function Pager({ total, page, pageSize, onPage, onPageSize, ariaLabel }: 
         <button
           type="button"
           className={styles.pageBtn}
-          disabled={page >= pages}
+          aria-disabled={nextDisabled || undefined}
           aria-label={t("common.nextPage")}
-          onClick={() => onPage(page + 1)}
+          onClick={() => {
+            if (!nextDisabled) onPage(page + 1);
+          }}
         >
           ›
         </button>

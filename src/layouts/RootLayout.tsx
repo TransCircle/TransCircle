@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AppNav } from "../components/AppNav";
@@ -19,6 +20,11 @@ import styles from "./RootLayout.module.css";
 const RootLayout = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    mainRef.current?.focus();
+  }, [location.pathname]);
 
   return (
     <div className={styles.app}>
@@ -27,7 +33,7 @@ const RootLayout = () => {
       </a>
       <AppNav />
       {/* location.pathname === '/' && <FloatingTOC items={TOC_ITEMS} /> */}
-      <main id="main-content" tabIndex={-1} className={styles.main}>
+      <main ref={mainRef} id="main-content" tabIndex={-1} className={styles.main}>
         {/* 按 pathname 重挂载做淡入上滑动效:查询参数/哈希变化(筛选、锚点)
             不应整页重挂载丢状态。仅顶级路由切换(landing/认证/后台)触发重挂载,
             admin/account 的子路由切换只换内容、不重建侧栏。 */}

@@ -3,17 +3,18 @@
 .spinner {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--s-2);
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
 }
 
+/* §5.12 Spinner：16px 圆环，--pink-600，600ms linear。 */
 .ring {
   display: inline-block;
-  border-radius: 50%;
-  border: 2px solid var(--soft-pink);
-  border-top-color: var(--accent-pink);
-  animation: adminSpin 0.7s linear infinite;
+  border-radius: var(--r-pill);
+  border: 2px solid var(--pink-200);
+  border-top-color: var(--pink-600);
+  animation: adminSpin 600ms linear infinite;
   flex-shrink: 0;
 }
 
@@ -24,8 +25,8 @@
 }
 
 .ring_md {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-width: 2px;
 }
 
@@ -67,11 +68,11 @@
 /* ── Alert ───────────────────────────────────────────────── */
 
 .alert {
-  border: 1px solid var(--divider-color);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
   padding: 0.8rem 1rem;
-  font-size: 0.88rem;
-  line-height: 1.55;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-caption);
   display: flex;
   align-items: flex-start;
   gap: 0.55rem;
@@ -91,21 +92,21 @@
 /* 语义软色 token 随主题取值（含系统暗色 :root:not([data-theme])），
    无需再为 [data-theme='dark'] 手工覆写。 */
 .alert_error {
-  background-color: var(--soft-error-bg);
-  border-color: var(--soft-error-border);
-  color: var(--soft-error-text);
+  background-color: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
 }
 
 .alert_success {
-  background-color: var(--soft-success-bg);
-  border-color: var(--soft-success-border);
-  color: var(--soft-success-text);
+  background-color: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
 }
 
 .alert_info {
-  background-color: var(--soft-info-bg);
-  border-color: var(--soft-info-border);
-  color: var(--soft-info-text);
+  background-color: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-text);
 }
 
 /* ── EmptyState ──────────────────────────────────────────── */
@@ -121,24 +122,29 @@
   color: var(--text-muted);
 }
 
+/* §5.12 空态：48px 线性图标（--text-muted）+ --fs-h3 标题 + 一句提示 + 一个 CTA。 */
 .emptyIcon {
   display: inline-flex;
   color: var(--text-muted);
-  opacity: 0.55;
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--s-2);
+}
+
+.emptyIcon svg {
+  width: 48px;
+  height: 48px;
 }
 
 .emptyTitle {
   margin: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
 }
 
 .emptyDesc {
   margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
   max-width: 36ch;
 }
 

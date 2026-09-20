@@ -1,35 +1,51 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--s-2);
   width: 100%;
 }
 
 .label {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
   color: var(--text-secondary);
 }
 
 .required {
-  margin-left: 0.2rem;
-  color: var(--accent-pink);
+  margin-left: var(--s-1);
+  color: var(--pink-700);
 }
 
 .input {
   width: 100%;
-  min-height: 40px;
-  padding: 0.55rem 0.8rem;
-  border: 1.5px solid var(--divider-color);
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  min-height: var(--control-h);
+  padding: 0 var(--s-3);
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
   font-family: inherit;
-  color: var(--text-main);
-  background-color: var(--surface-card);
+  color: var(--ink);
+  background-color: var(--surface-2);
   outline: none;
+  /* 压制 iOS 圆角/内阴影、Windows 凹边等原生外观，与 Frontend 对齐 */
+  appearance: none;
+  -webkit-appearance: none;
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    border-color var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-1) var(--ease-standard);
+}
+
+/* §5.4：移动端输入字号 16px，防 iOS 聚焦时自动放大页面。 */
+@media (max-width: 768px) {
+  .input {
+    font-size: var(--fs-body);
+  }
+}
+
+@media (any-pointer: coarse) {
+  .input {
+    font-size: var(--fs-body);
+  }
 }
 
 .input::placeholder {
@@ -38,8 +54,8 @@
 
 /* 聚焦环走主题 token，随主题取色，不再需要 color-mix 渐进增强兜底。 */
 .input:focus {
-  border-color: var(--primary-pink);
-  box-shadow: 0 0 0 3px var(--focus-ring);
+  border-color: var(--pink-600);
+  box-shadow: 0 0 0 3px var(--focus-halo);
 }
 
 .input:disabled {
@@ -48,27 +64,28 @@
 }
 
 .invalid {
-  border-color: var(--error-border);
+  border-color: var(--error-text);
 }
 
 .invalid:focus {
-  border-color: var(--error-color);
-  box-shadow: 0 0 0 3px var(--focus-ring-error);
+  border-color: var(--error-text);
+  box-shadow: 0 0 0 3px var(--focus-halo-error);
 }
 
 .textarea {
   resize: vertical;
   min-height: 80px;
-  line-height: 1.55;
+  padding-block: var(--s-3);
+  line-height: var(--lh-body);
 }
 
 .hint {
-  font-size: 0.78rem;
-  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
 }
 
 .hintError {
-  color: var(--error-color);
+  color: var(--error-text);
 }
 
 /* ── 密码可见性开关 ───────────────────────────────────────── */
@@ -82,29 +99,30 @@
 
 /* 给绝对定位的开关按钮腾出内边距，不改变字段外部宽度。 */
 .inputWithToggle {
-  padding-right: 2.6rem;
+  padding-right: var(--s-7);
 }
 
 .toggleBtn {
   position: absolute;
-  right: 0.5rem;
+  right: var(--s-2);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: var(--s-7);
+  height: var(--s-7);
   padding: 0;
   border: none;
-  border-radius: 50%;
+  border-radius: var(--r-pill);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color var(--dur-1) var(--ease-standard),
+    color var(--dur-1) var(--ease-standard);
 }
 
 .toggleBtn:hover {
-  background-color: var(--hover-bg);
-  color: var(--text-main);
+  background-color: var(--pink-100);
+  color: var(--ink);
 }
 
 /* ── SearchField ─────────────────────────────────────────── */
@@ -118,15 +136,15 @@
 
 .searchIcon {
   position: absolute;
-  left: 0.7rem;
+  left: var(--s-3);
   display: inline-flex;
   color: var(--text-muted);
   pointer-events: none;
 }
 
 .searchInput {
-  padding-left: 2.2rem;
-  padding-right: 2.2rem;
+  padding-left: var(--s-6);
+  padding-right: var(--s-6);
 }
 
 /* 移除浏览器原生搜索框装饰，统一自绘清除按钮 */
@@ -141,42 +159,42 @@
 
 .clearBtn {
   position: absolute;
-  right: 0.5rem;
+  right: var(--s-2);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: var(--s-6);
+  height: var(--s-6);
   padding: 0;
   border: none;
-  border-radius: 50%;
+  border-radius: var(--r-pill);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color var(--dur-1) var(--ease-standard),
+    color var(--dur-1) var(--ease-standard);
 }
 
 .clearBtn:hover {
-  background-color: var(--hover-bg);
-  color: var(--text-main);
+  background-color: var(--pink-100);
+  color: var(--ink);
 }
 
 /* Comfortable touch targets on touch devices.
    any-pointer（而非 pointer）：带触屏的笔记本主指针是鼠标，但手指也会点。 */
 @media (any-pointer: coarse) {
   .input {
-    min-height: 44px;
+    min-height: var(--tap-min);
   }
   .clearBtn,
   .toggleBtn {
-    width: 44px;
-    height: 44px;
+    width: var(--tap-min);
+    height: var(--tap-min);
   }
-  /* 按钮加大后同步扩大输入内边距（0.5rem 偏移 + 44px 按钮 ≈ 52px），
-     避免文字压到按钮下方。 */
+
   .searchInput,
   .inputWithToggle {
-    padding-right: 3.4rem;
+    padding-right: calc(var(--tap-min) + var(--s-2));
   }
 }
 

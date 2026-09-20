@@ -10,9 +10,9 @@
   width: min(320px, 100%);
   aspect-ratio: 1;
   margin-inline: auto;
-  border-radius: var(--radius-md);
+  border-radius: var(--r-md);
   overflow: hidden;
-  background-color: var(--hover-bg);
+  background-color: var(--pink-100);
   /* 触屏纵向拖拽用于平移,不让浏览器判定为滚动。 */
   touch-action: none;
 }
@@ -32,7 +32,7 @@
   outline: none;
 }
 .stageWrap:has(:focus-visible) {
-  outline: 2px solid var(--primary-pink);
+  outline: 2px solid var(--pink-600);
   outline-offset: 2px;
 }
 /* 圆形遮罩:方块四角以遮罩色压暗,圆内清晰,提示裁剪后按圆形展示。 */
@@ -40,8 +40,8 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  border-radius: 50%;
-  box-shadow: 0 0 0 9999px var(--overlay-bg);
+  border-radius: var(--r-pill);
+  box-shadow: 0 0 0 9999px var(--overlay);
 }
 
 .hint {
@@ -62,11 +62,11 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: var(--control-h);
-  height: var(--control-h);
-  border: 1px solid var(--divider-color);
-  border-radius: var(--radius-control);
-  background-color: var(--surface-card);
+  width: var(--btn-h);
+  height: var(--btn-h);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background-color: var(--surface);
   color: var(--text-secondary);
   cursor: pointer;
   transition:
@@ -75,19 +75,25 @@
     background-color 150ms var(--ease-standard);
 }
 .iconBtn:hover {
-  color: var(--accent-pink);
-  border-color: var(--primary-pink);
-  background-color: var(--hover-bg);
+  color: var(--pink-700);
+  border-color: var(--pink-600);
+  background-color: var(--pink-100);
 }
 .iconBtn:focus-visible {
-  outline: 2px solid var(--primary-pink);
+  outline: 2px solid var(--pink-600);
   outline-offset: 2px;
 }
 .slider {
   flex: 1;
   min-width: 0;
-  accent-color: var(--accent-pink);
+  accent-color: var(--pink-600);
   cursor: pointer;
+}
+
+/* 裸原生 range 没有组件焦点环，键盘聚焦时补全站一致的焦点环（§7）。 */
+.slider:focus-visible {
+  outline: 2px solid var(--pink-600);
+  outline-offset: 2px;
 }
 
 .actions {

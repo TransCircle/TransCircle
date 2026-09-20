@@ -4,26 +4,26 @@
 .qrWrap {
   display: flex;
   justify-content: center;
-  padding: 0.25rem 0;
+  padding: var(--s-1) 0;
 }
 .qr {
   display: block;
   width: 200px;
   max-width: 100%;
   height: auto;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--divider-color);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
 }
 
 /* 「无法扫描」折叠触发:低调的文字按钮,居中。 */
 .cantScan {
   align-self: center;
-  padding: 0.35rem 0.5rem;
+  padding: var(--s-2);
   border: none;
   background: none;
-  color: var(--accent-pink);
+  color: var(--pink-700);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
   text-decoration: underline;
   text-decoration-style: dotted;
@@ -33,34 +33,34 @@
   text-decoration-style: solid;
 }
 .cantScan:focus-visible {
-  outline: 2px solid var(--primary-pink);
+  outline: 2px solid var(--pink-600);
   outline-offset: 2px;
-  border-radius: var(--radius-xs);
+  border-radius: var(--r-xs);
 }
 
 /* 展开后的密钥行:标签 + 可选中密钥 + 复制按钮。 */
 .secretReveal {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--s-2);
   flex-wrap: wrap;
-  padding: 0.6rem 0.75rem;
-  background-color: var(--hover-bg);
-  border: 1px solid var(--divider-color);
-  border-radius: var(--radius-sm);
+  padding: var(--s-2) var(--s-3);
+  background-color: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
 }
 .secretRevealLabel {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   flex-shrink: 0;
 }
 .secretBox {
   flex: 1;
   min-width: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
   letter-spacing: 0.06em;
-  color: var(--text-main);
+  color: var(--ink);
   /* 单行完整展示,字号由 JS 动态收敛以适配宽度(不省略字符)。 */
   white-space: nowrap;
   overflow: hidden;
@@ -74,40 +74,40 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+  width: var(--btn-h);
+  height: var(--btn-h);
   padding: 0;
-  border: 1px solid var(--divider-color);
-  border-radius: var(--radius-control);
-  background-color: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background-color: var(--surface);
   color: var(--text-secondary);
   cursor: pointer;
   transition:
-    color 130ms var(--ease-standard),
-    border-color 130ms var(--ease-standard),
-    background-color 130ms var(--ease-standard);
+    color var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard),
+    background-color var(--dur-1) var(--ease-standard);
 }
 .copyBtn:hover {
-  color: var(--accent-pink);
-  border-color: var(--primary-pink);
-  background-color: var(--hover-bg);
+  color: var(--pink-700);
+  border-color: var(--pink-600);
+  background-color: var(--pink-100);
 }
 .copyBtn:focus-visible {
-  outline: 2px solid var(--primary-pink);
+  outline: 2px solid var(--pink-600);
   outline-offset: 2px;
 }
 .copyBtnDone,
 .copyBtnDone:hover {
-  color: var(--success-color);
-  border-color: var(--success-color);
-  background-color: var(--surface-card);
+  color: var(--success-text);
+  border-color: var(--success-text);
+  background-color: var(--surface);
 }
 
 /* 恢复码(模态内)。 */
 .recoveryCodes {
-  background-color: var(--hover-bg);
-  padding: 1rem;
-  border-radius: var(--radius-sm);
-  line-height: 2;
+  background-color: var(--surface-2);
+  padding: var(--s-4);
+  border-radius: var(--r-sm);
+  line-height: var(--lh-body);
   overflow-wrap: anywhere;
 }

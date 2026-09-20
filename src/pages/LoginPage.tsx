@@ -16,7 +16,7 @@ import { usePageTitle } from "../utils/usePageTitle";
 import { saveIamMfaHandoff } from "./AuthMfaDonePage";
 import { consumeMfaHandoff, hasMfaHandoff, type MfaHandoff } from "./mfaHandoff";
 import {
-  CenteredCard,
+  AuthSplit,
   PageHeader,
   TextField,
   AdminButton as Button,
@@ -696,7 +696,7 @@ const LoginPage = () => {
   }
 
   return (
-    <CenteredCard>
+    <AuthSplit>
       <PageHeader align="center" title={oidcUid ? t("login.oidcTitle") : t("login.title")} />
 
       {showSessionExpired && <Alert tone="error">{t("login.sessionExpired")}</Alert>}
@@ -1028,7 +1028,7 @@ const LoginPage = () => {
           );
         })()
       )}
-    </CenteredCard>
+    </AuthSplit>
   );
 };
 

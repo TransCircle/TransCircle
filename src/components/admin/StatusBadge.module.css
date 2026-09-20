@@ -1,12 +1,15 @@
+/* §5.6：chip/徽章一律 --r-xs、高 24–28px、padding 0 10px、--fs-sm。
+   状态徽章 = 色点 + 文字，禁止纯颜色传达状态（§7）。 */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.2rem 0.6rem 0.2rem 0.5rem;
-  border-radius: var(--radius-pill);
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: var(--r-xs);
   border: 1px solid transparent;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
   line-height: 1.4;
   white-space: nowrap;
   /* nowrap 的长文案（如异常状态串）不许撑破所在行：容器内收敛并截断。 */
@@ -14,14 +17,16 @@
 }
 
 .badge.sm {
-  font-size: 0.72rem;
-  padding: 0.12rem 0.5rem 0.12rem 0.42rem;
+  font-size: var(--fs-xs);
+  min-height: 22px;
+  padding: 0 8px;
 }
 
+/* §5.6：状态点 --r-pill 6px。 */
 .dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
   background-color: currentColor;
   flex-shrink: 0;
   opacity: 0.9;
@@ -39,32 +44,32 @@
    语义软色 token 随主题取值（含系统暗色），不再手工写 dark 覆盖。 */
 
 .tone_amber {
-  color: var(--soft-amber-text);
-  background-color: var(--soft-amber-bg);
+  color: var(--warning-text);
+  background-color: var(--warning-bg);
 }
 .tone_blue {
-  color: var(--soft-info-text);
-  background-color: var(--soft-info-bg);
+  color: var(--info-text);
+  background-color: var(--info-bg);
 }
 .tone_green {
-  color: var(--soft-success-text);
-  background-color: var(--soft-success-bg);
+  color: var(--success-text);
+  background-color: var(--success-bg);
 }
 .tone_red {
-  color: var(--soft-error-text);
-  background-color: var(--soft-error-bg);
+  color: var(--error-text);
+  background-color: var(--error-bg);
 }
 .tone_accent {
-  color: var(--accent-pink);
-  background-color: var(--hover-bg);
+  color: var(--pink-700);
+  background-color: var(--pink-100);
 }
 .tone_muted {
   color: var(--text-muted);
-  background-color: var(--hover-bg);
+  background-color: var(--pink-100);
 }
 .tone_neutral {
   color: var(--text-secondary);
-  background-color: var(--hover-bg);
+  background-color: var(--pink-100);
 }
 
 /* ── Pill (neutral marker) ───────────────────────────────── */
@@ -72,12 +77,13 @@
 .pill {
   display: inline-flex;
   align-items: center;
-  padding: 0.15rem 0.6rem;
-  border-radius: var(--radius-pill);
-  background-color: var(--hover-bg);
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: var(--r-xs);
+  background-color: var(--pink-100);
   color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   white-space: nowrap;
   max-width: 100%;
   overflow: hidden;
@@ -85,5 +91,5 @@
 }
 
 .pillAccent {
-  color: var(--accent-pink);
+  color: var(--pink-700);
 }

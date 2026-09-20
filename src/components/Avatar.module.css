@@ -6,18 +6,20 @@
   flex-shrink: 0;
   width: var(--avatar-size);
   height: var(--avatar-size);
-  border-radius: 50%;
+  /* §2.8：pill 圆角仅头像与进度轨道。 */
+  border-radius: var(--r-pill);
   overflow: hidden;
-  background: linear-gradient(135deg, var(--accent-pink), var(--primary-pink));
-  color: var(--on-accent);
-  font-weight: 600;
+  /* §5.11：--pink-100 底 + --ink 首字母。原先的 linear-gradient 违反 §1.1「禁止渐变」。 */
+  background-color: var(--pink-100);
+  color: var(--ink);
+  font-weight: var(--fw-semibold);
   font-size: calc(var(--avatar-size) * 0.42);
   line-height: 1;
   user-select: none;
 }
 
 
-/* 显示图片时去掉粉色渐变底:透明背景的头像才会透到所在表面/页面,而非头像框底色。 */
+/* 显示图片时去掉粉色底:透明背景的头像才会透到所在表面/页面,而非头像框底色。 */
 .hasImage {
   background: none;
 }

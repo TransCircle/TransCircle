@@ -6,7 +6,7 @@ import { checkPasswordStrength } from "../utils/string";
 import { usePageTitle } from "../utils/usePageTitle";
 import { readOidcInteraction } from "../utils/oidcInteraction";
 import {
-  CenteredCard,
+  AuthSplit,
   PageHeader,
   TextField,
   AdminButton as Button,
@@ -148,7 +148,7 @@ const RegisterPage = () => {
   ];
 
   return (
-    <CenteredCard>
+    <AuthSplit>
       <PageHeader align="center" title={t("register.title")} description={t("register.subtitle")} />
       {error && <Alert tone="error">{error}</Alert>}
       <form className={authStyles.form} onSubmit={submit}>
@@ -220,7 +220,7 @@ const RegisterPage = () => {
           {t("nav.login")}
         </Link>
       </p>
-    </CenteredCard>
+    </AuthSplit>
   );
 };
 

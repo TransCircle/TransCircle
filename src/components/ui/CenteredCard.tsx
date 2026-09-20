@@ -5,7 +5,7 @@ import styles from './CenteredCard.module.css'
 
 export interface CenteredCardProps {
   children: ReactNode
-  /** max inline width of the card; defaults to var(--width-form) (~26rem). */
+  /** max inline width of the card; defaults to var(--w-form) (~26rem). */
   maxWidth?: string
   padding?: 'sm' | 'md'
   /** outer landmark; use 'main' only when rendered outside RootLayout (e.g. error boundary). */

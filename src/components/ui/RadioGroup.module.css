@@ -1,20 +1,20 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: var(--s-2);
   width: 100%;
 }
 
 .label {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
   color: var(--text-secondary);
 }
 
 .group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--s-2);
 }
 
 .horizontal {
@@ -22,7 +22,6 @@
   flex-wrap: wrap;
 }
 
-/* 仅横向排列时等宽分摊；纵向靠 group 默认 align-items:stretch 占满整行，避免被 flex-grow 异常拉伸。 */
 .horizontal .option {
   flex: 1;
 }
@@ -31,29 +30,34 @@
   min-width: 0;
   display: flex;
   align-items: flex-start;
-  gap: 0.6rem;
-  min-height: 40px;
-  padding: 0.65rem 0.8rem;
-  border: 1.5px solid var(--divider-color);
-  border-radius: var(--radius-md);
-  background-color: var(--surface-card);
+  gap: var(--s-2);
+  min-height: var(--control-h);
+  padding: var(--s-2) var(--s-3);
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background-color: var(--surface-2);
   color: var(--text-body);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color var(--dur-1) var(--ease-standard),
+    background-color var(--dur-1) var(--ease-standard);
 }
 
 .option:hover:not(:disabled) {
-  border-color: var(--primary-pink);
+  border-color: var(--pink-700);
+}
+
+.option:active:not(:disabled) {
+  background-color: var(--pink-100);
 }
 
 /* 与 Select/Checkbox 统一的 box-shadow 焦点环(输入类控件家族)。 */
 .option:focus-visible {
   outline: none;
-  border-color: var(--primary-pink);
-  box-shadow: 0 0 0 3px var(--focus-ring);
+  border-color: var(--pink-700);
+  box-shadow: 0 0 0 3px var(--focus-halo);
 }
 
 .option:disabled {
@@ -62,18 +66,18 @@
 }
 
 .option.checked {
-  border-color: var(--primary-pink);
-  background-color: var(--hover-bg);
+  border-color: var(--pink-700);
+  background-color: var(--pink-100);
 }
 
 @supports (background-color: color-mix(in srgb, red 15%, white)) {
   .option.checked {
-    background-color: var(--hover-bg-mix);
+    background-color: var(--pink-100);
   }
 }
 
 .option.invalid {
-  border-color: var(--error-border);
+  border-color: var(--error-text);
 }
 
 .dot {
@@ -81,39 +85,39 @@
   position: relative;
   width: 18px;
   height: 18px;
-  margin-top: 0.1rem;
-  border: 1.5px solid var(--divider-color);
-  border-radius: 50%;
-  background-color: var(--surface-card);
-  transition: border-color 0.15s ease;
+  margin-top: var(--s-1);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-pill);
+  background-color: var(--surface);
+  transition: border-color var(--dur-1) var(--ease-standard);
 }
 
 .option.checked .dot {
-  border-color: var(--accent-pink);
+  border-color: var(--pink-700);
 }
 
 .option.checked .dot::after {
   content: '';
   position: absolute;
   inset: 3px;
-  border-radius: 50%;
-  background-color: var(--accent-pink);
+  border-radius: var(--r-pill);
+  background-color: var(--pink-700);
 }
 
 .optionText {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: var(--s-1);
   min-width: 0;
 }
 
 .optionLabel {
-  font-weight: 500;
-  color: var(--text-main);
+  font-weight: var(--fw-medium);
+  color: var(--ink);
 }
 
 .optionHint {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 

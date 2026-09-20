@@ -3,34 +3,36 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  width: var(--control-h);
-  height: var(--control-h);
+  width: var(--btn-h);
+  height: var(--btn-h);
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
   padding: 0;
-  transition: background-color var(--dur-fast) var(--ease-standard),
-    color var(--dur-fast) var(--ease-standard),
-    transform var(--dur-fast) var(--ease-standard);
+  transition: background-color var(--dur-1) var(--ease-standard),
+    color var(--dur-1) var(--ease-standard),
+    transform var(--dur-1) var(--ease-standard);
 }
 
 .toggleBtn:hover {
-  background-color: var(--hover-bg);
-  color: var(--primary-pink);
+  background-color: var(--pink-100);
+  color: var(--pink-700);
 }
 
 .toggleBtn:active {
-  transform: scale(0.9);
+  transform: scale(0.97);
 }
 
 .toggleBtn:focus-visible {
-  outline: 2px solid var(--primary-pink);
+  outline: 2px solid var(--pink-600);
   outline-offset: 2px;
 }
 
-/* ── 图标交叉淡入 + 旋转缩放（moon ⇄ sun，两枚常驻叠放） ── */
+/* ── 图标形态过渡（moon ⇄ sun，两枚常驻叠放） ──────────────
+   §5.11：切换时走圆形遮罩过渡（clip-path: circle()），时长 --dur-3。
+   clip-path 从中心生长/收缩，配合旋转缩放形成「日月此消彼长」的揭示感。 */
 .iconWrap {
   position: relative;
   width: 20px;
@@ -43,32 +45,36 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity var(--dur-base) var(--ease-standard),
-    transform 340ms var(--ease-emphasized);
+  transition: opacity var(--dur-3) var(--ease-out),
+    transform var(--dur-3) var(--ease-out),
+    clip-path var(--dur-3) var(--ease-out);
 }
 
 .moon {
   opacity: 1;
   transform: rotate(0) scale(1);
+  clip-path: circle(75% at 50% 50%);
 }
 
 .sun {
   opacity: 0;
   transform: rotate(-90deg) scale(0.6);
+  clip-path: circle(0% at 50% 50%);
 }
 
 .iconWrap[data-dark] .moon {
   opacity: 0;
   transform: rotate(90deg) scale(0.6);
+  clip-path: circle(0% at 50% 50%);
 }
 
 .iconWrap[data-dark] .sun {
   opacity: 1;
   transform: rotate(0) scale(1);
+  clip-path: circle(75% at 50% 50%);
 }
 
-/* 触屏(含触屏笔记本,故用 any-pointer):视觉保持 34px,居中透明 ::after 把命中区扩到 44px,
-   不撑高顶栏。 */
+/* 触屏（含触屏笔记本）通过居中透明 ::after 把 40px 按钮命中区扩到 44px，不撑高顶栏。 */
 @media (any-pointer: coarse) {
   .toggleBtn::after {
     content: "";

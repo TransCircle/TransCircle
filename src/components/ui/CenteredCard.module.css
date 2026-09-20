@@ -7,22 +7,36 @@
   /* dvh 随移动端浏览器工具栏伸缩取真实可视高度;vh 作旧浏览器兜底。 */
   min-height: 60vh;
   min-height: 60dvh;
-  padding: 1.5rem 1.25rem 2.5rem;
+  padding: var(--s-6) var(--page-x) var(--s-7);
 }
 
 .holder {
   width: 100%;
-  max-width: var(--width-form);
+  max-width: var(--w-form);
 }
 
+/* 认证/状态屏的居中卡是浮在页面底上的悬浮层，按 §1.4 允许玻璃；
+   §2.5 要求必须带 @supports 实色回退。玻璃样式直接覆盖底层 Card 的实色面。 */
 .card {
   width: 100%;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .card {
+    background-color: var(--surface);
+  }
 }
 
 .body {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: var(--s-5);
 }
 
 @media (max-width: 640px) {
@@ -31,7 +45,7 @@
      状态页不至于顶到屏顶失去落地感。 */
   .shell {
     min-height: 0;
-    padding: 2rem 1rem 2.5rem;
+    padding: var(--s-6) var(--s-4) var(--s-7);
   }
 
   .card {
@@ -39,6 +53,14 @@
     border-radius: 0;
     background: transparent;
     box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     padding: 0;
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .card {
+      background-color: transparent;
+    }
   }
 }

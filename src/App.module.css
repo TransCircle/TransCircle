@@ -1,152 +1,270 @@
-/* ── Main content ─────────────────────────────── */
+/* 门户首页 — DESIGN.md v3.0 §3.3 / §3.4 / §5.1 / §5.5 */
 
-.mainContent {
+.page {
   flex: 1;
   width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 2.5rem 4rem;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
 }
 
+/* ── Hero ─────────────────────────────────────────────────── */
 
-
-.contentHeader {
-  margin-bottom: 1.5rem;
+.hero {
+  position: relative;
+  overflow: hidden; /* 裁掉溢出的光晕，避免撑出横向滚动（§4 无横向滚动） */
+  /* hero 与紧随的「加入项目」保持同一段叙事：底部只留 32px，
+     不在光晕结束后制造一段脱节的空场。 */
+  padding: var(--s-9) var(--page-x) var(--s-7);
+  /* 亮色需要看得见才有连接作用；光晕只在 hero 内、只在鼠标进入时显示。 */
+  --aura-opacity: 0.17;
 }
 
-.mainTitle {
-  font-size: var(--fs-title);
-  font-weight: 700;
-  color: var(--text-main);
-  margin: 0 0 0.2rem 0;
-  letter-spacing: -0.02em;
+:global([data-theme="dark"]) .hero {
+  --aura-opacity: 0.20;
 }
 
-.subTitle {
-  font-size: var(--fs-subtitle);
-  color: var(--text-muted);
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme])) .hero {
+    --aura-opacity: 0.20;
+  }
+}
+
+/* 光标光晕：420px 实色圆 + blur(90px)，禁止渐变（§1.1 / §3.3）。
+   默认 opacity:0；只有 JS 判定为 pointer:fine + no-preference 后才写入 data-aura。 */
+.aura {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 420px;
+  height: 420px;
+  margin: -210px 0 0 -210px;
+  border-radius: var(--r-pill);
+  background: var(--pink-600);
+  filter: blur(90px);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.hero[data-aura="on"] .aura {
+  opacity: var(--aura-opacity);
+}
+
+.heroInner {
+  position: relative; /* 压在光晕之上 */
+  max-width: var(--w-content);
+  margin: 0 auto;
+}
+
+/* eyebrow：Space Grotesk 标签（§2.6 / §3.4） */
+.eyebrow {
+  font-family: var(--font-tech);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pink-700);
+  margin: 0 0 var(--s-4);
+}
+
+.heroTitle {
   margin: 0;
-  font-weight: 400;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
 }
 
-/* ── About section ────────────────────────────── */
-
-.introSection {
-  scroll-margin-top: 4.5rem;
+/* 品牌名使用官方字标推导出的 Nunito 系品牌字体，不再使用扁宽的 Unbounded。 */
+.heroDisplay {
+  font-family: var(--font-brand);
+  font-size: var(--fs-hero);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-display);
+  letter-spacing: -0.02em;
+  color: var(--ink);
 }
+
+/* 中文标题一律系统栈 700（§2.6：禁止用展示字体排中文） */
+.heroCn {
+  font-family: var(--font-sans);
+  font-size: var(--fs-display);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.heroTagline {
+  margin: var(--s-5) 0 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--pink-700);
+  line-height: var(--lh-heading);
+}
+
+.heroLede {
+  margin: var(--s-3) 0 0;
+  max-width: var(--w-reading);
+  font-size: var(--fs-body);
+  color: var(--text-secondary);
+  line-height: var(--lh-body);
+}
+
+/* ── CTA 按钮（§5.1）───────────────────────────────────────── */
+
+.ctaRow {
+  display: flex;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin-top: var(--s-6);
+}
+
+.ctaPrimary,
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--btn-h);
+  padding: 0 20px;
+  border-radius: var(--r-sm); /* §5.1 禁止 pill 按钮 */
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  transition: background-color var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard), color var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-1) var(--ease-standard), transform var(--dur-1) var(--ease-spring);
+}
+
+.ctaPrimary {
+  background-color: var(--pink-600);
+  color: var(--on-pink);
+  border: 1.5px solid transparent;
+}
+
+.ctaPrimary:hover {
+  background-color: var(--pink-600-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--glow-pink);
+}
+
+:global([data-theme="dark"]) .ctaPrimary:hover {
+  box-shadow: var(--glow-pink-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme])) .ctaPrimary:hover {
+    box-shadow: var(--glow-pink-dark);
+  }
+}
+
+.ctaPrimary:active {
+  transform: scale(0.97);
+}
+
+.ctaSecondary {
+  background-color: transparent;
+  border: 1.5px solid var(--line-strong);
+  color: var(--ink);
+}
+
+.ctaSecondary:hover {
+  border-color: var(--pink-600);
+  color: var(--pink-700);
+}
+
+.ctaSecondary:active {
+  transform: scale(0.97);
+}
+
+/* ── 内容区 ───────────────────────────────────────────────── */
+
+.body {
+  width: 100%;
+  max-width: var(--w-content);
+  margin: 0 auto;
+  padding: 0 var(--page-x) var(--s-9);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-7);
+}
+
+.section,
+.aboutSection,
+.followSection {
+  scroll-margin-top: calc(var(--nav-h) + var(--s-4));
+}
+
+/* hero 内部的第二幕：用上发丝线与适度留白分层，但保持同一光场。 */
+.aboutSection {
+  position: relative;
+  margin-top: var(--s-7);
+  padding-top: var(--s-6);
+  border-top: 1px solid var(--line);
+}
+
+/* 关注我们是故事的收束，沿用同一场域，只以发丝线建立最后一级节奏。 */
+.followSection {
+  position: relative;
+  margin-top: var(--s-6);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--line);
+}
+
+.sectionHeading {
+  font-family: var(--font-tech);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin: 0 0 var(--s-4);
+}
+
+/* ── 项目自述 ─────────────────────────────────────────────── */
 
 .greeting {
   font-size: var(--fs-body);
-  margin: 0 0 0.9rem 0;
+  margin: 0 0 var(--s-3);
   color: var(--text-body);
   line-height: var(--lh-body);
 }
 
+.aboutGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
+  align-items: start;
+  gap: var(--s-6);
+}
+
 .readmeContent {
   color: var(--text-secondary);
-  line-height: 1.7;
+  line-height: var(--lh-body);
   font-size: var(--fs-body);
 }
 
 .readmeContent p {
-  margin: 0 0 0.7rem 0;
+  margin: 0 0 var(--s-3);
 }
 
 .readmeContent p:last-child {
   margin-bottom: 0;
 }
 
+/* 强调句：改用实色底 + 常规描边，不用彩色左边框卡（§1.6 / §5.5）。 */
 .emphasis {
-  font-weight: 600;
-  color: var(--text-main);
-  border-left: 3px solid var(--primary-pink);
-  padding-left: 1rem;
-  margin: 1.4rem 0 0 0;
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+  background-color: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--s-5);
+  margin: 0;
   font-size: var(--fs-body);
   line-height: var(--lh-body);
+  white-space: pre-line;
 }
 
-/* ── Shared section chrome ────────────────────── */
-
-.actionSection,
-.followSection {
-  margin-top: 2rem;
-  padding-top: 1.4rem;
-  border-top: 1px solid var(--divider-color);
-  scroll-margin-top: 4.5rem;
-}
-
-.sectionHeading {
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  margin: 0 0 0.9rem 0;
-}
-
-/* ── CTA buttons ──────────────────────────────── */
-
-.ctaRow {
-  display: flex;
-  gap: 0.65rem;
-  flex-wrap: wrap;
-}
-
-.ctaPrimary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--cta-bg);
-  color: var(--cta-color);
-  height: var(--control-h);
-  padding: 0 1.15rem;
-  border-radius: var(--radius-pill);
-  text-decoration: none;
-  font-size: 0.875rem;
-  font-weight: 500;
-  box-shadow: var(--shadow-card);
-  transition: background-color var(--dur-base) var(--ease-standard), transform var(--dur-fast) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard);
-}
-
-.ctaPrimary:active {
-  transform: scale(0.94);
-}
-
-.ctaPrimary:hover {
-  background-color: var(--cta-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-card-hover);
-}
-
-.ctaSecondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid var(--primary-pink);
-  color: var(--accent-pink);
-  height: var(--control-h);
-  padding: 0 1.15rem;
-  border-radius: var(--radius-pill);
-  text-decoration: none;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.ctaSecondary:active {
-  transform: scale(0.94);
-}
-
-.ctaSecondary:hover {
-  background-color: var(--hover-bg);
-  border-color: var(--accent-pink);
-}
-
-/* ── Social links ─────────────────────────────── */
+/* ── 社交链接 ─────────────────────────────────────────────── */
 
 .socialList {
   list-style: none;
@@ -154,23 +272,22 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: var(--s-1);
 }
 
 .socialLink {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.45rem 0.6rem;
-  margin: 0 -0.6rem;
-  border-radius: var(--radius-sm);
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  margin: 0 calc(var(--s-3) * -1);
+  border-radius: var(--r-sm);
   text-decoration: none;
-  transition: background-color 0.15s ease;
+  transition: background-color var(--dur-1) var(--ease-standard);
 }
 
 .socialLink:hover {
-  background-color: var(--hover-bg);
-  background-color: var(--hover-bg-mix, var(--hover-bg));
+  background-color: var(--pink-100);
 }
 
 .socialIcon {
@@ -181,67 +298,69 @@
   width: 16px;
 }
 
+.socialLink:hover .socialIcon {
+  color: var(--pink-700);
+}
+
 .socialName {
-  color: var(--text-main);
-  font-size: 0.9rem;
-  font-weight: 500;
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   white-space: nowrap;
 }
 
 .socialHandle {
   color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 400;
+  font-family: var(--font-tech);
+  font-size: var(--fs-xs);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ── Reduced motion ───────────────────────────── */
+/* ── 指针 / 动效降级 ──────────────────────────────────────── */
 
-@media (prefers-reduced-motion: reduce) {
-  .ctaPrimary,
-  .ctaSecondary,
-  .socialLink {
-    transition: none;
-  }
-  .ctaPrimary:hover {
-    transform: none;
-  }
-}
-
-/* 触屏(含触屏笔记本,故用 any-pointer)下保证 ≥44px 触控目标。 */
+/* 触屏(含触屏笔记本,故用 any-pointer)下保证 ≥44px 触控目标（§4）。 */
 @media (any-pointer: coarse) {
   .ctaPrimary,
   .ctaSecondary,
   .socialLink {
-    min-height: 44px;
+    min-height: var(--tap-min);
   }
 }
 
-/* ── Responsive: tablet ───────────────────────── */
-
-@media (max-width: 1024px) {
-  .mainContent {
-    padding: 2rem 2.5rem;
+/* §4：coarse 指针下禁用 hover 专属效果（光晕）。 */
+@media (pointer: coarse) {
+  .aura {
+    display: none;
   }
 }
 
-/* ── Responsive: mobile ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .aura {
+    display: none;
+  }
+}
+
+/* ── 响应式 ───────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
-  .mainContent {
-    padding: 1.5rem;
-    max-width: 100%;
+  .hero {
+    padding: var(--s-7) var(--page-x) var(--s-6);
+  }
+
+  .body {
+    gap: var(--s-7);
+    padding-bottom: var(--s-8);
   }
 
   .ctaRow {
     flex-direction: column;
+    align-items: stretch;
   }
 
-  .ctaPrimary,
-  .ctaSecondary {
-    text-align: center;
+  .aboutGrid {
+    grid-template-columns: 1fr;
   }
 
   .socialHandle {

@@ -5,11 +5,13 @@ import { useSession } from "../context/SessionContext";
 import { useAdmin } from "../context/AdminContext";
 import ThemeToggle from "./ThemeToggle";
 import { Avatar } from "./Avatar";
+import FlagStripe from "./FlagStripe";
 import { cx } from "./admin/cx";
 import styles from "./AppNav.module.css";
 
-/** 移动断点:与 AppNav.module.css 的 @media (max-width: 1100px) 保持一致(双处互指)。 */
-const MOBILE_BREAKPOINT = 1100;
+/** 移动断点:与 AppNav.module.css 的 @media (max-width: 1200px) 保持一致(双处互指)。
+ *  1200px 为 DESIGN.md §4 规定的「导航折叠」断点。 */
+const MOBILE_BREAKPOINT = 1200;
 
 const ExternalIcon = () => (
   <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className={styles.extIcon}>
@@ -118,11 +120,8 @@ export function AppNav() {
   /**
    * 会话还没问出结果、且本地也没有身份提示。
    *
-   * 这时**既不能显示头像**（不知道是谁），**也不能显示「登录」入口**——
-   * 后者是把「还不知道」当成了「没登录」，正是这次改造要消灭的那个错误。
-   * 典型场景：用户的 HttpOnly refresh cookie 还在，但 localStorage 被清过
-   *（换设备、隐私模式、清理过站点数据）；首屏画出「登录」会诱导他点进去重登一次，
-   * 而探测结束后发现本来就登着。宁可这一小段时间什么都不画。
+   * 不展示头像（未知是谁），但必须保留登录入口：本地/网络错误可能让 session
+   * 探测长期停在 unknown，若把登录也隐藏，用户系统会变成无法进入的死状态。
    */
   const identityPending = status === "unknown" && navIdentity === null;
   const location = useLocation();
@@ -133,7 +132,6 @@ export function AppNav() {
   const [acctOpen, setAcctOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutFailed, setLogoutFailed] = useState(false);
-  const navRef = useRef<HTMLElement>(null);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const linksRef = useRef<HTMLDivElement>(null);
   const linksBtnRef = useRef<HTMLButtonElement>(null);
@@ -164,6 +162,15 @@ export function AppNav() {
     { label: t("nav.search"), href: "https://search.transcircle.org/" },
   ];
 
+  /**
+   * 当前项判定（§5.3 迷你旗帜条纹指示）：只有站内 <Link> 参与，外链永远不是「当前页」。
+   *
+   * 按 pathname + hash 整体比对，而不是只看 pathname —— 主导航里「首页」(/) 与
+   * 「人物归档」(/#about) 共享同一个 pathname，只比 pathname 会让两项同时高亮。
+   */
+  const currentPath = `${location.pathname}${location.hash}`;
+  const isCurrent = (l: NavLinkDef): boolean => l.to !== undefined && l.to === currentPath;
+
   // 关闭抽屉/下拉：路由变化时。含 hash——移动端已在 / 时点抽屉里的
   // 「人物归档」(/#about)只改 hash 不改 pathname,若仅依赖 pathname 则抽屉不关、
   // 背景滚动保持锁定、main 保持 inert 遮住刚滚到的分区。
@@ -184,26 +191,6 @@ export function AppNav() {
     },
     [],
   );
-
-  // --app-nav-height 动态写入文档根:导航实际高度随断点/字号/换行变化,
-  // 供 Page.module.css 等处的 sticky 偏移消费;index.css 保留 57px 静态兜底。
-  useEffect(() => {
-    const nav = navRef.current;
-    if (!nav || typeof ResizeObserver === "undefined") return;
-    const write = () => {
-      document.documentElement.style.setProperty(
-        "--app-nav-height",
-        `${Math.ceil(nav.getBoundingClientRect().height)}px`,
-      );
-    };
-    write();
-    const ro = new ResizeObserver(write);
-    ro.observe(nav);
-    return () => {
-      ro.disconnect();
-      document.documentElement.style.removeProperty("--app-nav-height");
-    };
-  }, []);
 
   // 抽屉打开时锁定背景滚动 + Escape 关闭 + 变宽自动关闭
   useEffect(() => {
@@ -354,7 +341,7 @@ export function AppNav() {
 
   return (
     <>
-      <nav ref={navRef} className={styles.nav} aria-label={t("nav.primary")}>
+      <nav className={styles.nav} aria-label={t("nav.primary")}>
         <div className={styles.inner}>
           <div className={styles.left}>
             <button
@@ -370,17 +357,40 @@ export function AppNav() {
               <span className={cx(styles.bar, drawerOpen && styles.barMid)} />
               <span className={cx(styles.bar, drawerOpen && styles.barBot)} />
             </button>
-            <Link to="/" className={styles.brand}>
-              <img className={styles.brandMark} src="/logo-mark.svg" width={28} height={28} alt="" aria-hidden="true" />
-              {/* TransCircle 为品牌专有名词，豁免 i18n。 */}
-              <span>TransCircle</span>
+            <Link to="/" className={styles.brand} aria-label="TransCircle">
+              <img
+                className={cx(styles.brandLogo, styles.brandLogoLight)}
+                src="/brand/transcircle-horizontal-on-light.svg"
+                width={400}
+                height={120}
+                alt=""
+                aria-hidden="true"
+              />
+              <img
+                className={cx(styles.brandLogo, styles.brandLogoDark)}
+                src="/brand/transcircle-horizontal-on-dark.svg"
+                width={400}
+                height={120}
+                alt=""
+                aria-hidden="true"
+              />
             </Link>
           </div>
 
           <div className={styles.links}>
             {primaryLinks.map((l) =>
               l.to ? (
-                <Link key={l.label} to={l.to} className={styles.link}>{l.label}</Link>
+                <Link
+                  key={l.label}
+                  to={l.to}
+                  className={cx(styles.link, isCurrent(l) && styles.linkActive)}
+                  aria-current={isCurrent(l) ? "page" : undefined}
+                >
+                  {l.label}
+                  {/* 当前项指示：24×3px 迷你旗帜条纹（§3.1 / §5.3）。
+                      语义由 aria-current 承担，条纹纯装饰。 */}
+                  {isCurrent(l) && <FlagStripe variant="mini" className={styles.activeStripe} />}
+                </Link>
               ) : (
                 <a key={l.label} href={l.href} rel="nofollow noopener noreferrer" className={styles.link}>
                   {l.label}<ExternalIcon />
@@ -415,7 +425,7 @@ export function AppNav() {
 
           <div className={styles.right}>
             <ThemeToggle />
-            {identityPending ? null : navUser ? (
+            {navUser ? (
               <div
                 ref={acctRef}
                 className={styles.dropdown}
@@ -509,17 +519,54 @@ export function AppNav() {
         </div>
       </nav>
 
-      {/* 移动端抽屉：关闭时 inert（不可聚焦、移出无障碍树）。 */}
+      {/* 移动端抽屉：关闭时 inert（不可聚焦、移出无障碍树）。
+          模态语义（role/aria-modal/aria-label）与既有焦点陷阱配套。 */}
       <div
         ref={drawerRef}
         className={cx(styles.drawer, drawerOpen && styles.drawerOpen)}
         id="app-drawer"
         inert={drawerOpen ? undefined : true}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('nav.primary')}
       >
+        <div className={styles.drawerHeader}>
+          <div className={styles.drawerBrand} aria-hidden="true">
+            <img
+              className={cx(styles.brandLogo, styles.brandLogoLight)}
+              src="/brand/transcircle-horizontal-on-light.svg"
+              width={400}
+              height={120}
+              alt=""
+            />
+            <img
+              className={cx(styles.brandLogo, styles.brandLogoDark)}
+              src="/brand/transcircle-horizontal-on-dark.svg"
+              width={400}
+              height={120}
+              alt=""
+            />
+          </div>
+          <button
+            type="button"
+            className={styles.drawerClose}
+            aria-label={t("shell.closeNav")}
+            onClick={() => setDrawerOpen(false)}
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
         <div className={styles.drawerInner}>
           {primaryLinks.map((l) =>
             l.to ? (
-              <Link key={l.label} to={l.to} className={styles.drawerLink}>{l.label}</Link>
+              <Link
+                key={l.label}
+                to={l.to}
+                className={styles.drawerLink}
+                aria-current={isCurrent(l) ? "page" : undefined}
+              >
+                {l.label}
+              </Link>
             ) : (
               <a key={l.label} href={l.href} rel="nofollow noopener noreferrer" className={styles.drawerLink}>
                 {l.label}<ExternalIcon />
@@ -530,9 +577,8 @@ export function AppNav() {
             <a key={l.href} href={l.href} target="_blank" rel="nofollow noopener noreferrer" className={styles.drawerLink}>{l.label}<ExternalIcon /></a>
           ))}
           <hr className={styles.drawerDivider} />
-          {identityUnconfirmed || identityPending ? (
-            // 抽屉里没有「只显示头像」的位置：身份未证实或还没问出结果时索性不给任何
-            // 账户操作，而不是给一组点了会失败、或干脆指错方向的入口。
+          {identityUnconfirmed ? (
+            // 身份提示未证实：不提供账户/退出等可能失败的操作。
             null
           ) : navUser ? (
             <>

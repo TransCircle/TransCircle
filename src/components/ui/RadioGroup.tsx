@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { useId, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { cx } from '../admin/cx'
 import styles from './RadioGroup.module.css'
 
@@ -36,6 +36,7 @@ export function RadioGroup<V extends string = string>({
   className,
 }: RadioGroupProps<V>) {
   const refs = useRef<HTMLButtonElement[]>([])
+  const labelId = useId()
 
   const findEnabled = (from: number, dir: 1 | -1): number => {
     const n = options.length
@@ -78,11 +79,12 @@ export function RadioGroup<V extends string = string>({
 
   return (
     <div className={cx(styles.field, className)}>
-      {label && <span className={styles.label}>{label}</span>}
+      {label && <span id={labelId} className={styles.label}>{label}</span>}
       <div
         className={cx(styles.group, orientation === 'horizontal' && styles.horizontal)}
         role="radiogroup"
-        aria-label={ariaLabel}
+        aria-labelledby={label ? labelId : undefined}
+        aria-label={label ? undefined : ariaLabel}
         aria-orientation={orientation}
         aria-invalid={invalid || undefined}
       >
