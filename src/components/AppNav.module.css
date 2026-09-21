@@ -522,3 +522,21 @@
   .menu { animation: none; }
   .loginCta:hover, .loginCta:active, .acctBtn:active { transform: none; }
 }
+
+/* 预告项（尚未上线的分区）：只读一行字,没有悬停反馈、没有手型光标 ——
+   看上去就不像能点的东西,省得用户对着它反复点。
+   **必须放在文件末尾**:与 .menuItem / .drawerLink 同特异性,靠源顺序决胜。
+   标签自带「（开发中）」,因此不再另加角标,避免同一句话说两遍。 */
+.menuItemMuted,
+.drawerLinkMuted {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.menuItemMuted:hover,
+.drawerLinkMuted:hover,
+.menuItemMuted:active,
+.drawerLinkMuted:active {
+  background-color: transparent;
+  color: var(--text-muted);
+}

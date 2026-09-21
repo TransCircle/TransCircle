@@ -7,6 +7,7 @@ import ThemeToggle from "./ThemeToggle";
 import { Avatar } from "./Avatar";
 import FlagStripe from "./FlagStripe";
 import { cx } from "./admin/cx";
+import { lockScroll } from "../utils/scrollLock";
 import styles from "./AppNav.module.css";
 
 /** 移动断点:与 AppNav.module.css 的 @media (max-width: 1200px) 保持一致(双处互指)。
@@ -28,6 +29,14 @@ interface NavLinkDef {
   to?: string;
   /** 生态外链(子域站点):原生 <a> + rel noopener noreferrer。 */
   href?: string;
+  /**
+   * 预告项:分区还没建成,菜单里只占个位置。
+   *
+   * 既不给 to 也不给 href —— 渲染成不可点的 <span>,点它不发生任何事。
+   * 曾经它指向 /#about(主页里谈归档愿景的那一段)当作替代目的地,
+   * 但那等于让人点「人物归档」却被送到别处,比不给目的地更让人困惑。
+   */
+  disabled?: boolean;
 }
 
 /**
@@ -147,33 +156,32 @@ export function AppNav() {
   const acctAutoFocus = useRef(true);
   const acctPointerType = useRef<string>("");
 
-  // 导航站主导航:首页 + 生态各业务分区。
-  // - 故事征集/社群互助:已上线的子域站点,直接外链(故事为 story.transcircle.org、社群论坛为 community.transcircle.org)。
-  // - 人物归档:尚无独立站点(标签仍带「开发中」),指向主页真实分区
-  //   (归档愿景在 #about 阐述),避免 /#archive 这类无目标死锚点。
+  // 导航站主导航:首页 + 已经上线的生态分区(全是独立子域,直接外链)。
   const primaryLinks: NavLinkDef[] = [
     { label: t("nav.home"), to: "/" },
+    { label: t("nav.blog"), href: "https://blog.transcircle.org/" },
     { label: t("nav.stories"), href: "https://story.transcircle.org/" },
-    { label: t("nav.archive"), to: "/#about" },
     { label: t("nav.community"), href: "https://community.transcircle.org/" },
   ];
-  const externalLinks: NavLinkDef[] = [
-    { label: t("nav.blog"), href: "https://blog.transcircle.org/" },
+  // 「更多」下拉:主导航之外的入口。
+  // 人物归档还没有站点,只作预告留在这里(不可点击,见 NavLinkDef.disabled)。
+  const moreLinks: NavLinkDef[] = [
+    { label: t("nav.archive"), disabled: true },
     { label: t("nav.search"), href: "https://search.transcircle.org/" },
   ];
 
   /**
-   * 当前项判定（§5.3 迷你旗帜条纹指示）：只有站内 <Link> 参与，外链永远不是「当前页」。
+   * 当前项判定（§5.3 迷你旗帜条纹指示）：只有站内 <Link> 参与，外链与预告项永远不是「当前页」。
    *
-   * 按 pathname + hash 整体比对，而不是只看 pathname —— 主导航里「首页」(/) 与
-   * 「人物归档」(/#about) 共享同一个 pathname，只比 pathname 会让两项同时高亮。
+   * 目标自带 hash 的按 pathname + hash 整体比对（同一 pathname 下的分区要各自高亮）；
+   * 不带 hash 的只看 pathname —— 否则停在 /#about 这类锚点上时「首页」会莫名失去标记。
    */
   const currentPath = `${location.pathname}${location.hash}`;
-  const isCurrent = (l: NavLinkDef): boolean => l.to !== undefined && l.to === currentPath;
+  const isCurrent = (l: NavLinkDef): boolean =>
+    l.to !== undefined && (l.to.includes("#") ? l.to === currentPath : l.to === location.pathname);
 
-  // 关闭抽屉/下拉：路由变化时。含 hash——移动端已在 / 时点抽屉里的
-  // 「人物归档」(/#about)只改 hash 不改 pathname,若仅依赖 pathname 则抽屉不关、
-  // 背景滚动保持锁定、main 保持 inert 遮住刚滚到的分区。
+  // 关闭抽屉/下拉：路由变化时。含 hash——站内锚点(/#about 之类)只改 hash 不改 pathname,
+  // 若仅依赖 pathname 则抽屉不关、背景滚动保持锁定、main 保持 inert 遮住刚滚到的分区。
   useEffect(() => {
     setDrawerOpen(false);
     setLinksOpen(false);
@@ -195,8 +203,9 @@ export function AppNav() {
   // 抽屉打开时锁定背景滚动 + Escape 关闭 + 变宽自动关闭
   useEffect(() => {
     if (!drawerOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // 与弹窗共用同一把锁(见 utils/scrollLock):抽屉此前只裸设 body.overflow,
+    // 既不参与引用计数(和弹窗叠一起会互相还原掉),旧浏览器上也从不补偿滚动条宽度。
+    const releaseScroll = lockScroll();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setDrawerOpen(false);
@@ -209,7 +218,7 @@ export function AppNav() {
     document.addEventListener("keydown", onKey);
     window.addEventListener("resize", onResize);
     return () => {
-      document.body.style.overflow = prev;
+      releaseScroll();
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", onResize);
     };
@@ -411,11 +420,25 @@ export function AppNav() {
               </button>
               {linksOpen && (
                 <ul ref={linksMenuRef} className={styles.menu} role="menu">
-                  {externalLinks.map((l) => (
-                    <li key={l.href} role="none">
-                      <a role="menuitem" href={l.href} target="_blank" rel="nofollow noopener noreferrer" className={styles.menuItem}>
-                        {l.label}<ExternalIcon />
-                      </a>
+                  {moreLinks.map((l) => (
+                    <li key={l.label} role="none">
+                      {l.disabled ? (
+                        /* 预告项:没有跳转目标,点了什么都不会发生。
+                           仍保留 role=menuitem + tabIndex=-1 —— 方向键要能走到它,
+                           不然键盘/读屏用户根本不知道这一项存在;aria-disabled 说明它现在点不了。 */
+                        <span
+                          role="menuitem"
+                          aria-disabled="true"
+                          tabIndex={-1}
+                          className={cx(styles.menuItem, styles.menuItemMuted)}
+                        >
+                          {l.label}
+                        </span>
+                      ) : (
+                        <a role="menuitem" href={l.href} target="_blank" rel="nofollow noopener noreferrer" className={styles.menuItem}>
+                          {l.label}<ExternalIcon />
+                        </a>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -573,9 +596,16 @@ export function AppNav() {
               </a>
             ),
           )}
-          {externalLinks.map((l) => (
-            <a key={l.href} href={l.href} target="_blank" rel="nofollow noopener noreferrer" className={styles.drawerLink}>{l.label}<ExternalIcon /></a>
-          ))}
+          {moreLinks.map((l) =>
+            l.disabled ? (
+              // 同桌面菜单:预告项不可点击,也不进焦点序列(抽屉的 Tab 陷阱只收可聚焦元素)。
+              <span key={l.label} aria-disabled="true" className={cx(styles.drawerLink, styles.drawerLinkMuted)}>
+                {l.label}
+              </span>
+            ) : (
+              <a key={l.label} href={l.href} target="_blank" rel="nofollow noopener noreferrer" className={styles.drawerLink}>{l.label}<ExternalIcon /></a>
+            ),
+          )}
           <hr className={styles.drawerDivider} />
           {identityUnconfirmed ? (
             // 身份提示未证实：不提供账户/退出等可能失败的操作。
