@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { cx } from './cx'
+import { lockScroll } from '../../utils/scrollLock'
 import styles from './Modal.module.css'
 
 const FOCUSABLE =
@@ -11,12 +12,9 @@ const FOCUSABLE =
 const modalStack: symbol[] = []
 const isTopModal = (id: symbol) => modalStack[modalStack.length - 1] === id
 
-/* body 滚动锁的引用计数:叠层时只有「第一层打开」锁定并记录原值、「最后一层关闭」复原。
-   若每个实例各自 capture/restore,两层同一次提交内一起关闭时,里层 cleanup 会把「外层仍锁定」
-   时读到的 overflow:hidden/paddingRight 当作原值写回,导致 body 永久锁死并残留横向位移。 */
-let bodyLockCount = 0
-let savedBodyOverflow = ''
-let savedBodyPaddingRight = ''
+/* 滚动锁的引用计数不在这里维护:见 utils/scrollLock —— 叠层(含与 ui/Dialog、导航抽屉
+   跨家族叠层)时只有第一次上锁记录原值、最后一次解锁还原。若每层各自 capture/restore,
+   里层 cleanup 会把「外层仍锁定」时读到的 overflow:hidden 当作原值写回,body 永久锁死。 */
 
 function trapFocus(e: KeyboardEvent, container: HTMLElement | null) {
   if (!container) return
@@ -77,16 +75,9 @@ export function Modal({
     if (!open) return
     modalStack.push(stackId)
     restoreRef.current = document.activeElement as HTMLElement | null
-    // 仅第一层模态锁定 body 并记录原值;叠层不重复锁、不重复补偿。
-    // 锁滚动会让文档滚动条消失、内容横向抖动；用等宽 padding 补偿。
-    if (bodyLockCount === 0) {
-      savedBodyOverflow = document.body.style.overflow
-      savedBodyPaddingRight = document.body.style.paddingRight
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
-      document.body.style.overflow = 'hidden'
-      if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`
-    }
-    bodyLockCount += 1
+    // 滚动锁与 ui/Dialog、导航抽屉共用同一份计数(见 utils/scrollLock):
+    // 各记各的话,跨家族叠层按非 LIFO 顺序关闭会提前解锁、甚至把 body 永久锁死。
+    const releaseScroll = lockScroll()
 
     const focusTarget =
       initialFocusRef?.current ??
@@ -97,12 +88,8 @@ export function Modal({
     return () => {
       const i = modalStack.indexOf(stackId)
       if (i >= 0) modalStack.splice(i, 1)
-      // 仅最后一层关闭时复原为「任何模态打开之前」的原值,与多层 cleanup 的执行顺序无关。
-      bodyLockCount = Math.max(0, bodyLockCount - 1)
-      if (bodyLockCount === 0) {
-        document.body.style.overflow = savedBodyOverflow
-        document.body.style.paddingRight = savedBodyPaddingRight
-      }
+      // 仅最后一层关闭时复原为「任何弹层打开之前」的原值,与多层 cleanup 的执行顺序无关。
+      releaseScroll()
       restoreRef.current?.focus?.()
     }
     // initialFocusRef is read once on open; intentionally not a dependency.

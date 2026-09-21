@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { cx } from "../admin/cx";
 import { AdminButton } from "../admin/AdminButton";
 import { Alert } from "../admin/Feedback";
+import { lockScroll } from "../../utils/scrollLock";
 import styles from "./Dialog.module.css";
 
 const FOCUSABLE =
@@ -20,28 +21,6 @@ const FOCUSABLE =
 /* 模块级模态栈:叠层(如表单弹窗上再弹 step-up)时只有栈顶实例响应 Esc 与 Tab 焦点陷阱。 */
 const dialogStack: symbol[] = [];
 const isTop = (id: symbol) => dialogStack[dialogStack.length - 1] === id;
-
-/* body 滚动锁的引用计数:叠层时只有「第一层打开」锁定并记录原值、「最后一层关闭」复原。 */
-let lockCount = 0;
-let savedOverflow = "";
-let savedPaddingRight = "";
-const lockBody = () => {
-  if (lockCount === 0) {
-    savedOverflow = document.body.style.overflow;
-    savedPaddingRight = document.body.style.paddingRight;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = "hidden";
-    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
-  }
-  lockCount += 1;
-};
-const unlockBody = () => {
-  lockCount = Math.max(0, lockCount - 1);
-  if (lockCount === 0) {
-    document.body.style.overflow = savedOverflow;
-    document.body.style.paddingRight = savedPaddingRight;
-  }
-};
 
 /* 退场动画兜底延时(≥ CSS 最长 transition:移动端底部抽屉 260ms)。 */
 const EXIT_MS = 280;
@@ -170,7 +149,8 @@ export function Dialog({
     if (!mounted) return;
     dialogStack.push(stackId);
     restoreRef.current = document.activeElement as HTMLElement | null;
-    lockBody();
+    // 滚动锁与 admin Modal、导航抽屉共用同一份计数(见 utils/scrollLock)。
+    const releaseScroll = lockScroll();
     const raf = requestAnimationFrame(() => {
       const target =
         initialFocusRef?.current ??
@@ -186,7 +166,7 @@ export function Dialog({
       const wasTop = isTop(stackId);
       const i = dialogStack.indexOf(stackId);
       if (i >= 0) dialogStack.splice(i, 1);
-      unlockBody();
+      releaseScroll();
       if (wasTop) restoreRef.current?.focus?.();
     };
     // initialFocusRef 仅在打开时读取一次,刻意不入依赖。

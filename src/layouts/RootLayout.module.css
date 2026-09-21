@@ -76,3 +76,32 @@
   }
 }
 
+
+/* ── 视口锁定：一屏内的短页面（登录/注册/状态屏…） ─────────────────
+   这类外壳（AuthSplit / CenteredCard）会自报 data-viewport-fit。它们的内容本就
+   只有一屏，却要等 Turnstile 落地、第三方登录列表返回才定型 —— 内容一长高，
+   整页凭空多出滚动条、页脚被顶出视口，这次「自适应」用户全程看得见。
+
+   宽屏（且视口够高）把外壳钉成整一屏：main 自己滚，页脚常驻屏底，
+   后到的内容只在 main 内部消化，页脚与导航一动不动。
+   窄屏刻意不锁 —— 手机上一条常驻页脚要吃掉近 1/5 可视高度，
+   那里让页脚回到文档流末尾（滚到底才出现）更划算。
+   :has() 不支持时退回原行为（页脚随内容下移），可接受的渐进降级。 */
+@media (min-width: 901px) and (min-height: 600px) {
+  /* 只认**路由页自己的根节点**(.pageWrap 的直接子元素)。
+     写成 `:has([data-viewport-fit])` 的话,任何一张嵌在长页面里的 CenteredCard
+     (比如将来某个区块的加载态)都会把整站切成 main 内部滚动 ——
+     那些页面上 `top: var(--nav-h)` 的 sticky 侧栏/标签会凭空多空出一个导航栏高度,
+     因为导航本身在 main 之外。 */
+  .app:has(.pageWrap > [data-viewport-fit]) {
+    height: 100dvh;
+  }
+
+  .app:has(.pageWrap > [data-viewport-fit]) .main {
+    /* flex 项默认 min-height:auto，不加这条 main 不会收缩，滚动条又会落回整页。 */
+    min-height: 0;
+    overflow-y: auto;
+    /* 先占住滚动条宽度：内容跨过一屏时卡片不再整体左移一条滚动条。 */
+    scrollbar-gutter: stable;
+  }
+}

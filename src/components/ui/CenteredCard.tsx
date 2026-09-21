@@ -22,7 +22,9 @@ export interface CenteredCardProps {
 export function CenteredCard({ children, maxWidth, padding = 'md', as = 'div', className }: CenteredCardProps) {
   const Shell = as
   return (
-    <Shell className={styles.shell}>
+    // data-viewport-fit：同 AuthSplit —— 状态屏/窄表单页只有一屏,
+    // 宽屏下锁成整屏,页脚不随内容下移(见 RootLayout.module.css)。
+    <Shell className={styles.shell} data-viewport-fit="">
       <div className={styles.holder} style={maxWidth ? { maxWidth } : undefined}>
         <Card padding={padding} className={cx(styles.card, className)}>
           <div className={styles.body}>{children}</div>

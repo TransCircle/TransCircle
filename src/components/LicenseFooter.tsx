@@ -19,7 +19,9 @@ function LicenseFooter() {
           <span className={styles.sep} aria-hidden="true">
             ·
           </span>
-          <span>{t("footer.text2")}</span>
+          {/* 这句是「将来会有单独版权页」的预告，不是授权条款本身：
+              窄屏下它要独占两三行，页脚会胖到与其分量不相称，因此只在宽屏显示。 */}
+          <span className={styles.note}>{t("footer.text2")}</span>
         </p>
         <p className={styles.copyright}>{t("footer.copyright", { year })}</p>
       </div>

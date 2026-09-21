@@ -2,15 +2,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   width: 100%;
+  /* 吃满外壳给的高度,卡片真正居中在「导航与页脚之间」——
+     只给 60dvh 的话卡片会吊在偏上的位置,下方留一大片空背景。 */
+  flex: 1;
   /* dvh 随移动端浏览器工具栏伸缩取真实可视高度;vh 作旧浏览器兜底。 */
   min-height: 60vh;
   min-height: 60dvh;
-  padding: var(--s-6) var(--page-x) var(--s-7);
+  padding: clamp(var(--s-5), 4vh, var(--s-6)) var(--page-x) clamp(var(--s-6), 5vh, var(--s-7));
 }
 
+/* 纵向用 auto 边距居中而非 justify-content: center ——
+   卡片比可视区高时后者会把卡片顶部推出滚动区、永远滚不到;
+   auto 边距在剩余空间为负时按 0 处理,天然安全。 */
 .holder {
+  margin-block: auto;
   width: 100%;
   max-width: var(--w-form);
 }
@@ -46,6 +52,12 @@
   .shell {
     min-height: 0;
     padding: var(--s-6) var(--s-4) var(--s-7);
+  }
+
+  /* 窄屏回到「贴着内容往下排」:小屏上把短卡片垂直居中会在标题上方留一大片空,
+     反而失去落地感(窄屏也不锁视口,见 RootLayout.module.css)。 */
+  .holder {
+    margin-block: 0;
   }
 
   .card {

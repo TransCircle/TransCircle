@@ -23,7 +23,9 @@ export function AuthSplit({ children, className }: AuthSplitProps) {
   const { t } = useTranslation();
 
   return (
-    <div className={styles.split}>
+    // data-viewport-fit：告诉 RootLayout「这页只有一屏」，
+    // 宽屏下由外壳锁成整屏、页脚常驻屏底（见 RootLayout.module.css）。
+    <div className={styles.split} data-viewport-fit="">
       <aside className={styles.brand}>
         {/* 旗帜条纹（§3.1）：标为 page 作用域，页脚条纹据此让位，
             保证同一视口只出现一处签名元素（§1.5）。 */}

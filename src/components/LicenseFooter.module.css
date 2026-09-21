@@ -47,3 +47,18 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+
+/* ── 窄屏：页脚回到文档流末尾（RootLayout 只在宽屏锁视口），
+   同时收紧体量 —— 手机上这条要是常驻，能吃掉近 1/5 的可视高度。 */
+@media (max-width: 640px) {
+  .bar {
+    padding: var(--s-3) var(--page-x);
+    gap: var(--s-1) var(--s-3);
+  }
+
+  /* 预告句与它前面的分隔点一起收起，只留「许可证 + 版权」两件事。 */
+  .sep,
+  .note {
+    display: none;
+  }
+}

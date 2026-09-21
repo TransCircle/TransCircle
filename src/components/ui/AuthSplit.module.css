@@ -4,6 +4,9 @@
 .split {
   display: flex;
   width: 100%;
+  /* 吃满外壳给的高度：品牌面板一路铺到页脚，而不是停在 60dvh 处留一截空背景。
+     内容比这更高时 flex 项不会被压缩（min-height:auto），照常往下长。 */
+  flex: 1;
   min-height: 60vh;
   min-height: 60dvh;
   align-items: stretch;
@@ -90,13 +93,19 @@
 .formSide {
   flex: 1 1 55%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--s-7) var(--page-x);
+  /* 纵向 padding 只是卡片四周的**下限**：卡片由 .holder 的 auto 边距居中，
+     空间富余时留白自然更大。所以这里按视口高度收敛（矮屏 16px → 高屏 32px），
+     让 1080p 满屏（可视高 ~945px）这类常见尺寸刚好装得下整张卡，
+     且是连续变化，不会在某个断点上突然跳一下。 */
+  padding: clamp(var(--s-4), 2.5vh, var(--s-6)) var(--page-x);
   min-width: 0;
 }
 
+/* auto 边距居中，而不是 align-items/justify-content: center ——
+   后者在「卡片比可视区还高」时会把卡片顶部推出滚动区、永远滚不到；
+   flex 的 auto 边距在剩余空间为负时自动按 0 处理，天然安全。 */
 .holder {
+  margin: auto;
   width: 100%;
   max-width: var(--w-form);
 }
@@ -122,7 +131,8 @@
 .body {
   display: flex;
   flex-direction: column;
-  gap: var(--s-5);
+  /* 同理随视口高度轻微收敛（24px → 最窄 16px），矮屏不必为此牺牲一屏完整性。 */
+  gap: clamp(var(--s-4), 2.6vh, var(--s-5));
 }
 
 /* ── ≤900px：堆叠为顶部品牌带 + 下方表单 ──────────────────── */
@@ -130,6 +140,9 @@
 @media (max-width: 900px) {
   .split {
     flex-direction: column;
+    /* 堆叠形态回到内容高度：窄屏不锁视口（见 RootLayout 的视口锁定说明），
+       撑满反而会把顶部品牌带和表单拉散。 */
+    flex: none;
     min-height: 0;
   }
 
