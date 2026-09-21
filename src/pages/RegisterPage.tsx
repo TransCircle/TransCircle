@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
@@ -13,7 +13,7 @@ import {
   Alert,
   StatusScreen,
 } from "../components/ui";
-import { TurnstileWidget } from "../components/ui/TurnstileWidget";
+import { TurnstileWidget, type TurnstileWidgetHandle } from "../components/ui/TurnstileWidget";
 import authStyles from "./Auth.module.css";
 
 /** 注册（修正缺失页）：POST /v1/auth/register { username, email, password, displayName }。
@@ -32,6 +32,8 @@ const RegisterPage = () => {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  /** 同登录页：令牌随注册请求发出即被消费，失败后必须重新挑战再让人重试。 */
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
   const [captchaError, setCaptchaError] = useState(false);
   // 注册总开关：页面打开时读一次公开状态；关闭则只展示提示，不渲染表单。
   const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
@@ -90,6 +92,9 @@ const RegisterPage = () => {
       setDone(true);
     } finally {
       setBusy(false);
+      // 令牌已经交给后端(无论成败),原地重新挑战,免得重试时撞上「验证码已过期」。
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     }
   };
 
@@ -199,11 +204,18 @@ const RegisterPage = () => {
           <div className={authStyles.fieldGroup}>
             {captchaError && <Alert tone="error">{t("register.captchaRequired")}</Alert>}
             <TurnstileWidget
+              ref={turnstileRef}
               onToken={(token) => {
                 setTurnstileToken(token);
                 setCaptchaError(false);
               }}
-              onError={() => setCaptchaError(true)}
+              /* 同登录页:令牌过期/出错后必须从 state 里清掉,否则提交的是废票。
+                 重新挑战由 widget 自己完成(refresh-expired 默认 auto)。 */
+              onExpire={() => setTurnstileToken(null)}
+              onError={() => {
+                setTurnstileToken(null);
+                setCaptchaError(true);
+              }}
             />
           </div>
         )}

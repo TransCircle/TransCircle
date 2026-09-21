@@ -1,0 +1,10 @@
+/* Turnstile 的挂载位。
+   脚本是跨域异步加载的（challenges.cloudflare.com），widget 落地前这个容器
+   高度为 0 —— 不预留的话表单会在首屏画完约一秒后突然长高 65px：卡片重新居中、
+   整页多出滚动条、页脚被顶出视口。这里按 widget 的高度（65px）先占好位，
+   落地时只是填进来，四周一动不动。
+   宽度撑满：widget 以 size:"flexible" 渲染（下限 300px），与表单控件等宽对齐。 */
+.slot {
+  width: 100%;
+  min-height: 65px;
+}

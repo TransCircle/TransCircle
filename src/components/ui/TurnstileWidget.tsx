@@ -1,11 +1,25 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 
 import { useTheme } from "../../context/ThemeContext";
+import styles from "./TurnstileWidget.module.css";
 
 export interface TurnstileWidgetProps {
   onToken: (token: string) => void;
   onError?: () => void;
   onExpire?: () => void;
+  /** 命令式句柄：调用方在提交之后用它重新挑战（见 TurnstileWidgetHandle）。 */
+  ref?: Ref<TurnstileWidgetHandle>;
+}
+
+export interface TurnstileWidgetHandle {
+  /**
+   * 作废当前令牌并重新挑战。
+   *
+   * 令牌是**一次性**的：只要随请求发给了后端，无论那次请求成功与否都已被消费。
+   * 登录失败后不重置的话，表单里留着的是一枚已经作废的令牌，
+   * 用户重试只会收到「验证码已过期」—— 看起来像是验证码自己坏了。
+   */
+  reset: () => void;
 }
 
 declare global {
@@ -19,6 +33,8 @@ declare global {
           "error-callback"?: () => void;
           "expired-callback"?: () => void;
           theme?: "light" | "dark" | "auto";
+          /** "flexible"：宽度撑满容器（下限 300px），与表单控件等宽。 */
+          size?: "normal" | "flexible" | "compact";
         },
       ) => string;
       reset: (widgetId: string) => void;
@@ -40,8 +56,10 @@ const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
  *   tracks the OS colour scheme and would not react to a manual theme toggle.
  *   On theme change the old widget is removed and re-rendered.
  */
-export const TurnstileWidget = ({ onToken, onError, onExpire }: TurnstileWidgetProps) => {
+export const TurnstileWidget = ({ onToken, onError, onExpire, ref }: TurnstileWidgetProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  /** 当前 widget id：reset() 要用，且必须随主题重渲染而更新。 */
+  const widgetIdRef = useRef<string | null>(null);
   const [scriptReady, setScriptReady] = useState(false);
   const { theme } = useTheme();
 
@@ -102,24 +120,39 @@ export const TurnstileWidget = ({ onToken, onError, onExpire }: TurnstileWidgetP
     if (!scriptReady || !SITE_KEY || !containerRef.current || !window.turnstile) return;
 
     const el = containerRef.current;
-    const widgetId = window.turnstile.render(el, {
-      sitekey: SITE_KEY,
-      callback: (token: string) => {
-        onTokenRef.current(token);
-      },
-      "error-callback": () => {
-        onErrorRef.current?.();
-      },
-      "expired-callback": () => {
-        onExpireRef.current?.();
-      },
-      theme,
-    });
+    // render 是第三方脚本的同步调用,配置不被认、容器状态异常时会直接抛。
+    // effect 里抛出去会被错误边界接走 —— 整张登录表单换成错误页,
+    // 而人机验证只是表单里的一个部件。这里兜住:最坏情况是没有验证码,
+    // 提交时后端会要求验证码并由 onError/CAPTCHA_REQUIRED 给出可见反馈。
+    let widgetId: string;
+    try {
+      widgetId = window.turnstile.render(el, {
+        sitekey: SITE_KEY,
+        // 默认的 normal 是固定 300px 宽，比表单控件窄一截，看着像没对齐；
+        // flexible 让 widget 撑满容器宽度（高度仍是 65px，与 .slot 预留一致）。
+        size: "flexible",
+        callback: (token: string) => {
+          onTokenRef.current(token);
+        },
+        "error-callback": () => {
+          onErrorRef.current?.();
+        },
+        "expired-callback": () => {
+          onExpireRef.current?.();
+        },
+        theme,
+      });
+    } catch {
+      onErrorRef.current?.();
+      return;
+    }
 
     // Expose the widget ID so callers can call window.turnstile.reset().
     el.dataset.turnstileWidget = widgetId;
+    widgetIdRef.current = widgetId;
 
     return () => {
+      widgetIdRef.current = null;
       if (window.turnstile) {
         try {
           // Destroy the old widget on unmount/theme change: a mere reset would
@@ -133,7 +166,27 @@ export const TurnstileWidget = ({ onToken, onError, onExpire }: TurnstileWidgetP
     };
   }, [scriptReady, theme]);
 
+  const reset = useCallback(() => {
+    // 脚本还没落地 / 已卸载时是 no-op：此时页面上根本没有待作废的令牌。
+    if (!widgetIdRef.current || !window.turnstile) return;
+    try {
+      window.turnstile.reset(widgetIdRef.current);
+    } catch {
+      // widget 已被移除（如主题切换的竞态）：下一次 render 会带来全新的挑战。
+    }
+  }, []);
+
+  useImperativeHandle(ref, () => ({ reset }), [reset]);
+
   if (!SITE_KEY) return null;
 
-  return <div ref={containerRef} />;
+  // 外层 .slot 预留 widget 的标准尺寸，避免脚本落地时整页抖一下（见样式文件）。
+  // 预留放在**外层**而不是挂载点上：turnstile.render() 会重写挂载点的 class
+  // （渲染后它的 class 变成空串），预留的高度会跟着一起消失 ——
+  // 主题切换要先 remove 再 render，中间那一帧就会塌下去闪一下。
+  return (
+    <div className={styles.slot}>
+      <div ref={containerRef} />
+    </div>
+  );
 };

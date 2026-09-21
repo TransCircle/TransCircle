@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api, getIdentityGen, installAccessToken, NON_REJECTING_AUTH_CODES } from "../api/client";
-import { hasStringFields, isNonEmptyString } from "../api/shape";
+import { hasStringFields, isNonEmptyString, isPlainObject } from "../api/shape";
 import { useSession } from "../context/SessionContext";
 import { readSignoutEpoch } from "../context/signoutEpoch";
 import type { LoginResult, OAuthProviderInfo, WebAuthnRequestOptions } from "../api/types";
@@ -23,7 +23,7 @@ import {
   Alert,
   StatusScreen,
 } from "../components/ui";
-import { TurnstileWidget } from "../components/ui/TurnstileWidget";
+import { TurnstileWidget, type TurnstileWidgetHandle } from "../components/ui/TurnstileWidget";
 import authStyles from "./Auth.module.css";
 
 const GithubIcon = () => (
@@ -68,6 +68,40 @@ const FingerIcon = () => (
 /** provider 的 pending 用 provider key 本身表示，所以这里是开放字符串。 */
 type PendingAction = "login" | "mfa" | "mfaPasskey" | "passkey" | (string & {});
 
+/**
+ * 上次见到的第三方登录方式条数，用来在列表回来之前占好位。
+ *
+ * 列表要等一次后端往返，首屏先画一块空白、按钮再插进来 —— 卡片会当场长高一大截，
+ * 用户看得见这次「自适应」。记住条数后，回头客的骨架与真实按钮等高，落地时高度不变。
+ * 只缓存**条数**，不缓存内容：哪些提供商可用由后端说了算，
+ * 缓存内容会让已下线的提供商继续画出来（点了必然报错）。
+ */
+const PROVIDER_SLOTS_KEY = "tc.login.providerSlots";
+/** 没有缓存时的保守占位数（GitHub + X 这一对是最常见的配置）。 */
+const PROVIDER_SLOTS_FALLBACK = 2;
+
+const readProviderSlots = (): number => {
+  try {
+    const raw = localStorage.getItem(PROVIDER_SLOTS_KEY);
+    // 没存过就是没存过：Number(null) 是 0，不拦这一下首访会占 0 格（等于没占位）。
+    if (raw === null || raw === "") return PROVIDER_SLOTS_FALLBACK;
+    const n = Number(raw);
+    // 上限防脏数据：存储可被用户改，别让它撑出一屏骨架。
+    return Number.isInteger(n) && n >= 0 && n <= 8 ? n : PROVIDER_SLOTS_FALLBACK;
+  } catch {
+    // 隐私模式 / 禁用存储：退回默认值，不影响登录。
+    return PROVIDER_SLOTS_FALLBACK;
+  }
+};
+
+const writeProviderSlots = (n: number) => {
+  try {
+    localStorage.setItem(PROVIDER_SLOTS_KEY, String(n));
+  } catch {
+    // 存不下就算了，下次继续用默认占位。
+  }
+};
+
 const LoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -102,6 +136,17 @@ const LoginPage = () => {
   /** 登录被「注销冷静期」拒绝：展示撤销入口。 */
   const [pendingDeletion, setPendingDeletion] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  /**
+   * 人机验证令牌是一次性的：随 /v1/auth/login 发出去就被后端消费掉了，
+   * 无论那次登录成功与否。密码打错、账户被锁之类的失败之后必须重新挑战 ——
+   * 不然表单里留着的是一枚已作废的令牌，用户重试只会收到「验证码已过期」，
+   * 看起来像是验证码自己坏了，而且他在页面上找不到任何刷新它的办法。
+   */
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
+  const resetTurnstile = () => {
+    setTurnstileToken(null);
+    turnstileRef.current?.reset();
+  };
   const busy = pending !== null;
 
   /**
@@ -350,6 +395,11 @@ const LoginPage = () => {
       setError(t("login.identityChanged"));
       return;
     }
+    // 清掉已被消费的令牌。**这条不能只靠 handleSubmit 的 finally**：
+    // 二次验证路径(handleMfa / handleMfaPasskey)也会走到这里，它们不经过那个 finally；
+    // 而下面档案拉取失败时会 clearMfaFlow() 把登录表单放回来 —— 那一刻若 state 里
+    // 还留着上一枚已消费的令牌，用户立刻重试就会被判「验证码已过期」。
+    // (重新挑战由重新挂载的 widget 负责，这里只负责不把废令牌带回表单。)
     setTurnstileToken(null);
     // **确认档案真的到手了才往下走。** refresh() 在 5xx / 限流 / 断网 / 身份已变时返回 null
     // 并且**不改状态**；此时若照常 finish()，会话状态还停在 unknown，
@@ -458,6 +508,10 @@ const LoginPage = () => {
       await onTokens(res.data, identityGen);
     } finally {
       setPending(null);
+      // 这一发已经把令牌交给后端了(无论结果),所以无条件重新挑战:
+      // 失败要重试的人手里才有一枚新鲜令牌。成功的路径马上就跳走/换表单,
+      // 多挑战这一次不会被看见。
+      resetTurnstile();
     }
   };
 
@@ -532,18 +586,53 @@ const LoginPage = () => {
    * 改由后端给列表还顺带解决了「未配置的提供商不该显示」：按钮点了必然报错的话，
    * 不如根本不画出来。
    */
-  const [providers, setProviders] = useState<OAuthProviderInfo[]>([]);
+  // null = 这一次往返还没回来（画占位骨架）；数组 = 权威结果（可能是空的）。
+  const [providers, setProviders] = useState<OAuthProviderInfo[] | null>(null);
+  // 骨架条数只在挂载时定一次：渲染中途变会把「占位」本身变成一次抖动。
+  const [providerSlots] = useState(readProviderSlots);
   useEffect(() => {
+    // StrictMode 的双次 effect(以及快速来回切路由)会让两发请求在途;
+    // 先回来的那一发若晚于后发者落地,就会用旧结果盖掉新结果,连 localStorage 里
+    // 的占位条数也一起写歪。作废标记让「已经不作数」的那一发彻底闭嘴。
+    let active = true;
     void (async () => {
       const res = await api.get<{ providers: OAuthProviderInfo[] }>(
         "/v1/auth/oauth/providers",
         { noAuth: true },
       );
+      if (!active) return;
       // 同样要校验形状：不是数组就当作没取到（下面那条注释说的退化路径），
       // 而不是让 `res.data.providers` 在 effect 里抛异常。
-      if (res.ok && Array.isArray(res.data?.providers)) setProviders(res.data.providers);
-      // 取不到就退化为「只有密码 / 通行密钥」，不阻塞登录。
+      //
+      // 元素也要逐个过一遍并**就地归一**,而不是原样塞进 state：
+      // `[null]` 会在读 `p.provider` 时抛,而 label 若不是字符串(比如对象)会在渲染时
+      // 触发 React 的 "object is not a valid child" —— 两者都会带走整张登录表单。
+      // provider key 是身份,缺了这颗按钮点了也没用,丢掉;label 只是文案,
+      // 坏了就退回用 provider key 显示,不能因此把一个可用的登录方式抹掉。
+      if (res.ok && Array.isArray(res.data?.providers)) {
+        const clean = res.data.providers.flatMap((raw): OAuthProviderInfo[] => {
+          // 先确认它是个普通对象再取字段：数组/字符串/null 在这里都可能出现，
+          // isPlainObject 一并挡掉（typeof 对 null 和数组都会骗人）。
+          if (!isPlainObject(raw) || !isNonEmptyString(raw.provider)) return [];
+          return [
+            {
+              provider: raw.provider,
+              label: isNonEmptyString(raw.label) ? raw.label : raw.provider,
+              permanent: raw.permanent === true,
+            },
+          ];
+        });
+        setProviders(clean);
+        writeProviderSlots(clean.length);
+      } else {
+        // 取不到就退化为「只有密码 / 通行密钥」，不阻塞登录 ——
+        // 但必须落定成空数组，否则骨架会一直挂在那儿。
+        setProviders([]);
+      }
     })();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const startOAuth = async (provider: string) => {
@@ -744,11 +833,21 @@ const LoginPage = () => {
               <div className={authStyles.fieldGroup}>
                 {captchaError && <Alert tone="error">{t("login.captchaRequired")}</Alert>}
                 <TurnstileWidget
+                  ref={turnstileRef}
                   onToken={(token) => {
                     setTurnstileToken(token);
                     setCaptchaError(false);
                   }}
-                  onError={() => setCaptchaError(true)}
+                  /* 令牌有寿命(默认 5 分钟)。登录页常常一开就摆在那儿很久,
+                     过期后不清掉 state 的话,用户回来一提交送出去的是废票,
+                     又回到「验证码已过期」。widget 自己会重新挑战(refresh-expired
+                     默认 auto),这里只负责别把废票留在表单里。 */
+                  onExpire={() => setTurnstileToken(null)}
+                  onError={() => {
+                    // 出错时手里那枚(若有)同样不能再用。
+                    setTurnstileToken(null);
+                    setCaptchaError(true);
+                  }}
                 />
               </div>
             )}
@@ -758,33 +857,43 @@ const LoginPage = () => {
           </form>
 
           {/* 提供商由后端按配置下发，可能一个都没有（未配置 / 接口失败）；
-              此时连同 passkey 一起判空，否则会剩一条什么都没有的分隔线。 */}
-          {(providers.length > 0 || isWebAuthnSupported()) && (
+              此时连同 passkey 一起判空，否则会剩一条什么都没有的分隔线。
+              列表未落定（providers === null）时按占位条数判断：上次权威结果是 0 条
+              且本机没有 passkey 的话，加载阶段画一条孤零零的分隔线、落定后又收掉，
+              等于自己制造了一次抖动 —— 正是这批改动要消灭的东西。 */}
+          {(providers === null
+            ? providerSlots > 0 || isWebAuthnSupported()
+            : providers.length > 0 || isWebAuthnSupported()) && (
             <div className={authStyles.divider}>{t("login.orContinueWith")}</div>
           )}
 
-          <div className={authStyles.oauthRow}>
-            {providers.map((p) => (
-              <Button
-                key={p.provider}
-                variant="ghost"
-                className={authStyles.oauthBtn}
-                fullWidth
-                iconLeft={providerIcon(p.provider)}
-                loading={pending === p.provider}
-                disabled={busy}
-                onClick={() => void startOAuth(p.provider)}
-              >
-                {/* 已知的三个用本地化文案，其余回落后端给的 label。 */}
-                {p.provider === "github"
-                  ? t("login.github")
-                  : p.provider === "x"
-                    ? t("login.x")
-                    : p.provider === "iam"
-                      ? t("login.iam")
-                      : p.label}
-              </Button>
-            ))}
+          <div className={authStyles.oauthRow} aria-busy={providers === null}>
+            {providers === null
+              ? // 等列表的这一秒画等高骨架：落地时原地换成按钮，卡片高度不变。
+                Array.from({ length: providerSlots }, (_, i) => (
+                  <div key={`slot-${i}`} className={authStyles.oauthSkeleton} aria-hidden="true" />
+                ))
+              : providers.map((p) => (
+                  <Button
+                    key={p.provider}
+                    variant="ghost"
+                    className={authStyles.oauthBtn}
+                    fullWidth
+                    iconLeft={providerIcon(p.provider)}
+                    loading={pending === p.provider}
+                    disabled={busy}
+                    onClick={() => void startOAuth(p.provider)}
+                  >
+                    {/* 已知的三个用本地化文案，其余回落后端给的 label。 */}
+                    {p.provider === "github"
+                      ? t("login.github")
+                      : p.provider === "x"
+                        ? t("login.x")
+                        : p.provider === "iam"
+                          ? t("login.iam")
+                          : p.label}
+                  </Button>
+                ))}
             {isWebAuthnSupported() && (
               <Button
                 variant="ghost"

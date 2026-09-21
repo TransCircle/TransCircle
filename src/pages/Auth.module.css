@@ -153,6 +153,25 @@
   color: var(--pink-700);
 }
 
+/* 第三方登录按钮的占位骨架：列表要等一次后端往返才回来，
+   直接留空会让按钮落地时把卡片顶高一大截（每颗 40px）。
+   这里按 .oauthBtn 的尺寸先占位（含 coarse 指针下的 44px），
+   列表到了原地换成按钮，四周高度不变。
+   刻意不做闪烁动画：一秒内的占位，闪一下比静止更扎眼。 */
+.oauthSkeleton {
+  height: var(--btn-h);
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line);
+  background-color: var(--surface-2);
+  opacity: 0.55;
+}
+
+@media (any-pointer: coarse) {
+  .oauthSkeleton {
+    height: var(--tap-min);
+  }
+}
+
 /* "or" divider between primary form and OAuth options */
 .divider {
   display: flex;
