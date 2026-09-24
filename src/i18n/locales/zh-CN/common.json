@@ -109,7 +109,7 @@
     }
   },
   "login": {
-    "title": "登录 TransCircle Pass",
+    "title": "登录到 TransCircle",
     "oidcTitle": "登录以继续授权",
     "checkingSession": "正在检查登录状态…",
     "continuing": "正在跳转…",

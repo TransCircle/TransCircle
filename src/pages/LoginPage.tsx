@@ -17,6 +17,7 @@ import { saveIamMfaHandoff } from "./AuthMfaDonePage";
 import { consumeMfaHandoff, hasMfaHandoff, type MfaHandoff } from "./mfaHandoff";
 import {
   AuthSplit,
+  BrandText,
   PageHeader,
   TextField,
   AdminButton as Button,
@@ -786,7 +787,10 @@ const LoginPage = () => {
 
   return (
     <AuthSplit>
-      <PageHeader align="center" title={oidcUid ? t("login.oidcTitle") : t("login.title")} />
+      <PageHeader
+        align="center"
+        title={oidcUid ? t("login.oidcTitle") : <BrandText text={t("login.title")} />}
+      />
 
       {showSessionExpired && <Alert tone="error">{t("login.sessionExpired")}</Alert>}
       {error && (

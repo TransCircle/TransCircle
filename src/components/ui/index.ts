@@ -33,6 +33,9 @@ export type { CenteredCardProps } from './CenteredCard'
 export { AuthSplit } from './AuthSplit'
 export type { AuthSplitProps } from './AuthSplit'
 
+export { BrandText } from './BrandText'
+export type { BrandTextProps } from './BrandText'
+
 export { StatusScreen } from './StatusScreen'
 export type { StatusScreenProps, StatusKind, StatusAction } from './StatusScreen'
 

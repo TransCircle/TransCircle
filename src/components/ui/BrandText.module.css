@@ -1,0 +1,5 @@
+/* 品牌词：Nunito Brand 圆体，比周围系统栈中文 700 再重一档，视觉粗细才对得上。 */
+.brand {
+  font-family: var(--font-brand);
+  font-weight: 800;
+}

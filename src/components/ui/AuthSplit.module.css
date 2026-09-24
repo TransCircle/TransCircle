@@ -1,97 +1,35 @@
-/* 登录/注册左右分栏 — DESIGN.md §8「TransCircle（Pass 门户）」
-   ≥900px：左 45% 深色品牌面板 + 右侧玻璃表单卡；≤900px 堆叠为顶部品牌带 + 表单。 */
+/* 登录/注册外壳 — DESIGN.md §8「TransCircle（Pass 门户）」
+   整页舞台 + 顶部旗帜条纹 + 居中表单卡（卡顶 compact lockup）；所有断点同一版式。 */
 
-.split {
+.stage {
+  /* 舞台底：亮色取方案定稿的粉彩 --pink-100；暗色取深李紫 #1A1420。
+     #1A1420 即亮色主题的 --ink，暗色主题下 --ink 翻成近白、令牌表里没有这一档，故在此具名。 */
+  --stage-bg: var(--pink-100);
+  --card-pad: var(--s-6);
+
   display: flex;
+  flex-direction: column;
   width: 100%;
-  /* 吃满外壳给的高度：品牌面板一路铺到页脚，而不是停在 60dvh 处留一截空背景。
+  /* 吃满外壳给的高度：舞台一路铺到页脚，而不是停在 60dvh 处留一截空背景。
      内容比这更高时 flex 项不会被压缩（min-height:auto），照常往下长。 */
   flex: 1;
   min-height: 60vh;
   min-height: 60dvh;
-  align-items: stretch;
+  background-color: var(--stage-bg);
 }
 
-/* ── 左侧品牌面板 ─────────────────────────────────────────────
-   面板恒为深色（§8「深李紫底 --ink 反白」）。但 --ink 在暗色主题下翻转成近白，
-   直接拿它当底色会让面板在暗色下变成一块白板，因此这里用局部变量把
-   「面板底 / 面板前景」显式绑定到各主题下确实为深/浅的那一档。 */
-.brand {
-  --brand-bg: var(--ink);
-  --brand-fg: var(--surface);
-  /* 面板恒为深底，粉字必须取「浅粉」那一档才够对比：
-     亮色主题用 --pink-300，暗色主题的 --pink-700 本身就是浅粉（#FF8FBB）。 */
-  --brand-accent: var(--pink-300);
-
-  position: relative;
-  flex: 0 0 45%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--brand-bg);
-  color: var(--brand-fg);
-  overflow: hidden;
-}
-
-:global([data-theme="dark"]) .brand {
-  --brand-bg: var(--surface);
-  --brand-fg: var(--ink);
-  --brand-accent: var(--pink-700);
+:global([data-theme="dark"]) .stage {
+  --stage-bg: #1a1420;
 }
 
 @media (prefers-color-scheme: dark) {
-  :global(:root:not([data-theme])) .brand {
-    --brand-bg: var(--surface);
-    --brand-fg: var(--ink);
-    --brand-accent: var(--pink-700);
+  :global(:root:not([data-theme])) .stage {
+    --stage-bg: #1a1420;
   }
 }
 
-.brandInner {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  flex: 1;
-  gap: var(--s-5);
-  padding: var(--s-8) clamp(var(--s-5), 4vw, var(--s-7));
-}
-
-.logo {
-  display: inline-flex;
-  align-items: center;
-  width: 132px;
-}
-
-.logoImage {
-  display: block;
-  width: 132px;
-  height: auto;
-}
-
-.brandEyebrow {
-  font-family: var(--font-tech);
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-semibold);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--brand-accent);
-  margin: 0;
-}
-
-/* 一句品牌语：中文 → 系统栈 700（§2.6） */
-.brandLine {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: var(--fs-display);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-  letter-spacing: 0;
-  color: var(--brand-fg);
-}
-
-/* ── 右侧表单区 ───────────────────────────────────────────── */
-
 .formSide {
-  flex: 1 1 55%;
+  flex: 1;
   display: flex;
   /* 纵向 padding 只是卡片四周的**下限**：卡片由 .holder 的 auto 边距居中，
      空间富余时留白自然更大。所以这里按视口高度收敛（矮屏 16px → 高屏 32px），
@@ -110,21 +48,67 @@
   max-width: var(--w-form);
 }
 
-/* 玻璃表单卡（§2.5）：浮动层允许玻璃；必须带 @supports 实色回退。 */
+/* 亮色：实色白卡浮在粉舞台上，靠描边 + 投影分层。
+   舞台本身是实色，玻璃在这里没有可模糊的内容，故不用 backdrop-filter。 */
 .card {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--s-4), 2.6vh, var(--s-5));
   width: 100%;
-  padding: var(--s-6);
-  border: 1px solid var(--glass-border);
+  padding: var(--card-pad);
+  border: 1px solid var(--line);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-3);
-  background-color: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+  background-color: var(--surface);
 }
 
-@supports not (backdrop-filter: blur(1px)) {
-  .card {
-    background-color: var(--surface);
+/* 暗色：卡面比舞台抬亮一档 + 细描边 + 深投影，读得出「浮在舞台上」。
+   --surface（#17131F）比舞台还暗，会做出反向层次，所以这里叠一层白。 */
+:global([data-theme="dark"]) .card {
+  border-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 24px 48px -16px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme])) .card {
+    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 24px 48px -16px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* 卡顶 lockup：居中，约为输入框宽度的三分之二；窄屏随卡片等比收。 */
+.lockup {
+  display: flex;
+  justify-content: center;
+}
+
+.lockupLight,
+.lockupDark {
+  width: min(240px, 70%);
+  height: auto;
+}
+
+.lockupDark {
+  display: none;
+}
+
+:global([data-theme="dark"]) .lockupLight {
+  display: none;
+}
+
+:global([data-theme="dark"]) .lockupDark {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme])) .lockupLight {
+    display: none;
+  }
+
+  :global(:root:not([data-theme])) .lockupDark {
+    display: block;
   }
 }
 
@@ -135,51 +119,13 @@
   gap: clamp(var(--s-4), 2.6vh, var(--s-5));
 }
 
-/* ── ≤900px：堆叠为顶部品牌带 + 下方表单 ──────────────────── */
-
-@media (max-width: 900px) {
-  .split {
-    flex-direction: column;
-    /* 堆叠形态回到内容高度：窄屏不锁视口（见 RootLayout 的视口锁定说明），
-       撑满反而会把顶部品牌带和表单拉散。 */
-    flex: none;
-    min-height: 0;
-  }
-
-  .brand {
-    flex: none;
-  }
-
-  .brandInner {
-    padding: var(--s-5) var(--page-x);
-    gap: var(--s-2);
-  }
-
-  /* 顶部品牌带只保留 Logo + 一行短语，标语降到副标级别免得挤掉表单。 */
-  .brandLine {
-    font-size: var(--fs-lg);
+@media (max-width: 640px) {
+  /* 窄屏卡片仍保留：舞台有底色，平铺会让表单直接压在粉/深底上。只收内边距。 */
+  .stage {
+    --card-pad: var(--s-5);
   }
 
   .formSide {
-    padding: var(--s-6) var(--page-x) var(--s-7);
-  }
-}
-
-@media (max-width: 640px) {
-  /* 窄屏下表单卡退化为平铺，留白统一收敛到 .formSide（与 CenteredCard 同策）。 */
-  .card {
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    background-color: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    padding: 0;
-  }
-
-  @supports not (backdrop-filter: blur(1px)) {
-    .card {
-      background-color: transparent;
-    }
+    padding: var(--s-5) var(--page-x) var(--s-7);
   }
 }
