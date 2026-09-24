@@ -12,6 +12,7 @@ import {
   clearOidcInteraction,
   readOidcInteraction,
 } from "../utils/oidcInteraction";
+import { cx } from "../components/admin/cx";
 import { usePageTitle } from "../utils/usePageTitle";
 import { saveIamMfaHandoff } from "./AuthMfaDonePage";
 import { consumeMfaHandoff, hasMfaHandoff, type MfaHandoff } from "./mfaHandoff";
@@ -49,6 +50,13 @@ const providerIcon = (provider: string) => {
   if (provider === "x") return <XIcon />;
   return <ShieldIcon />;
 };
+/** 第三方按钮文案：完整 / 简短两版都渲染，由容器宽度决定显示哪一版（纯视觉，名称走 aria-label）。 */
+const OAuthLabel = ({ full, short }: { full: string; short: string }) => (
+  <>
+    <span className={authStyles.labelFull} aria-hidden="true">{full}</span>
+    <span className={authStyles.labelShort} aria-hidden="true">{short}</span>
+  </>
+);
 const FingerIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
     <path d="M5 13a7 7 0 0 1 14 0c0 1.96-.14 4-1 6" /><path d="M12 11a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" /><path d="M8 21c.5-2 1-4 1-8" />
@@ -785,8 +793,32 @@ const LoginPage = () => {
     return <StatusScreen kind="loading" title={t("login.continuing")} />;
   }
 
+  /**
+   * 是否有「账号密码之外」的登录方式可展示。提供商由后端按配置下发，可能一个都没有
+   *（未配置 / 接口失败）；此时连同 passkey 一起判空，否则会剩一条什么都没有的分隔线，
+   * 横屏下也会多出一条孤零零的竖线和空右栏。
+   * 列表未落定（providers === null）时按占位条数判断：上次权威结果是 0 条且本机没有
+   * passkey 的话，加载阶段画出分隔线、落定后又收掉，等于自己制造一次抖动。
+   */
+  /**
+   * 第三方按钮的完整 / 简短文案。两列排布且卡片偏窄时只显示简短版（见 Auth.module.css），
+   * 完整版始终作为 aria-label，读屏听到的仍是「使用 GitHub 登录」。
+   * 已知的三个用本地化文案，其余回落后端给的 label。
+   */
+  const providerLabel = (p: OAuthProviderInfo): { full: string; short: string } => {
+    if (p.provider === "github") return { full: t("login.github"), short: t("login.githubShort") };
+    if (p.provider === "x") return { full: t("login.x"), short: t("login.xShort") };
+    if (p.provider === "iam") return { full: t("login.iam"), short: t("login.iamShort") };
+    return { full: p.label, short: p.label };
+  };
+
+  const hasAlternatives =
+    providers === null
+      ? providerSlots > 0 || isWebAuthnSupported()
+      : providers.length > 0 || isWebAuthnSupported();
+
   return (
-    <AuthSplit>
+    <AuthSplit wide={!mfaToken && hasAlternatives}>
       <PageHeader
         align="center"
         title={oidcUid ? t("login.oidcTitle") : <BrandText text={t("login.title")} />}
@@ -806,110 +838,110 @@ const LoginPage = () => {
 
       {!mfaToken ? (
         <>
-          <form className={authStyles.form} onSubmit={handleSubmit}>
-            <TextField
-              label={t("login.identifier")}
-              type="text"
-              autoComplete="username"
-              autoFocus
-              placeholder={t("login.identifierPlaceholder")}
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              required
-            />
-            <div className={authStyles.fieldGroup}>
+          {/* 窄屏：display: contents，表单与第三方入口照常纵向堆叠；
+              横屏宽视口：左账号密码 | 竖线 | 右第三方登录（见 Auth.module.css）。 */}
+          <div className={cx(authStyles.loginPanes, hasAlternatives && authStyles.loginPanesSplit)}>
+            <form className={authStyles.form} onSubmit={handleSubmit}>
               <TextField
-                label={t("login.password")}
-                type="password"
-                autoComplete="current-password"
-                placeholder={t("login.passwordPlaceholder")}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                label={t("login.identifier")}
+                type="text"
+                autoComplete="username"
+                autoFocus
+                placeholder={t("login.identifierPlaceholder")}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 required
               />
-              <div className={authStyles.forgotRow}>
-                <Link to="/password/forgot" className={authStyles.forgotLink}>
-                  {t("login.forgotPassword")}
-                </Link>
-              </div>
-            </div>
-            {import.meta.env.VITE_TURNSTILE_SITE_KEY && (
               <div className={authStyles.fieldGroup}>
-                {captchaError && <Alert tone="error">{t("login.captchaRequired")}</Alert>}
-                <TurnstileWidget
-                  ref={turnstileRef}
-                  onToken={(token) => {
-                    setTurnstileToken(token);
-                    setCaptchaError(false);
-                  }}
-                  /* 令牌有寿命(默认 5 分钟)。登录页常常一开就摆在那儿很久,
-                     过期后不清掉 state 的话,用户回来一提交送出去的是废票,
-                     又回到「验证码已过期」。widget 自己会重新挑战(refresh-expired
-                     默认 auto),这里只负责别把废票留在表单里。 */
-                  onExpire={() => setTurnstileToken(null)}
-                  onError={() => {
-                    // 出错时手里那枚(若有)同样不能再用。
-                    setTurnstileToken(null);
-                    setCaptchaError(true);
-                  }}
+                <TextField
+                  label={t("login.password")}
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder={t("login.passwordPlaceholder")}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
+                <div className={authStyles.forgotRow}>
+                  <Link to="/password/forgot" className={authStyles.forgotLink}>
+                    {t("login.forgotPassword")}
+                  </Link>
+                </div>
               </div>
-            )}
-            <Button type="submit" variant="primary" fullWidth loading={pending === "login"} disabled={busy}>
-              {t("login.submit")}
-            </Button>
-          </form>
-
-          {/* 提供商由后端按配置下发，可能一个都没有（未配置 / 接口失败）；
-              此时连同 passkey 一起判空，否则会剩一条什么都没有的分隔线。
-              列表未落定（providers === null）时按占位条数判断：上次权威结果是 0 条
-              且本机没有 passkey 的话，加载阶段画一条孤零零的分隔线、落定后又收掉，
-              等于自己制造了一次抖动 —— 正是这批改动要消灭的东西。 */}
-          {(providers === null
-            ? providerSlots > 0 || isWebAuthnSupported()
-            : providers.length > 0 || isWebAuthnSupported()) && (
-            <div className={authStyles.divider}>{t("login.orContinueWith")}</div>
-          )}
-
-          <div className={authStyles.oauthRow} aria-busy={providers === null}>
-            {providers === null
-              ? // 等列表的这一秒画等高骨架：落地时原地换成按钮，卡片高度不变。
-                Array.from({ length: providerSlots }, (_, i) => (
-                  <div key={`slot-${i}`} className={authStyles.oauthSkeleton} aria-hidden="true" />
-                ))
-              : providers.map((p) => (
-                  <Button
-                    key={p.provider}
-                    variant="ghost"
-                    className={authStyles.oauthBtn}
-                    fullWidth
-                    iconLeft={providerIcon(p.provider)}
-                    loading={pending === p.provider}
-                    disabled={busy}
-                    onClick={() => void startOAuth(p.provider)}
-                  >
-                    {/* 已知的三个用本地化文案，其余回落后端给的 label。 */}
-                    {p.provider === "github"
-                      ? t("login.github")
-                      : p.provider === "x"
-                        ? t("login.x")
-                        : p.provider === "iam"
-                          ? t("login.iam")
-                          : p.label}
-                  </Button>
-                ))}
-            {isWebAuthnSupported() && (
-              <Button
-                variant="ghost"
-                className={authStyles.oauthBtn}
-                fullWidth
-                iconLeft={<FingerIcon />}
-                loading={pending === "passkey"}
-                disabled={busy}
-                onClick={() => void loginWithPasskey()}
-              >
-                {t("login.passkey")}
+              {import.meta.env.VITE_TURNSTILE_SITE_KEY && (
+                <div className={authStyles.fieldGroup}>
+                  {captchaError && <Alert tone="error">{t("login.captchaRequired")}</Alert>}
+                  <TurnstileWidget
+                    ref={turnstileRef}
+                    onToken={(token) => {
+                      setTurnstileToken(token);
+                      setCaptchaError(false);
+                    }}
+                    /* 令牌有寿命(默认 5 分钟)。登录页常常一开就摆在那儿很久,
+                       过期后不清掉 state 的话,用户回来一提交送出去的是废票,
+                       又回到「验证码已过期」。widget 自己会重新挑战(refresh-expired
+                       默认 auto),这里只负责别把废票留在表单里。 */
+                    onExpire={() => setTurnstileToken(null)}
+                    onError={() => {
+                      // 出错时手里那枚(若有)同样不能再用。
+                      setTurnstileToken(null);
+                      setCaptchaError(true);
+                    }}
+                  />
+                </div>
+              )}
+              <Button type="submit" variant="primary" fullWidth loading={pending === "login"} disabled={busy}>
+                {t("login.submit")}
               </Button>
+            </form>
+
+            {hasAlternatives && (
+              <>
+                <div className={authStyles.paneRule} aria-hidden="true" />
+                <div className={authStyles.oauthSection}>
+                  <div className={authStyles.divider}>{t("login.orContinueWith")}</div>
+
+                  <div className={authStyles.oauthRow} aria-busy={providers === null}>
+                    {providers === null
+                      ? // 等列表的这一秒画等高骨架：落地时原地换成按钮，卡片高度不变。
+                        Array.from({ length: providerSlots }, (_, i) => (
+                          <div key={`slot-${i}`} className={authStyles.oauthSkeleton} aria-hidden="true" />
+                        ))
+                      : providers.map((p) => {
+                          const label = providerLabel(p);
+                          return (
+                            <Button
+                              key={p.provider}
+                              variant="ghost"
+                              className={authStyles.oauthBtn}
+                              fullWidth
+                              iconLeft={providerIcon(p.provider)}
+                              loading={pending === p.provider}
+                              disabled={busy}
+                              aria-label={label.full}
+                              onClick={() => void startOAuth(p.provider)}
+                            >
+                              <OAuthLabel full={label.full} short={label.short} />
+                            </Button>
+                          );
+                        })}
+                    {isWebAuthnSupported() && (
+                      <Button
+                        variant="ghost"
+                        className={authStyles.oauthBtn}
+                        fullWidth
+                        iconLeft={<FingerIcon />}
+                        loading={pending === "passkey"}
+                        disabled={busy}
+                        aria-label={t("login.passkey")}
+                        onClick={() => void loginWithPasskey()}
+                      >
+                        <OAuthLabel full={t("login.passkey")} short={t("login.passkeyShort")} />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </>
             )}
           </div>
 

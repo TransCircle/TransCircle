@@ -48,6 +48,14 @@
   max-width: var(--w-form);
 }
 
+/* 双栏卡片：两栏各约一张单栏卡的内宽，中间留竖线与间距。
+   断点须与 pages/Auth.module.css 的 .loginPanesSplit 保持一致。 */
+@media (min-width: 1024px) and (orientation: landscape) {
+  .holderWide {
+    max-width: 52rem;
+  }
+}
+
 /* 亮色：实色白卡浮在粉舞台上，靠描边 + 投影分层。
    舞台本身是实色，玻璃在这里没有可模糊的内容，故不用 backdrop-filter。 */
 .card {

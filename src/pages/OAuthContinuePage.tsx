@@ -7,13 +7,14 @@ import { sanitizeRedirect } from "../utils/url";
 import { usePageTitle } from "../utils/usePageTitle";
 import type { OAuthExchangeResult } from "../api/types";
 import {
-  CenteredCard,
+  AuthSplit,
   PageHeader,
   TextField,
   AdminButton as Button,
   Alert,
   StatusScreen,
 } from "../components/ui";
+import { cx } from "../components/admin/cx";
 import authStyles from "./Auth.module.css";
 
 /**
@@ -241,10 +242,10 @@ const OAuthContinuePage = () => {
   };
 
   return (
-    <CenteredCard>
+    // 与注册页同一外壳与排布：字段相同，横屏宽视口下两两并排（见 Auth.module.css .registerGrid）。
+    <AuthSplit wide>
       <PageHeader
         align="center"
-        size="card"
         eyebrow={t("continue.eyebrow", { provider: providerLabel })}
         title={t("continue.title")}
         description={t("continue.subtitle")}
@@ -270,12 +271,12 @@ const OAuthContinuePage = () => {
           <Alert tone="error">{error}</Alert>
         </div>
       )}
-      <form className={authStyles.form} onSubmit={submit}>
-        <TextField label={t("account.profile.displayName")} value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
-        <TextField label={t("account.profile.username")} hint={t("register.usernameHint")} value={username} onChange={(e) => setUsername(e.target.value)} required />
-        <TextField label={t("login.email")} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <TextField label={t("account.password.new")} type="password" autoComplete="new-password" hint={t("register.passwordHint")} value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <TextField label={t("account.password.confirm")} type="password" autoComplete="new-password" invalid={mismatch} hint={mismatch ? t("account.password.mismatch") : undefined} value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
+      <form className={cx(authStyles.form, authStyles.registerGrid)} onSubmit={submit}>
+        <TextField label={t("account.profile.displayName")} autoComplete="nickname" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
+        <TextField label={t("account.profile.username")} autoComplete="username" hint={t("register.usernameHint")} value={username} onChange={(e) => setUsername(e.target.value)} required />
+        <TextField label={t("login.email")} type="email" autoComplete="email" fieldClassName={authStyles.spanFull} value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <TextField label={t("register.password")} type="password" autoComplete="new-password" hint={t("register.passwordHint")} value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <TextField label={t("register.passwordConfirm")} type="password" autoComplete="new-password" invalid={mismatch} hint={mismatch ? t("account.password.mismatch") : undefined} value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
         {/* 名单到手才放行提交：permanent 警告与 acknowledgedPermanent 都依赖它。
             加载中显示 loading，加载失败则保持 disabled，由上面的重试提示接手。 */}
         <Button
@@ -284,15 +285,16 @@ const OAuthContinuePage = () => {
           fullWidth
           loading={busy || (!providers && !providersFailed)}
           disabled={!providers}
+          className={authStyles.registerSubmit}
         >
           {t("continue.submit")}
         </Button>
         {/* 放弃补注册：回登录页换一种方式登录（pending Cookie 会自然过期）。 */}
-        <Button variant="ghost" fullWidth to="/login" disabled={busy}>
+        <Button variant="secondary" fullWidth to="/login" disabled={busy} className={authStyles.registerSubmit}>
           {t("continue.cancel")}
         </Button>
       </form>
-    </CenteredCard>
+    </AuthSplit>
   );
 };
 

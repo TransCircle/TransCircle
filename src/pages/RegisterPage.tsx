@@ -14,6 +14,7 @@ import {
   StatusScreen,
 } from "../components/ui";
 import { TurnstileWidget, type TurnstileWidgetHandle } from "../components/ui/TurnstileWidget";
+import { cx } from "../components/admin/cx";
 import authStyles from "./Auth.module.css";
 
 /** 注册（修正缺失页）：POST /v1/auth/register { username, email, password, displayName }。
@@ -153,10 +154,12 @@ const RegisterPage = () => {
   ];
 
   return (
-    <AuthSplit>
+    <AuthSplit wide>
       <PageHeader align="center" title={t("register.title")} description={t("register.subtitle")} />
       {error && <Alert tone="error">{error}</Alert>}
-      <form className={authStyles.form} onSubmit={submit}>
+      {/* 横屏宽视口下字段两两并排（昵称|用户名、邮箱整行、密码|确认、人机验证|注册），
+          见 Auth.module.css 的 .registerGrid；其余视口照常单列。 */}
+      <form className={cx(authStyles.form, authStyles.registerGrid)} onSubmit={submit}>
         <TextField
           label={t("account.profile.displayName")}
           autoComplete="nickname"
@@ -175,6 +178,7 @@ const RegisterPage = () => {
         />
         <TextField
           label={t("login.email")}
+          fieldClassName={authStyles.spanFull}
           type="email"
           autoComplete="email"
           value={email}
@@ -182,7 +186,7 @@ const RegisterPage = () => {
           required
         />
         <TextField
-          label={t("account.password.new")}
+          label={t("register.password")}
           type="password"
           autoComplete="new-password"
           hint={password ? `${t("password.strengthLabel")}: ${strengthLabels[strength]}` : t("register.passwordHint")}
@@ -191,7 +195,7 @@ const RegisterPage = () => {
           required
         />
         <TextField
-          label={t("account.password.confirm")}
+          label={t("register.passwordConfirm")}
           type="password"
           autoComplete="new-password"
           invalid={mismatch}
@@ -219,7 +223,14 @@ const RegisterPage = () => {
             />
           </div>
         )}
-        <Button type="submit" variant="primary" fullWidth loading={busy}>
+        {/* 有人机验证时与它同排、底边对齐；没有时独占整行。 */}
+        <Button
+          type="submit"
+          variant="primary"
+          fullWidth
+          loading={busy}
+          className={cx(authStyles.registerSubmit, !import.meta.env.VITE_TURNSTILE_SITE_KEY && authStyles.spanFull)}
+        >
           {t("register.submit")}
         </Button>
       </form>

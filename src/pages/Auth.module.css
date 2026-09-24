@@ -126,17 +126,140 @@
   }
 }
 
+/* ── 登录页：账号密码 + 第三方入口的排布 ─────────────────────────
+   窄屏 / 竖屏：.loginPanes 不生成盒子（display: contents），子项直接参与卡片的纵向
+   flex 间距，与其余表单页节奏一致。
+   横屏宽视口：左账号密码 | 1px 竖线 | 右第三方登录。断点须与 AuthSplit 的
+   .holderWide 保持一致 —— 卡片在同一条件下放宽到能装下两栏。 */
+.loginPanes {
+  display: contents;
+}
+
+.paneRule {
+  display: none;
+}
+
+@media (min-width: 1024px) and (orientation: landscape) {
+  .loginPanesSplit {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+    column-gap: var(--s-6);
+    /* 两栏等高：右栏不再缩成一小团居中，而是和左侧表单上下对齐。 */
+    align-items: stretch;
+  }
+
+  .loginPanesSplit .paneRule {
+    display: block;
+    align-self: stretch;
+    background-color: var(--line);
+  }
+
+  /* 右栏竖排并撑满左栏高度：分隔标题对齐左侧首个字段标签，末颗按钮与左侧「登录」齐平。
+     间距固定 --s-5，多出来的高度优先让按钮长高而不是拉大间隙 —— 但按钮封顶 56px，
+     免得提供商少时长成大色块；左栏矮（无人机验证）时按钮回落到 --btn-h。 */
+  .loginPanesSplit .oauthRow {
+    flex: 1;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(var(--btn-h), 1fr);
+    row-gap: var(--s-5);
+  }
+
+  .loginPanesSplit .oauthRow > * {
+    align-self: center;
+    height: 100%;
+    max-height: calc(var(--control-h-cell) + var(--s-2));
+  }
+
+  /* 按钮长高后，字与图标同步放大一档，免得大按钮里一行小字显得空。 */
+  .loginPanesSplit .oauthBtn {
+    font-size: var(--fs-body);
+    gap: var(--s-3);
+  }
+
+  .loginPanesSplit .oauthBtn svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* ── 注册页 / 第三方首次登录补全页：横屏宽视口下字段两两并排 ─────
+   断点同 .loginPanesSplit / AuthSplit .holderWide。按语义成对：
+   昵称 | 用户名、邮箱整行、密码 | 确认密码、人机验证 | 注册。
+   行内顶端对齐：用户名、密码下方的提示文字只撑高本行，不把同行邻居拉开。 */
+@media (min-width: 1024px) and (orientation: landscape) {
+  .registerGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--s-6);
+    row-gap: var(--s-4);
+    align-items: start;
+  }
+
+  .registerGrid .spanFull {
+    grid-column: 1 / -1;
+  }
+
+  /* 与左侧人机验证框底边对齐，而不是飘在格子顶端。 */
+  .registerGrid .registerSubmit {
+    align-self: end;
+  }
+}
+
 /* OAuth / alternate-action button stack */
 .oauthSection {
   display: flex;
   flex-direction: column;
   gap: var(--s-4);
+  /* 按钮列数按这一块自身的宽度决定，而不是视口：同一视口下卡片宽窄不一。 */
+  container-type: inline-size;
 }
 
+/* 默认一行两颗，压低卡片高度；奇数颗时最后一颗独占一行，不留半格空洞。 */
 .oauthRow {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--s-2);
+}
+
+.oauthRow > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+/* 两列时每颗约 156px：收窄左右内边距，「使用 Passkey 登录」这类最长文案才放得下。 */
+.oauthRow .oauthBtn {
+  padding-inline: var(--s-3);
+}
+
+/* 按钮文案两版：完整版「使用 GitHub 登录」/ 简短版「GitHub」。 */
+.labelShort {
+  display: none;
+}
+
+/* 两列放不下完整文案（最长「使用 Passkey 登录」每颗需约 170px）时换简短版，
+   手机竖屏（卡片内宽约 290–330px）也能保持一行两颗。 */
+@container (max-width: 339px) {
+  .labelFull {
+    display: none;
+  }
+
+  .labelShort {
+    display: inline;
+  }
+}
+
+/* 连简短版都放不下两列的极窄容器：退回单列，文案恢复完整版。 */
+@container (max-width: 219px) {
+  .oauthRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .labelFull {
+    display: inline;
+  }
+
+  .labelShort {
+    display: none;
+  }
 }
 
 /* OAuth 登录按钮：§5.1 Secondary —— 透明底 + --line-strong 描边 + --ink 字，
