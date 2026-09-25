@@ -99,20 +99,24 @@
 
 /* 给绝对定位的开关按钮腾出内边距，不改变字段外部宽度。 */
 .inputWithToggle {
-  padding-right: var(--s-7);
+  padding-right: calc(var(--s-6) + var(--s-3));
 }
 
+/* 显示/隐藏密码：视觉上是输入框里的一枚 32px 小方块（圆角随输入框），
+   不再是比 44px 输入框还高的 48px 圆 —— 悬停时那一大片粉圆会溢出框外。
+   触屏命中区由下方 ::before 外扩补足到 44px，视觉尺寸不变。 */
 .toggleBtn {
   position: absolute;
-  right: var(--s-2);
+  /* 与上下留白相等（(44 − 32) / 2 = 6px），小方块在框内居中不偏。 */
+  right: calc((var(--control-h) - var(--s-6)) / 2);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--s-7);
-  height: var(--s-7);
+  width: var(--s-6);
+  height: var(--s-6);
   padding: 0;
   border: none;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-xs);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
@@ -186,15 +190,20 @@
   .input {
     min-height: var(--tap-min);
   }
-  .clearBtn,
-  .toggleBtn {
+  .clearBtn {
     width: var(--tap-min);
     height: var(--tap-min);
   }
 
-  .searchInput,
-  .inputWithToggle {
+  .searchInput {
     padding-right: calc(var(--tap-min) + var(--s-2));
+  }
+
+  /* 命中区外扩到 44×44（32 + 2×6），视觉仍是 32px 小方块。 */
+  .toggleBtn::before {
+    content: "";
+    position: absolute;
+    inset: calc((var(--tap-min) - var(--s-6)) / -2);
   }
 }
 
