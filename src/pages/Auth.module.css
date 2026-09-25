@@ -182,10 +182,19 @@
   }
 }
 
-/* ── 注册页 / 第三方首次登录补全页：横屏宽视口下字段两两并排 ─────
-   断点同 .loginPanesSplit / AuthSplit .holderWide。按语义成对：
-   昵称 | 用户名、邮箱整行、密码 | 确认密码、人机验证 | 注册。
-   行内顶端对齐：用户名、密码下方的提示文字只撑高本行，不把同行邻居拉开。 */
+/* ── 注册页 / 第三方首次登录补全页：横屏宽视口下左右分栏 ────────
+   断点同 .loginPanesSplit / AuthSplit .holderWide。
+   左栏「你是谁」：昵称、用户名、邮箱；右栏「怎么保护」：密码、确认密码 + 第三格
+  （注册页是人机验证，补全页是「取消 | 完成注册」按钮）。注册页底部再放一颗居中的提交按钮。
+   两栏用 subgrid 共享同一套行：第 N 个字段在两边同一行起笔，某侧的提示文字只撑高本行，
+   不会把另一侧的输入框挤歪。
+   窄屏下 .formCol / .formActions 不生成盒子（display: contents），
+   子项按 DOM 顺序直接落进表单的单列 flex，与改版前一致。 */
+.formCol,
+.formActions {
+  display: contents;
+}
+
 @media (min-width: 1024px) and (orientation: landscape) {
   .registerGrid {
     display: grid;
@@ -195,13 +204,47 @@
     align-items: start;
   }
 
-  .registerGrid .spanFull {
-    grid-column: 1 / -1;
+  .registerGrid .formCol {
+    display: grid;
+    grid-row: span 3;
+    grid-template-rows: subgrid;
   }
 
-  /* 与左侧人机验证框底边对齐，而不是飘在格子顶端。 */
+  /* 居中、与单栏同宽：比通栏按钮更像「整张表的收尾」，也不会宽得发空。 */
   .registerGrid .registerSubmit {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc((100% - var(--s-6)) / 2);
+    margin-top: var(--s-2);
+  }
+
+  /* 补全页：按钮占右栏第三格，底边与左侧邮箱输入框对齐。
+     DOM 里「完成注册」在前（窄屏主操作置顶），宽屏用 order 调成左取消、右确认。 */
+  .registerGrid .formActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--s-3);
     align-self: end;
+  }
+
+  .registerGrid .formActionsCancel {
+    order: -1;
+  }
+
+  /* 右栏第三格（人机验证框）底边与左侧邮箱输入框齐平。 */
+  .registerGrid .alignEnd {
+    align-self: end;
+  }
+}
+
+/* 不支持 subgrid 的旧浏览器：两栏各自纵向堆叠，不强求逐行对齐。 */
+@media (min-width: 1024px) and (orientation: landscape) {
+  @supports not (grid-template-rows: subgrid) {
+    .registerGrid .formCol {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-4);
+    }
   }
 }
 

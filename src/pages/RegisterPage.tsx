@@ -157,80 +157,76 @@ const RegisterPage = () => {
     <AuthSplit wide>
       <PageHeader align="center" title={t("register.title")} description={t("register.subtitle")} />
       {error && <Alert tone="error">{error}</Alert>}
-      {/* 横屏宽视口下字段两两并排（昵称|用户名、邮箱整行、密码|确认、人机验证|注册），
-          见 Auth.module.css 的 .registerGrid；其余视口照常单列。 */}
+      {/* 横屏宽视口下左右分栏（左：昵称/用户名/邮箱；右：密码/确认/人机验证），
+          注册按钮居中收尾，见 Auth.module.css 的 .registerGrid；其余视口照常单列。 */}
       <form className={cx(authStyles.form, authStyles.registerGrid)} onSubmit={submit}>
-        <TextField
-          label={t("account.profile.displayName")}
-          autoComplete="nickname"
-          autoFocus
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          required
-        />
-        <TextField
-          label={t("account.profile.username")}
-          autoComplete="username"
-          hint={t("register.usernameHint")}
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-        <TextField
-          label={t("login.email")}
-          fieldClassName={authStyles.spanFull}
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <TextField
-          label={t("register.password")}
-          type="password"
-          autoComplete="new-password"
-          hint={password ? `${t("password.strengthLabel")}: ${strengthLabels[strength]}` : t("register.passwordHint")}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <TextField
-          label={t("register.passwordConfirm")}
-          type="password"
-          autoComplete="new-password"
-          invalid={mismatch}
-          hint={mismatch ? t("account.password.mismatch") : undefined}
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          required
-        />
-        {import.meta.env.VITE_TURNSTILE_SITE_KEY && (
-          <div className={authStyles.fieldGroup}>
-            {captchaError && <Alert tone="error">{t("register.captchaRequired")}</Alert>}
-            <TurnstileWidget
-              ref={turnstileRef}
-              onToken={(token) => {
-                setTurnstileToken(token);
-                setCaptchaError(false);
-              }}
-              /* 同登录页:令牌过期/出错后必须从 state 里清掉,否则提交的是废票。
-                 重新挑战由 widget 自己完成(refresh-expired 默认 auto)。 */
-              onExpire={() => setTurnstileToken(null)}
-              onError={() => {
-                setTurnstileToken(null);
-                setCaptchaError(true);
-              }}
-            />
-          </div>
-        )}
-        {/* 有人机验证时与它同排、底边对齐；没有时独占整行。 */}
-        <Button
-          type="submit"
-          variant="primary"
-          fullWidth
-          loading={busy}
-          className={cx(authStyles.registerSubmit, !import.meta.env.VITE_TURNSTILE_SITE_KEY && authStyles.spanFull)}
-        >
+        <div className={authStyles.formCol}>
+          <TextField
+            label={t("account.profile.displayName")}
+            autoComplete="nickname"
+            autoFocus
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            required
+          />
+          <TextField
+            label={t("account.profile.username")}
+            autoComplete="username"
+            hint={t("register.usernameHint")}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+          <TextField
+            label={t("login.email")}
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className={authStyles.formCol}>
+          <TextField
+            label={t("register.password")}
+            type="password"
+            autoComplete="new-password"
+            hint={password ? `${t("password.strengthLabel")}: ${strengthLabels[strength]}` : t("register.passwordHint")}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <TextField
+            label={t("register.passwordConfirm")}
+            type="password"
+            autoComplete="new-password"
+            invalid={mismatch}
+            hint={mismatch ? t("account.password.mismatch") : undefined}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+          />
+          {import.meta.env.VITE_TURNSTILE_SITE_KEY && (
+            <div className={cx(authStyles.fieldGroup, authStyles.alignEnd)}>
+              {captchaError && <Alert tone="error">{t("register.captchaRequired")}</Alert>}
+              <TurnstileWidget
+                ref={turnstileRef}
+                onToken={(token) => {
+                  setTurnstileToken(token);
+                  setCaptchaError(false);
+                }}
+                /* 同登录页:令牌过期/出错后必须从 state 里清掉,否则提交的是废票。
+                   重新挑战由 widget 自己完成(refresh-expired 默认 auto)。 */
+                onExpire={() => setTurnstileToken(null)}
+                onError={() => {
+                  setTurnstileToken(null);
+                  setCaptchaError(true);
+                }}
+              />
+            </div>
+          )}
+        </div>
+        <Button type="submit" variant="primary" fullWidth loading={busy} className={authStyles.registerSubmit}>
           {t("register.submit")}
         </Button>
       </form>

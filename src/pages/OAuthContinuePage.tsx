@@ -272,27 +272,33 @@ const OAuthContinuePage = () => {
         </div>
       )}
       <form className={cx(authStyles.form, authStyles.registerGrid)} onSubmit={submit}>
-        <TextField label={t("account.profile.displayName")} autoComplete="nickname" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
-        <TextField label={t("account.profile.username")} autoComplete="username" hint={t("register.usernameHint")} value={username} onChange={(e) => setUsername(e.target.value)} required />
-        <TextField label={t("login.email")} type="email" autoComplete="email" fieldClassName={authStyles.spanFull} value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <TextField label={t("register.password")} type="password" autoComplete="new-password" hint={t("register.passwordHint")} value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <TextField label={t("register.passwordConfirm")} type="password" autoComplete="new-password" invalid={mismatch} hint={mismatch ? t("account.password.mismatch") : undefined} value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
-        {/* 名单到手才放行提交：permanent 警告与 acknowledgedPermanent 都依赖它。
-            加载中显示 loading，加载失败则保持 disabled，由上面的重试提示接手。 */}
-        <Button
-          type="submit"
-          variant="primary"
-          fullWidth
-          loading={busy || (!providers && !providersFailed)}
-          disabled={!providers}
-          className={authStyles.registerSubmit}
-        >
-          {t("continue.submit")}
-        </Button>
-        {/* 放弃补注册：回登录页换一种方式登录（pending Cookie 会自然过期）。 */}
-        <Button variant="secondary" fullWidth to="/login" disabled={busy} className={authStyles.registerSubmit}>
-          {t("continue.cancel")}
-        </Button>
+        {/* 横屏：左栏身份信息、右栏密码 +「取消 | 完成注册」（见 .registerGrid）。 */}
+        <div className={authStyles.formCol}>
+          <TextField label={t("account.profile.displayName")} autoComplete="nickname" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
+          <TextField label={t("account.profile.username")} autoComplete="username" hint={t("register.usernameHint")} value={username} onChange={(e) => setUsername(e.target.value)} required />
+          <TextField label={t("login.email")} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </div>
+        <div className={authStyles.formCol}>
+          <TextField label={t("register.password")} type="password" autoComplete="new-password" hint={t("register.passwordHint")} value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <TextField label={t("register.passwordConfirm")} type="password" autoComplete="new-password" invalid={mismatch} hint={mismatch ? t("account.password.mismatch") : undefined} value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
+          <div className={authStyles.formActions}>
+            {/* 名单到手才放行提交：permanent 警告与 acknowledgedPermanent 都依赖它。
+                加载中显示 loading，加载失败则保持 disabled，由上面的重试提示接手。 */}
+            <Button
+              type="submit"
+              variant="primary"
+              fullWidth
+              loading={busy || (!providers && !providersFailed)}
+              disabled={!providers}
+            >
+              {t("continue.submit")}
+            </Button>
+            {/* 放弃补注册：回登录页换一种方式登录（pending Cookie 会自然过期）。 */}
+            <Button variant="secondary" fullWidth to="/login" disabled={busy} className={authStyles.formActionsCancel}>
+              {t("continue.cancel")}
+            </Button>
+          </div>
+        </div>
       </form>
     </AuthSplit>
   );
