@@ -1,7 +1,7 @@
 {
   "footer": {
     "heading": "LICENSE",
-    "text1": "对于此页面的文字和素材：CC BY 4.0 or later",
+    "text1": "对于此页面的文字和素材：CC BY-SA 4.0 or later",
     "text2": "对于其他人提供的材料，依照她们的版权要求。届时我们会提供单独的版权页面。",
     "copyright": "© {{year}} TransCircle"
   },
@@ -19,7 +19,7 @@
     "change": "修改",
     "manage": "管理",
     "siteName": "跨环 TransCircle",
-    "defaultTitle": "跨环 · TransCircle Project",
+    "defaultTitle": "跨环 · TransCircle Project｜中文 MtF 跨性别社群史官工程",
     "back": "返回",
     "retry": "重试",
     "submit": "提交",
@@ -65,7 +65,6 @@
     "loading": "人机验证加载中…"
   },
   "landing": {
-    "title": "TransCircle Project",
     "subtitle": "我们的存在，就是对恶意最大的反抗。",
     "greeting": "您好！我们正在进行 TransCircle Project 的初期准备。",
     "intro1": "长此以往，中文 MtF 社群有个很奇怪的现象：我们确实有比较全面的社群 wiki，HRT 指南等，但几乎没有一个能见证我们社群存在与抗争的地方。",
@@ -76,13 +75,54 @@
     "joinForm": "填写申请表单",
     "joinChat": "加入 X 聊天群",
     "followHeading": "关注我们",
-    "heroEyebrow": "社群史官工程",
+    "heroEyebrow": "跨环 · 社群史官工程",
     "heroLede": "归档社群故事，记录抗争历史，团结同伴，争取跨性别权利。",
     "portalHeading": "生态入口",
     "portalStoryDesc": "阅读与投稿社群故事档案。",
     "portalCommunityDesc": "社群互助论坛与日常交流。",
     "portalBlogDesc": "项目公告、进展与随笔。",
-    "portalSearchDesc": "检索全站归档内容。"
+    "portalSearchDesc": "检索全站归档内容。",
+    "heroDisplay": "TransCircle",
+    "heroCn": "中文 MtF 跨性别社群史官工程",
+    "faqHeading": "常见问题",
+    "faq": {
+      "what": {
+        "q": "跨环（TransCircle Project）是什么？",
+        "a": "跨环（英文官方名 TransCircle Project）是一个面向中文 MtF（Male-to-Female，女性倾向）跨性别社群的史官档案工程，致力于记录跨性别者的真实故事、归档社群历史、团结同伴，并争取跨性别权利。"
+      },
+      "circle": {
+        "q": "「跨性别中文圈」「中文跨性别圈」指什么？和跨环是什么关系？",
+        "a": "「跨性别中文圈」「中文跨性别圈」通常泛指以中文交流的跨性别社群，分布在 X（推特）、Telegram、论坛与各类群组中。跨环正是为这个社群建立的史官档案工程：专门记录中文跨性别圈的故事、人物与历史。想了解中文跨性别圈发生过什么、有哪些人和事，可以从跨环开始。"
+      },
+      "why": {
+        "q": "为什么要建立跨环？",
+        "a": "中文 MtF 社群虽然已有较完整的社群 wiki 与 HRT 指南，却几乎没有一个能见证社群存在与抗争的档案。跨性别社群流动性极大，许多故事从未被完整记录下来。跨环希望填补这一空白，让中文跨性别社群的历史被看见、被保存、被延续。"
+      },
+      "difference": {
+        "q": "跨环与 MtF.wiki、HRT 指南等社群资源有什么不同？",
+        "a": "MtF.wiki 等资源聚焦医学、法律与生活实操，回答的是「如何做」；跨环聚焦社群史官与档案，记录跨性别个体与社群的故事、行动与历史轨迹，回答的是「我们是谁、我们走过什么」。两者互为补充，不存在替代关系。"
+      },
+      "resources": {
+        "q": "中文跨性别社群有哪些常用资源？",
+        "a": "医疗、法律与生活实操可参考 MtF.wiki 与 Project Trans 维护的各类指南；缅怀离去的社群成员可访问 one-among.us；记录社群故事、人物与抗争历史，则是跨环（transcircle.org）的专长——在故事分享站 story.transcircle.org 可以阅读与投稿，在社区论坛 community.transcircle.org 可以互助交流。"
+      },
+      "sites": {
+        "q": "跨环目前有哪些站点？",
+        "a": "主站 transcircle.org 提供项目介绍与统一账户（登录、注册、账户中心）；故事分享站 story.transcircle.org 用于阅读与投稿社群故事；社区论坛 community.transcircle.org 用于社群互助讨论；博客 blog.transcircle.org 发布项目公告、进展与社群知识。"
+      },
+      "join": {
+        "q": "如何参与跨环？",
+        "a": "可以填写官方申请表单（transcircle.org/s/join）加入项目协作，或加入 X 聊天群参与日常交流；也欢迎在 GitHub（github.com/TransCircle/TransCircle）提交 issue 或 PR，并关注 X（@TransCircleOrg）与 Bluesky（TransCircle.org）。"
+      },
+      "names": {
+        "q": "「跨环」「TransCircle Project」「跨性别圈工程」是什么关系？",
+        "a": "它们指同一个项目。「跨环」是中文名，「TransCircle Project」是英文官方名，「跨性别圈工程」是项目早期使用过的中文别名；TransCircle、TransCircleProject 也是常见写法。"
+      },
+      "license": {
+        "q": "跨环的内容采用什么授权协议？",
+        "a": "本站文字与素材采用 CC BY-SA 4.0 或更新版本授权：转载或改编请署名「跨环 TransCircle」并以相同协议共享。其他贡献者提供的材料依照其各自的版权要求处理，届时会提供单独的版权页面。项目代码以 AGPL 协议开源。"
+      }
+    }
   },
   "nav": {
     "home": "首页",
@@ -1488,5 +1528,8 @@
     "passkeyFailed": "通行密钥验证未完成。请重试，或改用密码验证。",
     "descNoToken": "没有检测到撤销链接。如果你的账户没有绑定邮箱，可以直接在下面验证身份来撤销注销；否则请从注销确认邮件中打开链接。",
     "entry": "去撤销注销"
+  },
+  "seo": {
+    "homeDescription": "跨环（TransCircle Project）是面向中文 MtF 跨性别社群的史官档案工程：归档社群故事、记录抗争历史、团结同伴、争取跨性别权利。"
   }
 }

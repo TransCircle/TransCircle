@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from './utils/usePageTitle';
+import { FaqSection } from './components/FaqSection';
 import styles from './App.module.css';
 
 const GitHubIcon = () => (
@@ -95,8 +96,8 @@ const App = () => {
           <p className={styles.eyebrow}>{t('landing.heroEyebrow')}</p>
           <h1 id="landing-title" className={styles.heroTitle}>
             {/* 品牌词用与正式字标同源的圆润字体；中文行保持系统栈。 */}
-            <span className={styles.heroDisplay}>TransCircle</span>
-            <span className={styles.heroCn}>中文 MtF 跨性别社群史官工程</span>
+            <span className={styles.heroDisplay}>{t('landing.heroDisplay')}</span>
+            <span className={styles.heroCn}>{t('landing.heroCn')}</span>
           </h1>
           <p className={styles.heroTagline}>{t('landing.subtitle')}</p>
           <p className={styles.heroLede}>{t('landing.heroLede')}</p>
@@ -127,24 +128,25 @@ const App = () => {
           {/* 关注入口是社群叙事的收束，而非下一张割裂页面：与 hero/自述同场。 */}
           <section id="follow" className={styles.followSection} aria-labelledby="follow-heading">
           <h2 id="follow-heading" className={styles.sectionHeading}>{t('landing.followHeading')}</h2>
-          {/* GitHub / X (Twitter) / Bluesky 为品牌与社媒专有名词，豁免 i18n。 */}
+          {/* GitHub / X (Twitter) / Bluesky 为品牌与社媒专有名词，豁免 i18n。
+              rel="me"：官方主页的身份互证（与 <head> 的 link[rel=me]、JSON-LD sameAs 一致）。 */}
           <ul className={styles.socialList}>
             <li>
-              <a href="https://github.com/TransCircle/TransCircle" className={styles.socialLink} target="_blank" rel="nofollow noopener noreferrer">
+              <a href="https://github.com/TransCircle/TransCircle" className={styles.socialLink} target="_blank" rel="me nofollow noopener noreferrer">
                 <span className={styles.socialIcon}><GitHubIcon /></span>
                 <span className={styles.socialName}>GitHub</span>
                 <span className={styles.socialHandle}>github.com/TransCircle/TransCircle</span>
               </a>
             </li>
             <li>
-              <a href="https://x.com/TransCircleOrg" className={styles.socialLink} target="_blank" rel="nofollow noopener noreferrer">
+              <a href="https://x.com/TransCircleOrg" className={styles.socialLink} target="_blank" rel="me nofollow noopener noreferrer">
                 <span className={styles.socialIcon}><XIcon /></span>
                 <span className={styles.socialName}>X (Twitter)</span>
                 <span className={styles.socialHandle}>@TransCircleOrg</span>
               </a>
             </li>
             <li>
-              <a href="https://bsky.app/profile/TransCircle.org" className={styles.socialLink} target="_blank" rel="nofollow noopener noreferrer">
+              <a href="https://bsky.app/profile/TransCircle.org" className={styles.socialLink} target="_blank" rel="me nofollow noopener noreferrer">
                 <span className={styles.socialIcon}><BlueskyIcon /></span>
                 <span className={styles.socialName}>Bluesky</span>
                 <span className={styles.socialHandle}>TransCircle.org</span>
@@ -152,6 +154,9 @@ const App = () => {
             </li>
           </ul>
         </section>
+
+          {/* 常见问题：同时是 FAQPage 结构化数据的可见载体（两者同源于 landing.faq）。 */}
+          <FaqSection className={styles.faqSection} headingClassName={styles.sectionHeading} />
         </div>
       </section>
     </div>
