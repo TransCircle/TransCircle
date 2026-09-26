@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAdmin } from "../../context/AdminContext";
-import { Avatar } from "../../components/Avatar";
 import { cx } from "../../components/admin/cx";
 import { AdminButton as Button, Card, EmptyState, StatusScreen } from "../../components/ui";
 import { usePageTitle } from "../../utils/usePageTitle";
@@ -61,6 +60,7 @@ const AdminLayout = () => {
   const { state, me, error, hasPermission, reload } = useAdmin();
   const [header, setHeader] = useState<AdminHeaderState>({ title: t("admin.title") });
   const [rail, setRail] = useState<"full" | "mini">("full");
+  const navRef = useRef<HTMLDivElement>(null);
 
   usePageTitle(state === "ready" ? `${header.title} · ${t("admin.title")}` : t("admin.title"));
 
@@ -70,6 +70,15 @@ const AdminLayout = () => {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  // 窄屏下左栏变成可横向滚动的分区条：换页后把当前项滚进可视范围，
+  // 否则停在「安全」这类靠右的分区时，当前项可能正好被裁在屏幕外。
+  // 竖排左栏里当前项本就可见，nearest 不会产生任何滚动。
+  useEffect(() => {
+    navRef.current
+      ?.querySelector<HTMLElement>('[aria-current="page"]')
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [location.pathname, state]);
 
   const setHeaderStable = useCallback((next: AdminHeaderState) => setHeader(next), []);
 
@@ -176,20 +185,13 @@ const AdminLayout = () => {
     return <Navigate to={navItems[0]!.to} replace />;
   }
 
-  const displayName = me.displayName || me.username || t("admin.staff");
-  const roleText = me.roles.length > 0 ? me.roles.join("、") : t("admin.access.directGrant");
-
   return (
     <div className={styles.shell} data-rail={rail}>
       <nav className={styles.rail} aria-label={t("admin.title")}>
-        <div className={styles.brand} aria-label="TransCircle">
-          {/* 展开态是官方横版 path 字标；mini 轨道才使用独立环形标，不再拼装文字 Logo。 */}
-          <img className={cx(styles.brandLogo, styles.brandLogoLight)} src="/brand/transcircle-horizontal-on-light.svg" width={400} height={120} alt="" aria-hidden="true" />
-          <img className={cx(styles.brandLogo, styles.brandLogoDark)} src="/brand/transcircle-horizontal-on-dark.svg" width={400} height={120} alt="" aria-hidden="true" />
-          <img className={styles.brandMiniMark} src="/logo-mark.svg" width={28} height={28} alt="" aria-hidden="true" />
-        </div>
-
-        <div className={styles.nav}>
+        {/* 左栏只放分区导航。品牌标与当前身份都由全站顶部导航栏承担 ——
+            这里再画一遍 logo（左上）和头像（左下）是纯重复，窄屏折成横条后
+            还会和顶栏的 logo / 头像上下贴在一起。 */}
+        <div ref={navRef} className={styles.nav}>
           <p className={styles.navGroup}>{t("admin.navGroup")}</p>
           {navItems.map((item) => (
             <NavLink
@@ -204,21 +206,6 @@ const AdminLayout = () => {
               <span className={styles.navLabel}>{t(`admin.nav.${item.key}`)}</span>
             </NavLink>
           ))}
-        </div>
-
-        {/* 身份在左栏底部。这里不放退出：控制台复用你自己的账户会话，没有单独的管理会话可退。 */}
-        <div className={styles.railFoot}>
-          <Link
-            to="/account"
-            className={styles.me}
-            aria-label={t("admin.identityLink", { name: displayName })}
-          >
-            <Avatar name={displayName} src={me.avatarUrl} size={30} />
-            <span className={styles.meText}>
-              <span className={styles.meName}>{displayName}</span>
-              <span className={styles.meRole}>{roleText}</span>
-            </span>
-          </Link>
         </div>
       </nav>
 

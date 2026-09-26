@@ -2,7 +2,7 @@
    Pass 管理控制台 —— 落自 design/admin-console.html。
 
    两条自适应规则，刻意不同源：
-   - 左栏折叠**按视口**（≥1280 展开、否则图标条、<640 顶部横条）；
+   - 左栏折叠**按视口**（≥1280 展开、否则图标条、≤768 顶部横条）；
    - 表格与详情**按工作区容器宽度**（容器查询）——左栏折叠后工作区会骤增 172px，
      按视口判断会判断错，出现「视口变窄、表格列反而变多」的反向跳变。
    1280 这个阈值是算出来的：折叠前容器 1048（>1040，全列），折叠后 1220，两侧同档，单调。
@@ -37,52 +37,6 @@
   max-height: calc(100dvh - var(--nav-h));
   overflow-y: auto;
   overflow-x: hidden;
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 var(--s-2);
-  min-width: 0;
-}
-
-.brandLogo {
-  display: block;
-  width: 132px;
-  height: auto;
-}
-
-.brandLogoDark,
-.brandMiniMark {
-  display: none;
-}
-
-[data-theme="dark"] .brandLogoLight {
-  display: none;
-}
-
-[data-theme="dark"] .brandLogoDark {
-  display: block;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) .brandLogoLight {
-    display: none;
-  }
-
-  :root:not([data-theme]) .brandLogoDark {
-    display: block;
-  }
-}
-
-.shell[data-rail="mini"] .brandLogo {
-  display: none;
-}
-
-.shell[data-rail="mini"] .brandMiniMark {
-  display: block;
-  width: 28px;
-  height: 28px;
 }
 
 .nav {
@@ -141,51 +95,12 @@
   flex: none;
 }
 
-.shell[data-rail="mini"] .brandText,
 .shell[data-rail="mini"] .navGroup,
-.shell[data-rail="mini"] .navLabel,
-.shell[data-rail="mini"] .meText {
+.shell[data-rail="mini"] .navLabel {
   display: none;
 }
 .shell[data-rail="mini"] .navItem {
   justify-content: center;
-}
-
-.railFoot {
-  border-top: 1px solid var(--line);
-  padding-top: var(--s-3);
-}
-.me {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  padding: var(--s-2);
-  width: 100%;
-  border-radius: var(--r-sm);
-  text-decoration: none;
-  color: inherit;
-  min-width: 0;
-}
-.meText {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
-}
-.meName {
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.meRole {
-  font-size: var(--fs-xs);
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ── 工作区：容器查询的锚点 ───────────────────────────────── */
@@ -1011,44 +926,50 @@
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
-/* ── 视口级：窄屏把左栏放到顶部横条 ───────────────────────── */
-@media (max-width: 640px) {
+/* ── 视口级：窄屏把左栏放到顶部横条 ───────────────────────────
+   768 = 全局平板断点（AGENTS §8.3）。横条只有分区导航（品牌与身份在全站顶栏），
+   因此恢复文字标签：纯图标在手机上无从辨认，六个分区横向滚动即可放下。 */
+@media (max-width: 768px) {
   .shell,
   .shell[data-rail="mini"] {
     grid-template-columns: 1fr;
   }
   .rail {
     position: static;
-    height: auto;
+    max-height: none;
     flex-direction: row;
-    align-items: center;
-    gap: var(--s-3);
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
     border-right: none;
     border-bottom: 1px solid var(--line);
-    padding: var(--s-3);
+    padding: var(--s-2) var(--page-x);
   }
-  .nav {
+  .nav,
+  .shell[data-rail="mini"] .nav {
     flex-direction: row;
     flex: none;
+    gap: var(--s-1);
   }
   .navGroup,
-  .navLabel,
-  .meText {
+  .shell[data-rail="mini"] .navGroup {
     display: none;
   }
-  .navItem {
-    justify-content: center;
+  .shell[data-rail="mini"] .navLabel {
+    display: inline;
   }
-  .railFoot {
-    border-top: none;
-    padding-top: 0;
-    margin-left: auto;
+  .navItem,
+  .shell[data-rail="mini"] .navItem {
+    width: auto;
+    flex: none;
+    gap: var(--s-2);
+    padding: var(--s-2) var(--s-3);
+    justify-content: flex-start;
   }
   .topbar,
   .body {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: var(--page-x);
+    padding-right: var(--page-x);
   }
 }
 

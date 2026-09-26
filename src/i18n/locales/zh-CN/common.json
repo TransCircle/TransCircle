@@ -575,7 +575,6 @@
     "navGroup": "管理",
     "staff": "工作人员",
     "filterAll": "全部",
-    "identityLink": "{{name}} · 前往账户中心",
     "perm": {
       "needed": "需要 {{perm}} 权限。"
     },

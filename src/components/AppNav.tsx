@@ -103,7 +103,7 @@ export function AppNav() {
   const { user, status, hint, logout: sessionLogout } = useSession();
   // 管理员就是普通用户：控制台复用同一条会话，因此导航身份只有 user 一个来源，
   // 「有没有管理权限」只决定要不要多显示一个入口，不再是第二种登录态。
-  const { state: adminState } = useAdmin();
+  const { state: adminState, me: adminMe } = useAdmin();
   const adminAuthed = adminState === "ready";
   /**
    * 导航栏要显示的身份。
@@ -336,6 +336,13 @@ export function AppNav() {
   const displayName = user ? user.displayName || user.username || "" : navIdentity?.displayName ?? "";
   const avatarUrl = navIdentity?.avatarUrl ?? null;
   const logoutLabel = loggingOut ? t("nav.loggingOut") : t("nav.logout");
+  /** 管理员的角色说明（原先画在后台左栏底部）；非管理员不显示。 */
+  const adminRoleText =
+    adminAuthed && adminMe
+      ? adminMe.roles.length > 0
+        ? adminMe.roles.join("、")
+        : t("admin.access.directGrant")
+      : null;
 
   // 触发器上按 ArrowDown/ArrowUp 也应打开菜单(菜单按钮键盘惯例);
   // 打开后由 useMenuKeyboard 将焦点移入首项。
@@ -462,7 +469,7 @@ export function AppNav() {
                   disabled={identityUnconfirmed}
                   aria-haspopup="menu"
                   aria-expanded={acctOpen}
-                  aria-label={adminAuthed ? `${displayName} · ${t("nav.admin")}` : `${displayName} · ${t("nav.account")}`}
+                  aria-label={`${displayName} · ${t("nav.account")}`}
                   onPointerDown={(e) => {
                     acctPointerType.current = e.pointerType;
                   }}
@@ -496,37 +503,31 @@ export function AppNav() {
                 </button>
                 {acctOpen && !identityUnconfirmed && (
                   <ul ref={acctMenuRef} className={cx(styles.menu, styles.menuRight)} role="menu">
-                    {adminAuthed ? (
-                      <>
-                        <li role="none"><Link role="menuitem" to="/admin" className={styles.menuItem}>{t("nav.admin")}</Link></li>
-                        <li role="none">
-                          <button
-                            role="menuitem"
-                            type="button"
-                            className={styles.menuItem}
-                            aria-busy={loggingOut}
-                            onClick={() => void doLogout()}
-                          >
-                            {logoutLabel}
-                          </button>
-                        </li>
-                      </>
-                    ) : (
-                      <>
-                        <li role="none"><Link role="menuitem" to="/account" className={styles.menuItem}>{t("nav.account")}</Link></li>
-                        <li role="none">
-                          <button
-                            role="menuitem"
-                            type="button"
-                            className={styles.menuItem}
-                            aria-busy={loggingOut}
-                            onClick={() => void doLogout()}
-                          >
-                            {logoutLabel}
-                          </button>
-                        </li>
-                      </>
+                    {/* 身份抬头：告诉用户「当前是谁」。管理后台不再在左栏底部重复画一遍头像，
+                        角色信息（仅管理员）就挪到这里。触发器的 aria-label 已含名字，
+                        这里对读屏隐藏，避免 role=menu 里混入非菜单项。 */}
+                    <li role="none" aria-hidden="true" className={styles.menuHeader}>
+                      <span className={styles.menuHeaderName}>{displayName}</span>
+                      {adminRoleText && <span className={styles.menuHeaderMeta}>{adminRoleText}</span>}
+                    </li>
+                    <li role="separator" className={styles.menuSeparator} />
+                    {/* 账户中心对所有人都在：管理员首先也是普通用户，个人资料 / 安全设置同样要能找到。 */}
+                    <li role="none"><Link role="menuitem" to="/account" className={styles.menuItem}>{t("nav.account")}</Link></li>
+                    {adminAuthed && (
+                      <li role="none"><Link role="menuitem" to="/admin" className={styles.menuItem}>{t("nav.admin")}</Link></li>
                     )}
+                    <li role="separator" className={styles.menuSeparator} />
+                    <li role="none">
+                      <button
+                        role="menuitem"
+                        type="button"
+                        className={styles.menuItem}
+                        aria-busy={loggingOut}
+                        onClick={() => void doLogout()}
+                      >
+                        {logoutLabel}
+                      </button>
+                    </li>
                     {logoutFailed && (
                       <li role="none">
                         <p className={styles.logoutError} role="alert">{t("nav.logoutFailed")}</p>
@@ -612,10 +613,9 @@ export function AppNav() {
             null
           ) : navUser ? (
             <>
-              {adminAuthed ? (
+              <Link to="/account" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.account")}</Link>
+              {adminAuthed && (
                 <Link to="/admin" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.admin")}</Link>
-              ) : (
-                <Link to="/account" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.account")}</Link>
               )}
               <button
                 type="button"
