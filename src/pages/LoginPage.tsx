@@ -77,6 +77,17 @@ const FingerIcon = () => (
 /** provider 的 pending 用 provider key 本身表示，所以这里是开放字符串。 */
 type PendingAction = "login" | "mfa" | "mfaPasskey" | "passkey" | (string & {});
 
+/** 与 TurnstileWidget 同一判据：站点密钥缺省时（本地开发）整个人机验证不存在。 */
+const TURNSTILE_ENABLED = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
+
+type CaptchaNotice = "pending" | "required" | "failed";
+
+const CAPTCHA_NOTICE_KEYS = {
+  pending: "login.captchaPending",
+  required: "login.captchaRequired",
+  failed: "login.captchaFailed",
+} as const satisfies Record<CaptchaNotice, string>;
+
 /**
  * 上次见到的第三方登录方式条数，用来在列表回来之前占好位。
  *
@@ -141,7 +152,15 @@ const LoginPage = () => {
   const [mfaRecoveryMode, setMfaRecoveryMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
-  const [captchaError, setCaptchaError] = useState(false);
+  /**
+   * 人机验证相关的提示，按成因区分文案：
+   *  - pending：前端还没拿到令牌（脚本慢 / 用户没点）就想提交 —— 在本地拦下，不发请求；
+   *  - required：后端仍判定缺少令牌；
+   *  - failed：令牌校验失败或 widget 自身出错。
+   * 以前一律显示「登录尝试过于频繁」：慢网下验证码还没加载出来用户就点了登录，
+   * 请求没带令牌被后端拒掉，用户明明只点了一次却被告知「过于频繁」。
+   */
+  const [captchaNotice, setCaptchaNotice] = useState<CaptchaNotice | null>(null);
   /** 登录被「注销冷静期」拒绝：展示撤销入口。 */
   const [pendingDeletion, setPendingDeletion] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -453,6 +472,12 @@ const LoginPage = () => {
     if (busy) return;
     setError(null);
     setPendingDeletion(false);
+    // 配置了人机验证却还没拿到令牌：发出去必然被后端以 CAPTCHA_REQUIRED 拒掉，
+    // 还白白消耗一次登录尝试的限流额度。就地拦下并说明要等什么。
+    if (TURNSTILE_ENABLED && !turnstileToken) {
+      setCaptchaNotice("pending");
+      return;
+    }
     setPending("login");
     try {
       const body: Record<string, unknown> = { identifier, password };
@@ -480,8 +505,12 @@ const LoginPage = () => {
           setError(res.error.message);
           return;
         }
-        if (res.error.code === "CAPTCHA_REQUIRED" || res.error.code === "CAPTCHA_FAILED") {
-          setCaptchaError(true);
+        if (res.error.code === "CAPTCHA_REQUIRED") {
+          setCaptchaNotice("required");
+          return;
+        }
+        if (res.error.code === "CAPTCHA_FAILED") {
+          setCaptchaNotice("failed");
           return;
         }
         setError(res.error.message);
@@ -868,14 +897,14 @@ const LoginPage = () => {
                   </Link>
                 </div>
               </div>
-              {import.meta.env.VITE_TURNSTILE_SITE_KEY && (
+              {TURNSTILE_ENABLED && (
                 <div className={authStyles.fieldGroup}>
-                  {captchaError && <Alert tone="error">{t("login.captchaRequired")}</Alert>}
+                  {captchaNotice && <Alert tone="error">{t(CAPTCHA_NOTICE_KEYS[captchaNotice])}</Alert>}
                   <TurnstileWidget
                     ref={turnstileRef}
                     onToken={(token) => {
                       setTurnstileToken(token);
-                      setCaptchaError(false);
+                      setCaptchaNotice(null);
                     }}
                     /* 令牌有寿命(默认 5 分钟)。登录页常常一开就摆在那儿很久,
                        过期后不清掉 state 的话,用户回来一提交送出去的是废票,
@@ -885,7 +914,7 @@ const LoginPage = () => {
                     onError={() => {
                       // 出错时手里那枚(若有)同样不能再用。
                       setTurnstileToken(null);
-                      setCaptchaError(true);
+                      setCaptchaNotice("failed");
                     }}
                   />
                 </div>

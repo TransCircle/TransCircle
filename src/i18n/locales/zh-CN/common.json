@@ -61,6 +61,9 @@
   "toc": {
     "label": "目录"
   },
+  "turnstile": {
+    "loading": "人机验证加载中…"
+  },
   "landing": {
     "title": "TransCircle Project",
     "subtitle": "我们的存在，就是对恶意最大的反抗。",
@@ -150,7 +153,8 @@
     "mfaBackToOther": "返回其他验证方式",
     "adminEntry": "管理员登录（IAM）",
     "mfaChallengeMissing": "登录需要多因素验证，但服务器未返回验证挑战，请重试；若问题持续请联系管理员。",
-    "captchaRequired": "登录尝试过于频繁，请完成人机验证",
+    "captchaRequired": "请完成人机验证后再登录",
+    "captchaPending": "人机验证尚未完成，请等待下方验证加载并通过后再登录",
     "captchaFailed": "人机验证失败，请重试",
     "mfaIamPrompt": "此账户的两步验证已交给「TransCircle 统一身份」接管，请前往完成验证。",
     "mfaIamGo": "前往统一身份验证",

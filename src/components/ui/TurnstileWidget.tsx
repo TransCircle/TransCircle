@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../../context/ThemeContext";
 import styles from "./TurnstileWidget.module.css";
@@ -61,7 +62,14 @@ export const TurnstileWidget = ({ onToken, onError, onExpire, ref }: TurnstileWi
   /** 当前 widget id：reset() 要用，且必须随主题重渲染而更新。 */
   const widgetIdRef = useRef<string | null>(null);
   const [scriptReady, setScriptReady] = useState(false);
+  /**
+   * widget 是否已经画进容器。脚本跨域加载，慢网下要好几秒 ——
+   * 这段时间里槽位只是一块空白，用户根本不知道下面还有一步要等，
+   * 于是填完表单就去点登录。未就绪时在槽位里放一行可见（且对读屏播报）的加载提示。
+   */
+  const [isRendered, setIsRendered] = useState(false);
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   // Keep the latest callbacks in refs so the render effect never re-runs when
   // the parent passes inline arrow functions that change every render.
@@ -108,6 +116,11 @@ export const TurnstileWidget = ({ onToken, onError, onExpire, ref }: TurnstileWi
     script.async = true;
     script.defer = true;
     script.onload = onLoad;
+    // 脚本被拦截 / 网络失败时不会有 load 事件：不上报的话调用方永远等不到令牌，
+    // 用户也得不到任何「验证出错」的反馈。
+    script.onerror = () => {
+      if (!cancelled) onErrorRef.current?.();
+    };
     document.head.appendChild(script);
 
     return () => {
@@ -150,6 +163,7 @@ export const TurnstileWidget = ({ onToken, onError, onExpire, ref }: TurnstileWi
     // Expose the widget ID so callers can call window.turnstile.reset().
     el.dataset.turnstileWidget = widgetId;
     widgetIdRef.current = widgetId;
+    setIsRendered(true);
 
     return () => {
       widgetIdRef.current = null;
@@ -186,6 +200,11 @@ export const TurnstileWidget = ({ onToken, onError, onExpire, ref }: TurnstileWi
   // 主题切换要先 remove 再 render，中间那一帧就会塌下去闪一下。
   return (
     <div className={styles.slot}>
+      {!isRendered && (
+        <p className={styles.loading} role="status">
+          {t("turnstile.loading")}
+        </p>
+      )}
       <div ref={containerRef} />
     </div>
   );

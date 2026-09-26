@@ -5,6 +5,21 @@
    落地时只是填进来，四周一动不动。
    宽度撑满：widget 以 size:"flexible" 渲染（下限 300px），与表单控件等宽对齐。 */
 .slot {
+  position: relative;
   width: 100%;
   min-height: 65px;
+}
+
+/* 脚本落地前的占位提示：叠在预留槽位上，不占额外高度，widget 画出来后即移除。 */
+.loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
 }
