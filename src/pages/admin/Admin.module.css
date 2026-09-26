@@ -948,6 +948,8 @@
     max-height: none;
     flex-direction: row;
     overflow-x: auto;
+    /* 同 Tabs：单写 overflow-x 会让纵向也可滚，横条被上下拖动。 */
+    overflow-y: hidden;
     overscroll-behavior-x: contain;
     scrollbar-width: thin;
     border-right: none;

@@ -1,8 +1,13 @@
+/* 只许横向滚动。单写 overflow-x:auto 时 overflow-y 会被规范算成 auto 而不是 visible ——
+   只要子项比容器高出哪怕 1px，标签条就能被上下拖动（iOS 上还带回弹），
+   在一条横向导航上表现为「整条菜单上下晃」。纵向显式关死，并阻止横向滚到头时带动整页。 */
 .tabs {
   display: flex;
   align-items: center;
   gap: 0.15rem;
   overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
 }
 
@@ -71,13 +76,16 @@
 
 /* ── Underline variant ───────────────────────────────────── */
 
+/* 底线用内阴影画在容器内部，而不是 border + 标签 margin-bottom:-1px 压线：
+   负边距让每个标签比滚动容器高出 1px，正是纵向可滚的来源；
+   而容器纵向裁剪后，伸出去的那 1px 指示条又会被切掉。
+   内阴影画在子项下层，激活标签的 2px 指示条直接盖住它。 */
 .underline {
-  border-bottom: 1px solid var(--line);
+  box-shadow: inset 0 -1px 0 var(--line);
 }
 
 .underline .tab {
   border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
   border-radius: var(--r-xs) var(--r-xs) 0 0;
 }
 
