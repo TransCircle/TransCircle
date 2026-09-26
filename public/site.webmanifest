@@ -1,16 +1,18 @@
 {
-  "name": "TransCircle Project",
-  "short_name": "TransCircle",
-  "description": "跨环（TransCircle Project）— 中文 MtF 跨性别社群史官工程：归档故事、记录历史、团结社群、争取跨性别权利。",
+  "id": "/",
+  "name": "跨环 TransCircle",
+  "short_name": "跨环",
+  "description": "跨环（TransCircle Project）是面向中文 MtF 跨性别社群的史官档案工程：归档社群故事、记录抗争历史、团结同伴、争取跨性别权利。",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "theme_color": "#904A49",
-  "background_color": "#FFF8F7",
+  "display_override": ["standalone", "minimal-ui"],
+  "theme_color": "#fdf9fb",
+  "background_color": "#fdf9fb",
   "lang": "zh-CN",
   "dir": "ltr",
   "categories": ["social", "education", "lifestyle"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",
@@ -31,10 +33,22 @@
       "purpose": "maskable"
     },
     {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png",
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "登录",
+      "url": "/login",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "账户中心",
+      "url": "/account",
+      "icons": [{ "src": "/favicon-96x96.png", "sizes": "96x96", "type": "image/png" }]
     }
   ]
 }

@@ -1,3 +1,4 @@
+# 短链（robots.txt 已 Disallow /s/，不参与收录）
 # 基础
 /s/x-chat https://x.com/i/chat/group_join/g2053071552552603876/fw9lZ8e4SH 302
 /s/repo https://github.com/TransCircle/TransCircle 302
@@ -9,5 +10,5 @@
 # 表单
 /s/join https://docs.google.com/forms/d/e/1FAIpQLSdDdB-WUlqgej2zNzIPLIU98heCYiMkezZ8YnHNPQCTlgIABQ/viewform?usp=publish-editor 302
 
-# SPA fallback：所有其余路径交由前端路由处理（必须置于具体规则之后）
-/* /index.html 200
+# SPA 回退由 wrangler.jsonc 的 not_found_handling 负责，HTML 路由的状态码 / robots
+# 由 worker/index.ts 决定 —— 这里不能再写 `/* /index.html 200`，否则会吞掉真正的 404。

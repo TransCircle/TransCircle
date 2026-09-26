@@ -1,0 +1,21 @@
+/* TEAM */
+Project: 跨环 TransCircle Project
+Site: https://transcircle.org/
+Source: https://github.com/TransCircle/TransCircle
+Contact: https://github.com/TransCircle/TransCircle/issues
+X: @TransCircleOrg
+Bluesky: TransCircle.org
+Location: 中文互联网 / Chinese-speaking internet
+
+/* THANKS */
+Monica Helms — 跨性别骄傲旗帜（1999）
+每一位分享故事、参与协作的社群成员
+
+/* SITE */
+Last update: 2026-09-26
+Language: 中文（zh-CN）
+Content license: CC BY-SA 4.0 or later
+Code license: AGPL
+Standards: HTML, CSS, WCAG 2.1
+Components: React, React Router, i18next, Vite
+Hosting: Cloudflare Workers
