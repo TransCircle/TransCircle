@@ -10,7 +10,8 @@
     "typecheck": "pnpm types:worker && tsc -b",
     "types:worker": "wrangler types",
     "brand:generate": "node scripts/generate-brand-assets.ts",
-    "deploy": "wrangler deploy",
+    "deploy": "pnpm build && wrangler deploy && node scripts/indexnow.ts",
+    "seo:indexnow": "node scripts/indexnow.ts",
     "test": "vitest run"
   },
   "dependencies": {
