@@ -5,6 +5,7 @@ import { AppNav } from "../components/AppNav";
 // import FloatingTOC from "../components/FloatingTOC";
 // import type { TOCItem } from "../components/FloatingTOC";
 import LicenseFooter from "../components/LicenseFooter";
+import { useRouteSeo } from "../seo/use-route-seo";
 import styles from "./RootLayout.module.css";
 
 // const TOC_ITEMS: TOCItem[] = [
@@ -21,6 +22,9 @@ const RootLayout = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
+
+  // 客户端路由切换时同步 robots / canonical（首屏由边缘 Worker 负责）。
+  useRouteSeo(location.pathname);
 
   useEffect(() => {
     mainRef.current?.focus();

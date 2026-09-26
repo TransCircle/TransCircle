@@ -1,56 +1,88 @@
-# TransCircle Project — https://transcircle.org/
-# 我们欢迎搜索引擎与 AI 爬虫归档与引用本站内容。
-# 内容版权：CC BY 4.0 or later。
+# 跨环 TransCircle — https://transcircle.org/
+# 欢迎搜索引擎、AI 检索与 Web 归档抓取本站。内容授权：CC BY-SA 4.0 or later。
+#
+# 登录 / 账户 / 管理页不在此 Disallow：它们通过 X-Robots-Tag: noindex 排除收录，
+# 若在这里屏蔽，爬虫反而读不到 noindex 指令。
 
-# ── 默认规则：开放，但屏蔽短链与原始数据 ─────────────
+# ── 默认规则 ─────────────────────────────────────────
+# Content-Signal：Cloudflare Content Signals Policy（https://contentsignals.org/）。
+# search=可用于搜索索引；ai-input=可用于 AI 实时检索/RAG 作答；ai-train=可用于模型训练。
+# 适用范围：本站自有内容（CC BY-SA 4.0）。第三方材料不在本站发布；/ref/lists/ 已排除。
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 Disallow: /s/
 Disallow: /ref/lists/
+Disallow: /v1/
+Disallow: /oauth2/
 
-# ── 主流搜索引擎 ─────────────────────────────────────
+# ── 搜索引擎 ─────────────────────────────────────────
+# 显式点名：部分爬虫只遵守针对自身 UA 的规则组（匹配到专属组后会忽略 * 组）。
 User-agent: Googlebot
+User-agent: Googlebot-Image
 User-agent: Bingbot
+User-agent: Slurp
 User-agent: DuckDuckBot
 User-agent: Baiduspider
+User-agent: Baiduspider-image
+User-agent: Baiduspider-render
 User-agent: Sogou web spider
 User-agent: 360Spider
 User-agent: YisouSpider
+User-agent: Bytespider
+User-agent: PetalBot
 User-agent: Yandex
+User-agent: SeznamBot
+User-agent: Qwantbot
+User-agent: Yeti
+User-agent: Applebot
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 Disallow: /s/
 Disallow: /ref/lists/
+Disallow: /v1/
+Disallow: /oauth2/
 
-# ── AI 爬虫（GEO：显式欢迎索引、检索、训练） ─────────
+# ── AI 检索与训练（GEO：欢迎引用，请保留署名与原始链接） ──
 User-agent: GPTBot
-User-agent: ChatGPT-User
 User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
 User-agent: ClaudeBot
-User-agent: Claude-User
 User-agent: Claude-SearchBot
+User-agent: Claude-User
 User-agent: anthropic-ai
 User-agent: PerplexityBot
 User-agent: Perplexity-User
 User-agent: Google-Extended
+User-agent: Google-CloudVertexBot
 User-agent: GoogleOther
-User-agent: Applebot
 User-agent: Applebot-Extended
 User-agent: Meta-ExternalAgent
 User-agent: Meta-ExternalFetcher
 User-agent: FacebookBot
-User-agent: Bytespider
-User-agent: DuckAssistBot
-User-agent: YouBot
 User-agent: Amazonbot
+User-agent: DuckAssistBot
+User-agent: MistralAI-User
 User-agent: cohere-ai
 User-agent: cohere-training-data-crawler
+User-agent: YouBot
 User-agent: Diffbot
-User-agent: ImagesiftBot
-User-agent: omgili
-User-agent: Mistralai-User
-User-agent: MistralAI-User
+User-agent: CCBot
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 Disallow: /s/
 Disallow: /ref/lists/
+Disallow: /v1/
+Disallow: /oauth2/
+
+# ── Web 归档（「史官」工程：欢迎长期保存本站快照） ────
+User-agent: archive.org_bot
+User-agent: ia_archiver
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
+Allow: /
+Disallow: /s/
+Disallow: /ref/lists/
+Disallow: /v1/
+Disallow: /oauth2/
 
 Sitemap: https://transcircle.org/sitemap.xml

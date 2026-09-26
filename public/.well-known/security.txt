@@ -1,0 +1,6 @@
+# 跨环 TransCircle 安全问题报告（RFC 9116）
+# 请通过 GitHub 私密漏洞报告提交，勿在公开 issue 中披露细节。
+Contact: https://github.com/TransCircle/TransCircle/security/advisories/new
+Expires: 2027-09-26T00:00:00.000Z
+Preferred-Languages: zh, en
+Canonical: https://transcircle.org/.well-known/security.txt

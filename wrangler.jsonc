@@ -1,15 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "transcircle",
-  "main": "worker.js",
-  "compatibility_date": "2026-05-09",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-09-26",
   "observability": {
     "enabled": true
   },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    // 所有请求先进 Worker（见 worker/index.ts）：页面按路由改写 robots / 状态码，
+    // 缺失的文件返回真正的 404。不能把 /assets/* 等目录排除在外 —— 排除后缺失文件
+    // 会被 SPA 回退成 index.html（200），再叠加 _headers 的一年 immutable 缓存，
+    // 发版后旧页面请求已删除的 chunk 会拿到被长期缓存的 HTML，整页白屏。
+    "run_worker_first": true
   },
   "compatibility_flags": [
     "nodejs_compat"

@@ -1,0 +1,61 @@
+/* 首页常见问题：发丝线分隔的折叠列表，不做卡片、不用彩色边框（DESIGN §1.6）。 */
+
+.list {
+  border-top: 1px solid var(--line);
+}
+
+.item {
+  border-bottom: 1px solid var(--line);
+}
+
+.question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  min-height: var(--tap-min);
+  padding: var(--s-3) 0;
+  color: var(--ink);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-heading);
+  list-style: none;
+  cursor: pointer;
+  /* 焦点环沿用全局 :focus-visible（index.css §7），这里只给它圆角。 */
+  border-radius: var(--r-xs);
+  transition: color var(--dur-1) var(--ease-standard);
+}
+
+/* 隐藏浏览器默认三角，改用右侧 chevron（仍是同一个 summary，语义不变）。 */
+.question::-webkit-details-marker {
+  display: none;
+}
+
+.question:hover {
+  color: var(--pink-700);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform var(--dur-1) var(--ease-standard);
+}
+
+.item[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.answer {
+  margin: 0 0 var(--s-4);
+  max-width: var(--w-reading);
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .question,
+  .chevron {
+    transition: none;
+  }
+}

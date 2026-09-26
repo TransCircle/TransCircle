@@ -190,7 +190,8 @@
 
 .section,
 .aboutSection,
-.followSection {
+.followSection,
+.faqSection {
   scroll-margin-top: calc(var(--nav-h) + var(--s-4));
 }
 
@@ -208,6 +209,12 @@
   margin-top: var(--s-6);
   padding-top: var(--s-5);
   border-top: 1px solid var(--line);
+}
+
+/* 常见问题：列表自带发丝线，这里只留出与上一幕的间距。 */
+.faqSection {
+  position: relative;
+  margin-top: var(--s-7);
 }
 
 .sectionHeading {

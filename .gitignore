@@ -48,3 +48,6 @@ CLAUDE.md
 ds-bundle/
 
 mock-server/
+# Build-time prerender bundle (scripts/prerender.ts) & generated Worker types (pnpm types:worker)
+.prerender/
+worker-configuration.d.ts
