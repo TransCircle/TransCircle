@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "pnpm types:worker && tsc -b && vite build && vite build --ssr src/entry-prerender.tsx --outDir .prerender && node scripts/prerender.ts",
     "preview": "vite preview",
+    "typecheck": "pnpm types:worker && tsc -b",
+    "types:worker": "wrangler types",
+    "brand:generate": "node scripts/generate-brand-assets.ts",
     "deploy": "wrangler deploy",
-    "test": "vitest run",
-    "brand:generate": "node scripts/generate-brand-assets.ts"
+    "test": "vitest run"
   },
   "dependencies": {
     "i18next": "^26.3.0",
