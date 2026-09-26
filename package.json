@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite",
     "build": "pnpm types:worker && tsc -b && vite build && vite build --ssr src/entry-prerender.tsx --outDir .prerender && node scripts/prerender.ts",
