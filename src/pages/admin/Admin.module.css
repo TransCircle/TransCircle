@@ -75,9 +75,13 @@
   transition: background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
-.navItem:hover {
-  background-color: var(--pink-100);
-  color: var(--ink);
+/* 只在真能悬停的设备上给 hover 底色：触屏上 :hover 会「粘」在刚点过的那一项上，
+   换页后旧项仍是粉底，看起来像同时选中了两个分区。 */
+@media (hover: hover) {
+  .navItem:hover {
+    background-color: var(--pink-100);
+    color: var(--ink);
+  }
 }
 /* 当前项用淡粉面与字重，不使用模板化的彩色左条。 */
 .navItemActive,
@@ -930,9 +934,14 @@
    768 = 全局平板断点（AGENTS §8.3）。横条只有分区导航（品牌与身份在全站顶栏），
    因此恢复文字标签：纯图标在手机上无从辨认，六个分区横向滚动即可放下。 */
 @media (max-width: 768px) {
+  /* 行轨必须显式给出。外壳被 RootLayout 以 flex:1 撑满整屏，
+     两条隐式 auto 行会**平分**富余高度：内容区还在加载（很矮）时，
+     分区条被拉高一截，数据一到又缩回去 —— 点「概览 / 用户 / 应用 / 审计」时的跳动就是它。
+     分区条只取内容高度，富余全部交给工作区。 */
   .shell,
   .shell[data-rail="mini"] {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
   .rail {
     position: static;

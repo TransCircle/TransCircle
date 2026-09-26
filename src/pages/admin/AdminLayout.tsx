@@ -60,7 +60,7 @@ const AdminLayout = () => {
   const { state, me, error, hasPermission, reload } = useAdmin();
   const [header, setHeader] = useState<AdminHeaderState>({ title: t("admin.title") });
   const [rail, setRail] = useState<"full" | "mini">("full");
-  const navRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLElement>(null);
 
   usePageTitle(state === "ready" ? `${header.title} · ${t("admin.title")}` : t("admin.title"));
 
@@ -73,11 +73,21 @@ const AdminLayout = () => {
 
   // 窄屏下左栏变成可横向滚动的分区条：换页后把当前项滚进可视范围，
   // 否则停在「安全」这类靠右的分区时，当前项可能正好被裁在屏幕外。
-  // 竖排左栏里当前项本就可见，nearest 不会产生任何滚动。
+  //
+  // 刻意不用 scrollIntoView：它会连带滚动**所有**祖先滚动容器，包括文档本身 ——
+  // 分区条被顶部导航栏部分遮住时，点一下分区整页会纵向跳一截。这里只动分区条自己的 scrollLeft。
   useEffect(() => {
-    navRef.current
-      ?.querySelector<HTMLElement>('[aria-current="page"]')
-      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const rail = railRef.current;
+    if (!rail || rail.scrollWidth <= rail.clientWidth) return; // 竖排 / 放得下：无需滚动
+    const active = rail.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!active) return;
+    const railBox = rail.getBoundingClientRect();
+    const itemBox = active.getBoundingClientRect();
+    if (itemBox.left < railBox.left) {
+      rail.scrollLeft -= railBox.left - itemBox.left;
+    } else if (itemBox.right > railBox.right) {
+      rail.scrollLeft += itemBox.right - railBox.right;
+    }
   }, [location.pathname, state]);
 
   const setHeaderStable = useCallback((next: AdminHeaderState) => setHeader(next), []);
@@ -187,11 +197,11 @@ const AdminLayout = () => {
 
   return (
     <div className={styles.shell} data-rail={rail}>
-      <nav className={styles.rail} aria-label={t("admin.title")}>
+      <nav ref={railRef} className={styles.rail} aria-label={t("admin.title")}>
         {/* 左栏只放分区导航。品牌标与当前身份都由全站顶部导航栏承担 ——
             这里再画一遍 logo（左上）和头像（左下）是纯重复，窄屏折成横条后
             还会和顶栏的 logo / 头像上下贴在一起。 */}
-        <div ref={navRef} className={styles.nav}>
+        <div className={styles.nav}>
           <p className={styles.navGroup}>{t("admin.navGroup")}</p>
           {navItems.map((item) => (
             <NavLink

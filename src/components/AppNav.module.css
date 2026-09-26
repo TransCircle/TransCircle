@@ -4,15 +4,28 @@
   position: sticky;
   top: 0;
   z-index: var(--z-nav);
+  border-bottom: 1px solid var(--line);
+}
+
+/* 玻璃画在伪元素上，**不能**直接给 .nav 加 backdrop-filter。
+   带 backdrop-filter 的元素会成为后代的「背景根」：下拉菜单（.menu，也是玻璃）
+   的模糊只能取到顶栏自身范围内的内容 —— 伸出顶栏的那一截底下的页面完全不被模糊，
+   只剩 72%（暗色 62%）的半透明底，正文直接透进菜单文字里。
+   挪到 ::before 后顶栏本身不再是背景根，菜单的玻璃能正常模糊整页内容。 */
+.nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background-color: var(--glass-bg);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border-bottom: 1px solid var(--line);
+  pointer-events: none;
 }
 
 /* §2.5：玻璃必须带实色回退。 */
 @supports not (backdrop-filter: blur(1px)) {
-  .nav {
+  .nav::before {
     background-color: var(--surface);
   }
 }
