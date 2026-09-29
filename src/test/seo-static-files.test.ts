@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import zhCN from "../i18n/locales/zh-CN/common.json";
 import { FAQ_KEYS } from "../seo/faq";
-import { INDEXNOW_KEY, LICENSE_URL, SITE_NAME, SITE_URL, SOCIAL_PROFILES } from "../seo/site";
+import { INDEXNOW_KEY, LICENSE_URL, PROJECTS, SITE_NAME, SITE_URL, SOCIAL_PROFILES } from "../seo/site";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const read = (path: string): string => readFileSync(`${ROOT}${path}`, "utf8");
@@ -143,6 +143,22 @@ describe("爬虫与 AI 索引文件", () => {
     for (const key of FAQ_KEYS) {
       expect(llmsFull, key).toContain(faq[key]?.q);
       expect(llmsFull, key).toContain(faq[key]?.a);
+    }
+  });
+
+  it("llms-full.txt 收录与首页「项目」一节一致的子项目简介与地址", () => {
+    const llmsFull = read("public/llms-full.txt");
+    const projects = zhCN.landing.projects as Record<string, { title: string; desc: string }>;
+    for (const { key, url } of PROJECTS) {
+      expect(llmsFull, key).toContain(projects[key]?.title);
+      expect(llmsFull, key).toContain(projects[key]?.desc);
+      if (url) expect(llmsFull, key).toContain(url);
+    }
+  });
+
+  it("humans.txt 与 llms-full.txt 各留一个团队段占位符（构建时由 prerender 填入名单）", () => {
+    for (const file of ["public/humans.txt", "public/llms-full.txt"]) {
+      expect(read(file).split("{{TEAM_MEMBERS}}"), file).toHaveLength(2);
     }
   });
 

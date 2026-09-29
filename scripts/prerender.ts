@@ -12,7 +12,11 @@ import { INDEXABLE_PATHS } from "../src/seo/route-policy.ts";
 import { absoluteUrl, OG_IMAGE } from "../src/seo/site.ts";
 
 interface PrerenderModule {
-  render(options: { dateModified: string | null }): Promise<{ appHtml: string; headHtml: string }>;
+  render(options: { dateModified: string | null }): Promise<{
+    appHtml: string;
+    headHtml: string;
+    team: TeamList;
+  }>;
 }
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -24,6 +28,9 @@ const HOME_SOURCES = [
   "index.html",
   "src/App.tsx",
   "src/components/FaqSection.tsx",
+  "src/components/ProjectsSection.tsx",
+  "src/components/TeamSection.tsx",
+  "src/data",
   "src/i18n/locales/zh-CN/common.json",
   "src/seo",
   "public/llms.txt",
@@ -36,6 +43,19 @@ const DATED_TEXT_FILES: ReadonlyArray<readonly [file: string, line: RegExp, labe
   ["llms-full.txt", /^最后更新：.*$/m, "最后更新："],
   ["humans.txt", /^Last update: .*$/m, "Last update: "],
 ];
+
+/** public 源文件里的团队段占位符：构建时换成解析过 GitHub 昵称的名单。 */
+const TEAM_PLACEHOLDER = "{{TEAM_MEMBERS}}";
+
+type TeamList = ReadonlyArray<{ github: string; name: string; role: string }>;
+
+/** 两种文本格式：humans.txt 按其惯例「职位: 名字」，llms-full.txt 用 Markdown 列表。 */
+function formatTeam(file: string, team: TeamList): string {
+  if (file === "humans.txt") {
+    return team.map((m) => `${m.role}: ${m.name}\nGitHub: https://github.com/${m.github}`).join("\n\n");
+  }
+  return team.map((m) => `- **${m.name}**（${m.role}）：https://github.com/${m.github}`).join("\n");
+}
 
 /**
  * 取不到可信的内容修改日期时返回 null（由调用方省略 dateModified / lastmod），
@@ -60,6 +80,12 @@ function injectOnce(html: string, placeholder: string, content: string): string 
     throw new Error(`dist/index.html 中应恰好有一个 ${placeholder} 占位符，实际 ${parts.length - 1} 个`);
   }
   return parts.join(content);
+}
+
+function injectTeam(file: string, text: string, team: TeamList): string {
+  const parts = text.split(TEAM_PLACEHOLDER);
+  if (parts.length !== 2) throw new Error(`dist/${file} 中应恰好有一个 ${TEAM_PLACEHOLDER} 占位符`);
+  return parts.join(formatTeam(file, team));
 }
 
 function escapeXml(value: string): string {
@@ -92,7 +118,7 @@ function buildSitemap(lastmod: string | null): string {
 async function main(): Promise<void> {
   const dateModified = lastModifiedDate();
   const { render } = (await import(pathToFileURL(`${SSR_OUT}entry-prerender.js`).href)) as PrerenderModule;
-  const { appHtml, headHtml } = await render({ dateModified });
+  const { appHtml, headHtml, team } = await render({ dateModified });
 
   const indexPath = `${DIST}index.html`;
   let html = await readFile(indexPath, "utf8");
@@ -104,7 +130,7 @@ async function main(): Promise<void> {
   // 源文件里的日期只是占位：以内容源的 git 日期为准，未知时删掉整行，不留过期日期。
   for (const [file, line, label] of DATED_TEXT_FILES) {
     const path = `${DIST}${file}`;
-    const text = await readFile(path, "utf8");
+    const text = injectTeam(file, await readFile(path, "utf8"), team);
     if (!line.test(text)) throw new Error(`dist/${file} 缺少「${label}」日期行`);
     await writeFile(path, text.replace(line, dateModified ? `${label}${dateModified}` : "").replace(/\n{3,}/g, "\n\n"));
   }

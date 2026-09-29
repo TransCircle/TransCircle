@@ -23,6 +23,7 @@ import { SessionProvider } from "./context/SessionContext";
 import { AdminProvider } from "./context/AdminContext";
 import { buildHomeStructuredData, serializeJsonLd } from "./seo/structured-data";
 import { SITE_URL } from "./seo/site";
+import { TEAM_MEMBERS, type TeamMember } from "./data/team";
 
 export interface PrerenderOptions {
   /** 首页内容最后修改日期（YYYY-MM-DD）；未知时为 null，省略 WebPage.dateModified。 */
@@ -34,6 +35,8 @@ export interface PrerenderResult {
   readonly appHtml: string;
   /** 注入 <head> 的 JSON-LD 脚本块。 */
   readonly headHtml: string;
+  /** 已解析 GitHub 昵称的团队名单，供 humans.txt / llms-full.txt 填充团队段。 */
+  readonly team: readonly TeamMember[];
 }
 
 const routes = [{ element: <RootLayout />, children: [{ path: "/", element: <App /> }] }];
@@ -62,5 +65,5 @@ export async function render({ dateModified }: PrerenderOptions): Promise<Preren
   const structuredData = buildHomeStructuredData({ translate: (key) => i18n.t(key), dateModified });
   const headHtml = `<script type="application/ld+json">\n${serializeJsonLd(structuredData)}\n</script>`;
 
-  return { appHtml, headHtml };
+  return { appHtml, headHtml, team: TEAM_MEMBERS };
 }

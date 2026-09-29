@@ -1,4 +1,6 @@
 /* TEAM */
+{{TEAM_MEMBERS}}
+
 Project: 跨环 TransCircle Project
 Site: https://transcircle.org/
 Source: https://github.com/TransCircle/TransCircle

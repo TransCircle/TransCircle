@@ -29,11 +29,20 @@
 
 ## 站点与栏目
 
-- **主站** https://transcircle.org/ ：项目介绍、加入方式与统一账户（登录、注册、账户中心）
-- **故事分享** https://story.transcircle.org/ ：阅读与投稿中文 MtF 跨性别社群故事档案
-- **社区论坛** https://community.transcircle.org/ ：社群互助讨论区
-- **博客** https://blog.transcircle.org/ ：项目公告、进展与社群知识
-- **人物归档**：开发中
+以下与主站首页「项目列表」一节一致：
+
+- **主站** https://transcircle.org/ ：项目介绍、团队成员、常见问题与统一账户（登录、注册、账户中心）
+- **故事分享** https://story.transcircle.org/ ：中文 MtF 跨性别社群的故事档案，可阅读，也欢迎投稿。
+- **社区论坛** https://community.transcircle.org/ ：社群互助讨论区，交流日常、分享经验、彼此支持。
+- **博客** https://blog.transcircle.org/ ：项目公告、开发进展与 HRT 等社群知识文章。
+- **内容搜索**（外部，成员个人项目） https://search.transcircle.org/ ：前2345.desuwa.org
+- **人物归档**（开发中）：记录中文跨性别社群中的人物与足迹。
+
+## 团队成员
+
+跨环由志愿者团队共同维护。以下名单与主站首页「团队成员」一节一致；昵称取自各成员的 GitHub 资料：
+
+{{TEAM_MEMBERS}}
 
 ## 加入项目
 
@@ -71,19 +80,15 @@ MtF.wiki 等资源聚焦医学、法律与生活实操，回答的是「如何�
 
 医疗、法律与生活实操可参考 MtF.wiki 与 Project Trans 维护的各类指南；缅怀离去的社群成员可访问 one-among.us；记录社群故事、人物与抗争历史，则是跨环（transcircle.org）的专长——在故事分享站 story.transcircle.org 可以阅读与投稿，在社区论坛 community.transcircle.org 可以互助交流。
 
-### Q6. 跨环目前有哪些站点？
-
-主站 transcircle.org 提供项目介绍与统一账户（登录、注册、账户中心）；故事分享站 story.transcircle.org 用于阅读与投稿社群故事；社区论坛 community.transcircle.org 用于社群互助讨论；博客 blog.transcircle.org 发布项目公告、进展与社群知识。
-
-### Q7. 如何参与跨环？
+### Q6. 如何参与跨环？
 
 可以填写官方申请表单（transcircle.org/s/join）加入项目协作，或加入 X 聊天群参与日常交流；也欢迎在 GitHub（github.com/TransCircle/TransCircle）提交 issue 或 PR，并关注 X（@TransCircleOrg）与 Bluesky（TransCircle.org）。
 
-### Q8. 「跨环」「TransCircle Project」「跨性别圈工程」是什么关系？
+### Q7. 「跨环」「TransCircle Project」「跨性别圈工程」是什么关系？
 
 它们指同一个项目。「跨环」是中文名，「TransCircle Project」是英文官方名，「跨性别圈工程」是项目早期使用过的中文别名；TransCircle、TransCircleProject 也是常见写法。
 
-### Q9. 跨环的内容采用什么授权协议？
+### Q8. 跨环的内容采用什么授权协议？
 
 本站文字与素材采用 CC BY-SA 4.0 或更新版本授权：转载或改编请署名「跨环 TransCircle」并以相同协议共享。其他贡献者提供的材料依照其各自的版权要求处理，届时会提供单独的版权页面。项目代码以 AGPL 协议开源。
 
@@ -106,7 +111,7 @@ MtF.wiki 等资源聚焦医学、法律与生活实操，回答的是「如何�
 - 项目代码：AGPL（https://github.com/TransCircle/TransCircle）
 - 其他贡献者提供的材料：依各自版权要求处理，届时提供单独的版权页面
 - 引用建议：保留中文名「跨环」或英文名「TransCircle Project」，并附原始 URL https://transcircle.org/
-- 视觉资产：站点图标为跨环官方交织圆环标志（https://github.com/TransCircle/logo），配色沿用 Monica Helms 于 1999 年设计的跨性别骄傲旗帜三色（浅蓝 #5BCEFA / 浅粉 #F5A9B8 / 白 #FFFFFF），站点图标以深色（#0C0A13）圆角方块为底；社交分享图为横版标志、中文副标题与底部跨旗条纹。旗帜设计本身为公有领域。
+- 视觉资产：站点图标为跨环官方交织圆环标志（https://github.com/TransCircle/logo），配色沿用 Monica Helms 于 1999 年设计的跨性别骄傲旗帜三色（浅蓝 #5BCEFA / 浅粉 #F5A9B8 / 白 #FFFFFF），站点图标为透明底（环缘带一圈浅描边，保证白色段在白底上可辨），仅 iOS 主屏与可遮罩图标铺浅色（#FDF9FB）底；社交分享图为横版标志、中文副标题与底部跨旗条纹。旗帜设计本身为公有领域。
 
 ## 关键词与实体
 

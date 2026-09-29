@@ -6,6 +6,8 @@
 
 **为什么存在**：中文 MtF 社群已有较完整的社群 wiki（如 MtF.wiki）与 HRT 指南，回答「如何做」；但缺少一个见证社群存在与抗争的档案。跨环记录「我们是谁、我们走过什么」，与上述资源互为补充。
 
+**团队**：由 Epheia 创立，不会起名の捌拐玖捌🍥 与翅膀喵（GitHub：xzdmycbx）联合创立，志愿者团队共同开发与运营；完整成员名单见 [llms-full.txt](https://transcircle.org/llms-full.txt) 与主站「团队成员」一节。
+
 **当前状态**：故事分享站、社区论坛与博客已上线，人物归档开发中；主站提供项目介绍与统一账户。
 
 **授权**：内容采用 CC BY-SA 4.0 or later，引用或转述请署名「跨环 TransCircle」并附原始链接 https://transcircle.org/；代码采用 AGPL。
@@ -25,10 +27,11 @@
 
 ## 站点
 
-- [主站](https://transcircle.org/)：项目介绍、常见问题、加入方式、统一账户
-- [故事分享](https://story.transcircle.org/)：阅读与投稿社群故事档案
-- [社区论坛](https://community.transcircle.org/)：社群互助讨论区
-- [博客](https://blog.transcircle.org/)：项目公告、进展与社群知识
+- [主站](https://transcircle.org/)：项目介绍、各子项目入口、团队成员、常见问题、统一账户
+- [故事分享](https://story.transcircle.org/)：中文 MtF 跨性别社群的故事档案，可阅读，也欢迎投稿
+- [社区论坛](https://community.transcircle.org/)：社群互助讨论区，交流日常、分享经验、彼此支持
+- [博客](https://blog.transcircle.org/)：项目公告、开发进展与 HRT 等社群知识文章
+- [内容搜索](https://search.transcircle.org/)（外部，成员个人项目）：前2345.desuwa.org
 
 ## 参与
 
