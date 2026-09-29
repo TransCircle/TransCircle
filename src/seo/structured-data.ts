@@ -2,15 +2,17 @@
  * 首页 JSON-LD（schema.org @graph）。构建期由 scripts/prerender.ts 调用并注入 <head>，
  * 因此不执行 JS 的爬虫与 AI 也能读到；不在客户端运行时生成。
  */
+import { githubProfileUrl, TEAM_MEMBERS, type TeamMember } from "../data/team";
 import { getFaqEntries } from "./faq";
 import {
+  absoluteUrl,
   FOUNDING_DATE,
   LICENSE_URL,
   LOGO,
   OG_IMAGE,
   ORG_ALTERNATE_NAMES,
   ORG_NAME,
-  SISTER_SITES,
+  PROJECTS,
   SITE_LANGUAGE,
   SITE_NAME,
   SITE_URL,
@@ -32,6 +34,24 @@ const WEBPAGE_ID = `${SITE_URL}#webpage`;
 const LOGO_ID = `${SITE_URL}#logo`;
 const OG_IMAGE_ID = `${SITE_URL}#primaryimage`;
 const FAQ_ID = `${SITE_URL}#faq`;
+/** team.json 里职位以「创始人」结尾的成员（创始人、联合创始人）同时写成 Organization.founder。 */
+const isFounder = (m: TeamMember): boolean => m.role.endsWith("创始人");
+
+const personId = (login: string): string => `${SITE_URL}#person-${login.toLowerCase()}`;
+
+/** 团队成员的 Person 节点：GitHub 主页既是 url 也是 sameAs，便于搜索引擎与 AI 做实体消歧。 */
+function personNode({ github, name, avatar }: TeamMember): JsonLdNode {
+  const profile = githubProfileUrl(github);
+  return {
+    "@type": "Person",
+    "@id": personId(github),
+    name,
+    ...(name === github ? {} : { alternateName: github }),
+    url: profile,
+    sameAs: [profile],
+    ...(avatar ? { image: absoluteUrl(avatar) } : {}),
+  };
+}
 
 export function buildHomeStructuredData({ translate, dateModified }: StructuredDataInput): JsonLdNode {
   const description = translate("seo.homeDescription");
@@ -47,6 +67,13 @@ export function buildHomeStructuredData({ translate, dateModified }: StructuredD
     description,
     slogan: translate("landing.subtitle"),
     foundingDate: FOUNDING_DATE,
+    founder: TEAM_MEMBERS.filter(isFounder).map((m) => ({ "@id": personId(m.github) })),
+    // schema.org 的 Role 模式：OrganizationRole 包住 Person，才能同时表达「谁」和「担任什么」。
+    member: TEAM_MEMBERS.map((m) => ({
+      "@type": "OrganizationRole",
+      roleName: m.role,
+      member: { "@id": personId(m.github) },
+    })),
     sameAs: [...SOCIAL_PROFILES],
     // 主题关联（不是名称）：本项目所服务、所记录的社群与领域。
     knowsAbout: [
@@ -126,19 +153,27 @@ export function buildHomeStructuredData({ translate, dateModified }: StructuredD
     })),
   };
 
-  const sisterSites: JsonLdNode[] = SISTER_SITES.map((site) => ({
-    "@type": "WebSite",
-    "@id": `${site.url}#website`,
-    url: site.url,
-    name: site.name,
-    description: site.description,
-    inLanguage: SITE_LANGUAGE,
-    publisher: { "@id": ORG_ID },
-  }));
+  // 只有已上线的子项目才是 WebSite 实体；描述与首页「项目」卡片同源。
+  const sisterSites: JsonLdNode[] = PROJECTS.flatMap(({ key, url, seoName, kind }) =>
+    url === null
+      ? []
+      : [
+          {
+            "@type": "WebSite",
+            "@id": `${url}#website`,
+            url,
+            name: seoName,
+            description: translate(`landing.projects.${key}.desc`),
+            inLanguage: SITE_LANGUAGE,
+            // 成员个人维护的周边项目不以组织名义发布。
+            ...(kind === "official" ? { publisher: { "@id": ORG_ID } } : {}),
+          },
+        ],
+  );
 
   return {
     "@context": "https://schema.org",
-    "@graph": [organization, website, primaryImage, webpage, faq, ...sisterSites],
+    "@graph": [organization, website, primaryImage, webpage, faq, ...TEAM_MEMBERS.map(personNode), ...sisterSites],
   };
 }
 

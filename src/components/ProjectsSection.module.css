@@ -1,0 +1,184 @@
+/* 首页「项目」：子项目卡片网格。实色表面 + 发丝线描边，无渐变、无彩色左边框（DESIGN §1.6 / §5.5）。 */
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* flex-wrap + 按断点给定列数（DESIGN 断点 1200 / 768 / 480）：
+     桌面一行 5 张；平板 3 + 2；大屏手机两列；小屏单列。
+     桌面 / 平板的 flex-grow 让最后一行剩下的两张均分整行；两列档的孤卡保持同宽（见下）。 */
+  --cols: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.grid > li {
+  display: flex;
+  flex: 1 1 calc((100% - (var(--cols) - 1) * var(--s-3)) / var(--cols));
+  min-width: 0;
+}
+
+@media (max-width: 1200px) {
+  .grid {
+    --cols: 3;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid {
+    --cols: 2;
+  }
+
+  /* 两列时 5 张卡会剩一张单独成行：不再伸展，保持与上面各卡同宽，免得孤卡被拉满整行。 */
+  .grid > li {
+    flex-grow: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    --cols: 1;
+  }
+
+  .grid > li {
+    flex-grow: 1;
+  }
+}
+
+.card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-5);
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  text-decoration: none;
+  transition: border-color var(--dur-1) var(--ease-standard), box-shadow var(--dur-1) var(--ease-standard),
+    transform var(--dur-1) var(--ease-standard);
+}
+
+a.card:hover {
+  border-color: var(--pink-600);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
+}
+
+a.card:active {
+  transform: scale(0.99);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  color: var(--ink);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+}
+
+a.card:hover .title {
+  color: var(--pink-700);
+}
+
+.titleText {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* 「外部」标签：中性描边小签，不与状态色混用。 */
+.tag {
+  padding: 1px var(--s-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-xs);
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-heading);
+}
+
+.arrow {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+a.card:hover .titleText {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* 「外部」标签：中性描边小签，不与状态色混用。 */
+.tag {
+  padding: 1px var(--s-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-xs);
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-heading);
+}
+
+.arrow {
+  color: var(--pink-700);
+}
+
+.desc {
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-body);
+}
+
+.url,
+.status {
+  margin-top: var(--s-2);
+  color: var(--text-muted);
+  font-family: var(--font-tech);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
+/* 未上线：不可点击，底色退到 surface-2，状态恒为「圆点 + 文字」（WCAG 1.4.1）。 */
+.cardPending {
+  background-color: var(--surface-2);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-sans);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background-color: var(--warning-text);
+}
+
+/* 手机：单列，卡片内边距收紧。 */
+@media (max-width: 480px) {
+  .card {
+    padding: var(--s-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  a.card:hover,
+  a.card:active {
+    transform: none;
+  }
+}

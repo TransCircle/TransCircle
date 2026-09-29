@@ -2,7 +2,10 @@ import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from './utils/usePageTitle';
+import { focusTarget } from './utils/focusTarget';
 import { FaqSection } from './components/FaqSection';
+import { ProjectsSection } from './components/ProjectsSection';
+import { TeamSection } from './components/TeamSection';
 import styles from './App.module.css';
 
 const GitHubIcon = () => (
@@ -82,9 +85,13 @@ const App = () => {
 
   // 顶栏锚点(如 /#about)经 SPA 路由到达时浏览器不会自动滚动到目标分区,
   // 这里补齐;各 section 的 scroll-margin-top 已抵消吸顶导航高度。
+  // 焦点一并移过去：从子页（如登录页）点顶栏「成员」回到这里时，键盘 / 读屏用户也落在该分区。
   useEffect(() => {
     if (!location.hash) return;
-    document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    const target = document.getElementById(location.hash.slice(1));
+    if (!target) return;
+    target.scrollIntoView();
+    focusTarget(target);
   }, [location.hash]);
 
   return (
@@ -110,10 +117,10 @@ const App = () => {
             </a>
           </div>
 
-          {/* 「加入项目」不是下一张页面卡片，而是 hero 的叙事延续：
+          {/* 「团队简介」不是下一张页面卡片，而是 hero 的叙事延续：
               光晕只属于这一个完整场域，鼠标移动时不会在标题与自述之间硬切断。 */}
           <section id="about" className={styles.aboutSection} aria-labelledby="about-heading">
-            <h2 id="about-heading" className={styles.sectionHeading}>{t('landing.joinHeading')}</h2>
+            <h2 id="about-heading" className={styles.sectionHeading}>{t('landing.aboutHeading')}</h2>
             <p className={styles.greeting}>{t('landing.greeting')}</p>
             <div className={styles.aboutGrid}>
               <div className={styles.readmeContent}>
@@ -124,6 +131,12 @@ const App = () => {
               <p className={styles.emphasis}>{t('landing.emphasis')}</p>
             </div>
           </section>
+
+          {/* 项目列表：各项目入口，与 JSON-LD 的子站 WebSite 节点同源（src/seo/site.ts PROJECTS）。 */}
+          <ProjectsSection className={styles.projectsSection} headingClassName={styles.sectionHeading} />
+
+          {/* 团队成员：名单来自 src/data/team.json，同时写入 JSON-LD 的 founder / member。 */}
+          <TeamSection className={styles.teamSection} headingClassName={styles.sectionHeading} />
 
           {/* 关注入口是社群叙事的收束，而非下一张割裂页面：与 hero/自述同场。 */}
           <section id="follow" className={styles.followSection} aria-labelledby="follow-heading">

@@ -3,7 +3,7 @@
  * 两者文案同出 `landing.faq.<key>.{q,a}`，保证结构化数据描述的正是页面上可见的内容
  * （Google 结构化数据政策要求如此）。
  */
-export const FAQ_KEYS = ["what", "circle", "why", "difference", "resources", "sites", "join", "names", "license"] as const;
+export const FAQ_KEYS = ["what", "circle", "why", "difference", "resources", "join", "names", "license"] as const;
 
 export type FaqKey = (typeof FAQ_KEYS)[number];
 

@@ -1,0 +1,64 @@
+/* 首页团队成员：头像 + 昵称 + 职位的等宽网格，不做卡片边框（DESIGN §1.6），
+   整块是一个链接，悬停只给浅粉底，与「关注我们」的链接行为一致。 */
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: var(--s-2);
+}
+
+.member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  height: 100%;
+  padding: var(--s-4) var(--s-2);
+  border-radius: var(--r-md);
+  text-align: center;
+  text-decoration: none;
+  transition: background-color var(--dur-1) var(--ease-standard);
+}
+
+.member:hover {
+  background-color: var(--pink-100);
+}
+
+.avatar {
+  margin-bottom: var(--s-2);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.name {
+  max-width: 100%;
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-heading);
+  overflow-wrap: anywhere;
+}
+
+.member:hover .name {
+  color: var(--pink-700);
+}
+
+.role {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-heading);
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .member {
+    transition: none;
+  }
+}

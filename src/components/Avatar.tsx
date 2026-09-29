@@ -32,7 +32,7 @@ export function Avatar({ name, src, size = 40, label, className }: AvatarProps) 
     >
       {showImage ? (
         /* alt 留空：可访问名称统一由外层 aria-label 承担,避免重复播报。 */
-        <img src={src} alt="" className={styles.img} onError={() => setFailedSrc(src)} />
+        <img src={src} alt="" loading="lazy" decoding="async" className={styles.img} onError={() => setFailedSrc(src)} />
       ) : (
         <span className={styles.initial}>{initial}</span>
       )}

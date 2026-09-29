@@ -1,3 +1,4 @@
+import { TEAM_MEMBERS } from "../data/team";
 import i18n from "../i18n/config";
 import { FAQ_KEYS, getFaqEntries } from "../seo/faq";
 import { LICENSE_URL, SITE_NAME, SITE_URL, SOCIAL_PROFILES } from "../seo/site";
@@ -62,6 +63,18 @@ describe("首页结构化数据", () => {
     expect(website?.license).toBe(LICENSE_URL);
     expect(byType("Organization").sameAs).toEqual([...SOCIAL_PROFILES]);
     expect(i18n.t("common.siteName")).toBe(SITE_NAME);
+  });
+
+  it("团队成员写入 Organization.member，创始人写入 founder", () => {
+    const org = byType("Organization");
+    const members = org.member as Array<{ roleName: string; member: { "@id": string } }>;
+    expect(members.map((m) => m.roleName)).toEqual(TEAM_MEMBERS.map((m) => m.role));
+    const people = graphOf().filter((n) => n["@type"] === "Person");
+    expect(people.map((p) => p.url)).toEqual(TEAM_MEMBERS.map((m) => `https://github.com/${m.github}`));
+    const founders = (org.founder as Array<{ "@id": string }>).map(({ "@id": id }) => people.find((p) => p["@id"] === id)?.url);
+    const expected = TEAM_MEMBERS.filter((m) => m.role.endsWith("创始人")).map((m) => `https://github.com/${m.github}`);
+    expect(expected.length).toBeGreaterThan(0);
+    expect(founders).toEqual(expected);
   });
 
   it("WebPage 带发布与修改日期", () => {

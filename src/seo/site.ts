@@ -32,17 +32,29 @@ export const SOCIAL_PROFILES = [
 export const SOURCE_REPOSITORY = "https://github.com/TransCircle/TransCircle";
 export const TWITTER_HANDLE = "@TransCircleOrg";
 
-export interface SisterSite {
-  readonly name: string;
-  readonly url: string;
-  readonly description: string;
+export type ProjectKey = "story" | "community" | "blog" | "search" | "archive";
+
+export interface Project {
+  /** 首页「项目」卡片文案的 i18n key：landing.projects.<key>.{title,desc}。 */
+  readonly key: ProjectKey;
+  /** 线上地址；尚未上线的项目为 null（卡片不可点击，也不进 JSON-LD）。 */
+  readonly url: string | null;
+  /** JSON-LD WebSite.name：带品牌前缀的完整站名，便于实体识别。 */
+  readonly seoName: string;
+  /**
+   * official：项目组正式运营的子站（JSON-LD 里 publisher 指向本组织）；
+   * other：项目组成员个人维护的周边项目（卡片标注「外部」，JSON-LD 不声明 publisher）。
+   */
+  readonly kind: "official" | "other";
 }
 
-/** 同一组织运营的官方子站（search.transcircle.org 为第三方站点，不在此列）。 */
-export const SISTER_SITES: readonly SisterSite[] = [
-  { name: "跨环故事分享", url: "https://story.transcircle.org/", description: "阅读与投稿中文 MtF 跨性别社群故事档案。" },
-  { name: "TransCircle 社区论坛", url: "https://community.transcircle.org/", description: "跨性别社群互助讨论区。" },
-  { name: "跨环博客", url: "https://blog.transcircle.org/", description: "项目公告、进展与社群知识。" },
+/** 项目组的各个项目，顺序即首页「项目列表」的展示顺序。 */
+export const PROJECTS: readonly Project[] = [
+  { key: "story", url: "https://story.transcircle.org/", seoName: "跨环故事分享", kind: "official" },
+  { key: "community", url: "https://community.transcircle.org/", seoName: "TransCircle 社区论坛", kind: "official" },
+  { key: "blog", url: "https://blog.transcircle.org/", seoName: "跨环博客", kind: "official" },
+  { key: "search", url: "https://search.transcircle.org/", seoName: "跨环内容搜索", kind: "other" },
+  { key: "archive", url: null, seoName: "跨环人物归档", kind: "official" },
 ];
 
 export interface ImageAsset {

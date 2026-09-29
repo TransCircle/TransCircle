@@ -26,7 +26,10 @@ const RootLayout = () => {
   // 客户端路由切换时同步 robots / canonical（首屏由边缘 Worker 负责）。
   useRouteSeo(location.pathname);
 
+  // 换页时焦点回到 main。带 hash 且目标存在时让位：页面自己把焦点移到目标分区
+  // （父级 effect 晚于子页面执行，不让位就会把焦点从分区抢回 main）。
   useEffect(() => {
+    if (location.hash && document.getElementById(location.hash.slice(1))) return;
     mainRef.current?.focus();
   }, [location.pathname]);
 

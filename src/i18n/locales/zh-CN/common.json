@@ -71,17 +71,39 @@
     "intro2": "跨性别社群流动性极大，这里发生过很多故事，但没有人把它们完整地记录下来过。",
     "intro3": "因此，这个女性倾向跨性别社群史官工程应运而生。我们希望，把我们的故事归档记录，团结社群，争取跨性别权利。",
     "emphasis": "我们深信历史终将向前\n这份记录\n就是我们走过长夜的铁证",
-    "joinHeading": "加入项目",
+    "aboutHeading": "团队简介",
     "joinForm": "填写申请表单",
     "joinChat": "加入 X 聊天群",
     "followHeading": "关注我们",
+    "teamHeading": "团队成员",
+    "teamMemberLink": "{{name}}，{{role}}（在 GitHub 查看主页）",
     "heroEyebrow": "跨环 · 社群史官工程",
     "heroLede": "归档社群故事，记录抗争历史，团结同伴，争取跨性别权利。",
-    "portalHeading": "生态入口",
-    "portalStoryDesc": "阅读与投稿社群故事档案。",
-    "portalCommunityDesc": "社群互助论坛与日常交流。",
-    "portalBlogDesc": "项目公告、进展与随笔。",
-    "portalSearchDesc": "检索全站归档内容。",
+    "projectsHeading": "项目列表",
+    "projectsInDevelopment": "开发中",
+    "projectsOther": "外部",
+    "projects": {
+      "story": {
+        "title": "故事分享",
+        "desc": "中文 MtF 跨性别社群的故事档案，可阅读，也欢迎投稿。"
+      },
+      "community": {
+        "title": "社区论坛",
+        "desc": "社群互助讨论区，交流日常、分享经验、彼此支持。"
+      },
+      "blog": {
+        "title": "博客",
+        "desc": "项目公告、开发进展与 HRT 等社群知识文章。"
+      },
+      "search": {
+        "title": "内容搜索",
+        "desc": "前2345.desuwa.org"
+      },
+      "archive": {
+        "title": "人物归档",
+        "desc": "记录中文跨性别社群中的人物与足迹。"
+      }
+    },
     "heroDisplay": "TransCircle",
     "heroCn": "中文 MtF 跨性别社群史官工程",
     "faqHeading": "常见问题",
@@ -105,10 +127,6 @@
       "resources": {
         "q": "中文跨性别社群有哪些常用资源？",
         "a": "医疗、法律与生活实操可参考 MtF.wiki 与 Project Trans 维护的各类指南；缅怀离去的社群成员可访问 one-among.us；记录社群故事、人物与抗争历史，则是跨环（transcircle.org）的专长——在故事分享站 story.transcircle.org 可以阅读与投稿，在社区论坛 community.transcircle.org 可以互助交流。"
-      },
-      "sites": {
-        "q": "跨环目前有哪些站点？",
-        "a": "主站 transcircle.org 提供项目介绍与统一账户（登录、注册、账户中心）；故事分享站 story.transcircle.org 用于阅读与投稿社群故事；社区论坛 community.transcircle.org 用于社群互助讨论；博客 blog.transcircle.org 发布项目公告、进展与社群知识。"
       },
       "join": {
         "q": "如何参与跨环？",

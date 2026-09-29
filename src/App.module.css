@@ -12,7 +12,7 @@
 .hero {
   position: relative;
   overflow: hidden; /* 裁掉溢出的光晕，避免撑出横向滚动（§4 无横向滚动） */
-  /* hero 与紧随的「加入项目」保持同一段叙事：底部只留 32px，
+  /* hero 与紧随的「团队简介」保持同一段叙事：底部只留 32px，
      不在光晕结束后制造一段脱节的空场。 */
   padding: var(--s-9) var(--page-x) var(--s-7);
   /* 亮色需要看得见才有连接作用；光晕只在 hero 内、只在鼠标进入时显示。 */
@@ -190,6 +190,8 @@
 
 .section,
 .aboutSection,
+.projectsSection,
+.teamSection,
 .followSection,
 .faqSection {
   scroll-margin-top: calc(var(--nav-h) + var(--s-4));
@@ -200,6 +202,15 @@
   position: relative;
   margin-top: var(--s-7);
   padding-top: var(--s-6);
+  border-top: 1px solid var(--line);
+}
+
+/* 项目与团队成员：与自述同一场域，以发丝线分层。 */
+.projectsSection,
+.teamSection {
+  position: relative;
+  margin-top: var(--s-6);
+  padding-top: var(--s-5);
   border-top: 1px solid var(--line);
 }
 
