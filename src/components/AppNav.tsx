@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type RefObject } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSession } from "../context/SessionContext";
@@ -8,35 +8,40 @@ import { Avatar } from "./Avatar";
 import FlagStripe from "./FlagStripe";
 import { cx } from "./admin/cx";
 import { lockScroll } from "../utils/scrollLock";
+import { useSectionSpy } from "../utils/useSectionSpy";
+import { focusTarget } from "../utils/focusTarget";
 import styles from "./AppNav.module.css";
 
-/** 移动断点:与 AppNav.module.css 的 @media (max-width: 1200px) 保持一致(双处互指)。
- *  1200px 为 DESIGN.md §4 规定的「导航折叠」断点。 */
-const MOBILE_BREAKPOINT = 1200;
+/** 移动断点:与 AppNav.module.css 的 @media (max-width: 1024px) 保持一致(双处互指)。
+ *  顶栏改用短标签后横排只占约 330px，1024px 仍放得下，故折叠点从 1200 下移到 1024（DESIGN §4 断点之一）。 */
+const MOBILE_BREAKPOINT = 1024;
 
-const ExternalIcon = () => (
-  <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className={styles.extIcon}>
-    <path d="M6 2h8v8" /><path d="M14 2 4 12" />
-  </svg>
-);
-const ChevronIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className={styles.chevron}><path d="m6 9 6 6 6-6" /></svg>
-);
+/** 首页分区 id，顺序即页面自上而下的顺序（滚动监听按此判定所在分区）。 */
+const SECTION_IDS = ["about", "projects", "team", "follow", "faq"] as const;
+type SectionId = (typeof SECTION_IDS)[number];
+
+/** 顶栏用两字短标签（抽屉与首页分区标题仍用完整名称）。 */
+const SECTION_TITLE_KEYS: Record<SectionId, string> = {
+  about: "landing.aboutHeading",
+  projects: "landing.projectsHeading",
+  team: "landing.teamHeading",
+  follow: "landing.followHeading",
+  faq: "landing.faqHeading",
+};
+
+const prefersReducedMotion = (): boolean =>
+  typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 
 interface NavLinkDef {
+  /** 完整名称：抽屉、悬停提示。 */
   label: string;
+  /** 顶栏横排用的短标签。 */
+  shortLabel: string;
   /** 站内路由:一律 react-router <Link>,避免整页刷新丢状态。 */
-  to?: string;
-  /** 生态外链(子域站点):原生 <a> + rel noopener noreferrer。 */
-  href?: string;
-  /**
-   * 预告项:分区还没建成,菜单里只占个位置。
-   *
-   * 既不给 to 也不给 href —— 渲染成不可点的 <span>,点它不发生任何事。
-   * 曾经它指向 /#about(主页里谈归档愿景的那一段)当作替代目的地,
-   * 但那等于让人点「人物归档」却被送到别处,比不给目的地更让人困惑。
-   */
-  disabled?: boolean;
+  to: string;
+  /** 首页分区 id；「首页」本身为 null。 */
+  section: SectionId | null;
 }
 
 /**
@@ -137,14 +142,10 @@ export function AppNav() {
   const navigate = useNavigate();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [linksOpen, setLinksOpen] = useState(false);
   const [acctOpen, setAcctOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutFailed, setLogoutFailed] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
-  const linksRef = useRef<HTMLDivElement>(null);
-  const linksBtnRef = useRef<HTMLButtonElement>(null);
-  const linksMenuRef = useRef<HTMLUListElement>(null);
   const acctRef = useRef<HTMLDivElement>(null);
   const acctBtnRef = useRef<HTMLButtonElement>(null);
   const acctMenuRef = useRef<HTMLUListElement>(null);
@@ -156,35 +157,88 @@ export function AppNav() {
   const acctAutoFocus = useRef(true);
   const acctPointerType = useRef<string>("");
 
-  // 导航站主导航:首页 + 已经上线的生态分区(全是独立子域,直接外链)。
-  const primaryLinks: NavLinkDef[] = [
-    { label: t("nav.home"), to: "/" },
-    { label: t("nav.blog"), href: "https://blog.transcircle.org/" },
-    { label: t("nav.stories"), href: "https://story.transcircle.org/" },
-    { label: t("nav.community"), href: "https://community.transcircle.org/" },
-  ];
-  // 「更多」下拉:主导航之外的入口。
-  // 人物归档还没有站点,只作预告留在这里(不可点击,见 NavLinkDef.disabled)。
-  const moreLinks: NavLinkDef[] = [
-    { label: t("nav.archive"), disabled: true },
-    { label: t("nav.search"), href: "https://search.transcircle.org/" },
+  // 页面导览：首页 + 首页各分区的锚点。宽屏横排短标签，≤1024px 收进汉堡抽屉（完整名称）。
+  // 各子项目的入口在首页「项目列表」一节（ProjectsSection），不放进顶栏。
+  const navLinks: NavLinkDef[] = [
+    { label: t("nav.home"), shortLabel: t("nav.home"), to: "/", section: null },
+    ...SECTION_IDS.map((id) => ({
+      label: t(SECTION_TITLE_KEYS[id]),
+      shortLabel: t(`nav.section.${id}`),
+      to: `/#${id}`,
+      section: id,
+    })),
   ];
 
   /**
-   * 当前项判定（§5.3 迷你旗帜条纹指示）：只有站内 <Link> 参与，外链与预告项永远不是「当前页」。
-   *
-   * 目标自带 hash 的按 pathname + hash 整体比对（同一 pathname 下的分区要各自高亮）；
-   * 不带 hash 的只看 pathname —— 否则停在 /#about 这类锚点上时「首页」会莫名失去标记。
+   * 当前项（§5.3 迷你旗帜条纹指示）：在首页上跟随滚动位置（scroll spy），
+   * 还没滚到第一个分区时是「首页」；离开首页后顶栏各项都指向首页内容，均不算当前。
    */
-  const currentPath = `${location.pathname}${location.hash}`;
-  const isCurrent = (l: NavLinkDef): boolean =>
-    l.to !== undefined && (l.to.includes("#") ? l.to === currentPath : l.to === location.pathname);
+  const onHome = location.pathname === "/";
+  const spySection = useSectionSpy(SECTION_IDS, onHome);
+  const activeTo = onHome ? (spySection ? `/#${spySection}` : "/") : null;
+  const isCurrent = (l: NavLinkDef): boolean => l.to === activeTo;
+  // 首页用 page；分区是页内位置，用 location（读屏念「当前位置」）。
+  const currentKind = (l: NavLinkDef): "page" | "location" | undefined =>
+    isCurrent(l) ? (l.section ? "location" : "page") : undefined;
+
+  /**
+   * 已在首页时点击导览：自己平滑滚动，而不是交给路由改 hash。
+   * 路由方案在「hash 没变」（滚走后再点同一项）时什么都不做；而且 App 的 hash 跳转是瞬移。
+   * 抽屉打开时滚动被锁住、背景是 inert，所以先关抽屉，等锁释放（下一帧）再滚。
+   *
+   * 焦点随之移到目标分区（同跳转链接的惯例）：否则从抽屉里按 Enter 的键盘用户，
+   * 焦点会留在刚被隐藏的抽屉链接上，Tab 下去又回到页首。
+   */
+  const onNavClick = (l: NavLinkDef) => (e: MouseEvent<HTMLAnchorElement>) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    if (!onHome) {
+      // 跨页跳到首页分区：交给路由，但**同步**关抽屉 —— 与路由更新同一次提交，
+      // 抽屉 effect 的清理（解除 main 的 inert、释放滚动锁）先于 App 的聚焦 / 定位执行；
+      // 否则 App 聚焦目标时 main 仍是 inert，焦点落不下去。
+      setDrawerOpen(false);
+      return;
+    }
+    e.preventDefault();
+    setDrawerOpen(false);
+    const behavior: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
+    window.requestAnimationFrame(() => {
+      const target = l.section ? document.getElementById(l.section) : null;
+      if (target) target.scrollIntoView({ behavior, block: "start" });
+      else window.scrollTo({ top: 0, behavior });
+      // 「首页」落到页面主标题；分区落到分区本身。
+      const landing = target ?? document.querySelector<HTMLElement>("main h1");
+      if (landing) focusTarget(landing);
+      // 同步地址栏以便分享/刷新，但不经路由（避免触发 App 的瞬移跳转）。
+      window.history.replaceState(window.history.state, "", l.to);
+    });
+  };
+
+  // 横排当前项下方的旗帜条纹是一条独立元素，在各项之间滑动，而不是在每项里闪现/消失。
+  const linksRowRef = useRef<HTMLDivElement>(null);
+  const [stripe, setStripe] = useState<{ x: number; ready: boolean } | null>(null);
+  useLayoutEffect(() => {
+    const row = linksRowRef.current;
+    if (!row) return;
+    const place = () => {
+      const el = activeTo ? row.querySelector<HTMLElement>(`[data-nav-to="${activeTo}"]`) : null;
+      if (!el || el.offsetWidth === 0) {
+        setStripe(null);
+        return;
+      }
+      const x = el.offsetLeft + el.offsetWidth / 2;
+      // 首次定位不做过渡（否则会从最左侧滑进来）；之后的切换才滑动。
+      setStripe((prev) => ({ x, ready: prev !== null }));
+    };
+    place();
+    const ro = typeof ResizeObserver === "function" ? new ResizeObserver(place) : null;
+    ro?.observe(row);
+    return () => ro?.disconnect();
+  }, [activeTo, t]);
 
   // 关闭抽屉/下拉：路由变化时。含 hash——站内锚点(/#about 之类)只改 hash 不改 pathname,
   // 若仅依赖 pathname 则抽屉不关、背景滚动保持锁定、main 保持 inert 遮住刚滚到的分区。
   useEffect(() => {
     setDrawerOpen(false);
-    setLinksOpen(false);
     setAcctOpen(false);
     if (acctCloseTimer.current !== null) {
       clearTimeout(acctCloseTimer.current);
@@ -257,14 +311,10 @@ export function AppNav() {
   // 点击外部 / Escape 关闭下拉(菜单内的 Escape 由 useMenuKeyboard 处理并恢复焦点)
   useEffect(() => {
     const onDown = (e: PointerEvent) => {
-      if (linksRef.current && !linksRef.current.contains(e.target as Node)) setLinksOpen(false);
       if (acctRef.current && !acctRef.current.contains(e.target as Node)) setAcctOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setLinksOpen(false);
-        setAcctOpen(false);
-      }
+      if (e.key === "Escape") setAcctOpen(false);
     };
     document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
@@ -276,9 +326,7 @@ export function AppNav() {
 
   // close 回调必须引用稳定,否则菜单打开期间的任意重渲染都会触发
   // useMenuKeyboard 重新执行"聚焦首项",打断方向键导航。
-  const closeLinks = useCallback(() => setLinksOpen(false), []);
   const closeAcct = useCallback(() => setAcctOpen(false), []);
-  useMenuKeyboard(linksOpen, closeLinks, linksMenuRef, linksBtnRef);
   useMenuKeyboard(acctOpen, closeAcct, acctMenuRef, acctBtnRef, acctAutoFocus);
 
   // 身份一旦变得不确定（别的标签页换了号、会话正在重新确认），**已经展开的账户菜单
@@ -344,17 +392,6 @@ export function AppNav() {
         : t("admin.access.directGrant")
       : null;
 
-  // 触发器上按 ArrowDown/ArrowUp 也应打开菜单(菜单按钮键盘惯例);
-  // 打开后由 useMenuKeyboard 将焦点移入首项。
-  const triggerArrowOpen =
-    (open: boolean, setOpen: (v: boolean) => void) =>
-    (e: React.KeyboardEvent) => {
-      if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
-        e.preventDefault();
-        setOpen(true);
-      }
-    };
-
   return (
     <>
       <nav className={styles.nav} aria-label={t("nav.primary")}>
@@ -393,64 +430,29 @@ export function AppNav() {
             </Link>
           </div>
 
-          <div className={styles.links}>
-            {primaryLinks.map((l) =>
-              l.to ? (
-                <Link
-                  key={l.label}
-                  to={l.to}
-                  className={cx(styles.link, isCurrent(l) && styles.linkActive)}
-                  aria-current={isCurrent(l) ? "page" : undefined}
-                >
-                  {l.label}
-                  {/* 当前项指示：24×3px 迷你旗帜条纹（§3.1 / §5.3）。
-                      语义由 aria-current 承担，条纹纯装饰。 */}
-                  {isCurrent(l) && <FlagStripe variant="mini" className={styles.activeStripe} />}
-                </Link>
-              ) : (
-                <a key={l.label} href={l.href} rel="nofollow noopener noreferrer" className={styles.link}>
-                  {l.label}<ExternalIcon />
-                </a>
-              ),
-            )}
-            <div ref={linksRef} className={styles.dropdown}>
-              <button
-                ref={linksBtnRef}
-                type="button"
-                className={styles.link}
-                aria-haspopup="menu"
-                aria-expanded={linksOpen}
-                onClick={() => setLinksOpen((o) => !o)}
-                onKeyDown={triggerArrowOpen(linksOpen, setLinksOpen)}
+          <div ref={linksRowRef} className={styles.links}>
+            {navLinks.map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                data-nav-to={l.to}
+                className={cx(styles.link, isCurrent(l) && styles.linkActive)}
+                aria-current={currentKind(l)}
+                title={l.shortLabel === l.label ? undefined : l.label}
+                onClick={onNavClick(l)}
               >
-                {t("nav.links")}<ChevronIcon />
-              </button>
-              {linksOpen && (
-                <ul ref={linksMenuRef} className={styles.menu} role="menu">
-                  {moreLinks.map((l) => (
-                    <li key={l.label} role="none">
-                      {l.disabled ? (
-                        /* 预告项:没有跳转目标,点了什么都不会发生。
-                           仍保留 role=menuitem + tabIndex=-1 —— 方向键要能走到它,
-                           不然键盘/读屏用户根本不知道这一项存在;aria-disabled 说明它现在点不了。 */
-                        <span
-                          role="menuitem"
-                          aria-disabled="true"
-                          tabIndex={-1}
-                          className={cx(styles.menuItem, styles.menuItemMuted)}
-                        >
-                          {l.label}
-                        </span>
-                      ) : (
-                        <a role="menuitem" href={l.href} target="_blank" rel="nofollow noopener noreferrer" className={styles.menuItem}>
-                          {l.label}<ExternalIcon />
-                        </a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+                {l.shortLabel}
+              </Link>
+            ))}
+            {/* 当前项指示：24×3px 迷你旗帜条纹（§3.1 / §5.3），随当前项滑动。
+                语义由 aria-current 承担，条纹纯装饰。 */}
+            {stripe && (
+              <FlagStripe
+                variant="mini"
+                className={cx(styles.activeStripe, stripe.ready && styles.activeStripeAnimated)}
+                style={{ "--stripe-x": `${stripe.x}px` } as CSSProperties}
+              />
+            )}
           </div>
 
           <div className={styles.right}>
@@ -581,32 +583,11 @@ export function AppNav() {
           </button>
         </div>
         <div className={styles.drawerInner}>
-          {primaryLinks.map((l) =>
-            l.to ? (
-              <Link
-                key={l.label}
-                to={l.to}
-                className={styles.drawerLink}
-                aria-current={isCurrent(l) ? "page" : undefined}
-              >
-                {l.label}
-              </Link>
-            ) : (
-              <a key={l.label} href={l.href} rel="nofollow noopener noreferrer" className={styles.drawerLink}>
-                {l.label}<ExternalIcon />
-              </a>
-            ),
-          )}
-          {moreLinks.map((l) =>
-            l.disabled ? (
-              // 同桌面菜单:预告项不可点击,也不进焦点序列(抽屉的 Tab 陷阱只收可聚焦元素)。
-              <span key={l.label} aria-disabled="true" className={cx(styles.drawerLink, styles.drawerLinkMuted)}>
-                {l.label}
-              </span>
-            ) : (
-              <a key={l.label} href={l.href} target="_blank" rel="nofollow noopener noreferrer" className={styles.drawerLink}>{l.label}<ExternalIcon /></a>
-            ),
-          )}
+          {navLinks.map((l) => (
+            <Link key={l.to} to={l.to} className={styles.drawerLink} aria-current={currentKind(l)} onClick={onNavClick(l)}>
+              {l.label}
+            </Link>
+          ))}
           <hr className={styles.drawerDivider} />
           {identityUnconfirmed ? (
             // 身份提示未证实：不提供账户/退出等可能失败的操作。

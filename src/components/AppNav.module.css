@@ -87,6 +87,7 @@
 
 /* ── Desktop links ─────────────────────────────────────── */
 .links {
+  position: relative; /* 滑动条纹的定位参照 */
   display: flex;
   align-items: center;
   gap: var(--s-1);
@@ -133,33 +134,23 @@
   }
 }
 
-/* 下拉触发器在其菜单打开时保持高亮。 */
-.link[aria-expanded="true"] {
-  color: var(--ink);
-  background-color: var(--pink-100);
-}
-
 /* 当前项：底部挂 24×3px 迷你旗帜条纹（§3.1 / §5.3）。 */
 .linkActive {
   color: var(--ink);
 }
 
+/* 条纹挂在 .links 上，用 --stripe-x（当前项中心的 x）定位；切换当前项时横向滑过去。 */
 .activeStripe {
   position: absolute;
-  left: 50%;
+  left: 0;
   bottom: 2px;
-  transform: translateX(-50%);
+  transform: translateX(calc(var(--stripe-x, 0px) - 50%));
+  pointer-events: none;
 }
 
-/* Links 下拉的 chevron 在菜单打开时翻转 180°。 */
-.chevron {
-  transition: transform var(--dur-1) var(--ease-standard);
+.activeStripeAnimated {
+  transition: transform var(--dur-2) var(--ease-standard);
 }
-.link[aria-expanded="true"] .chevron {
-  transform: rotate(180deg);
-}
-
-.extIcon { margin-left: 2px; opacity: 0.7; }
 
 .right {
   display: flex;
@@ -167,11 +158,6 @@
   justify-content: flex-end;
   gap: var(--s-2);
   flex: 1;
-}
-
-.adminLink {
-  color: var(--pink-700);
-  font-weight: var(--fw-semibold);
 }
 
 /* ── Dropdown menus ────────────────────────────────────── */
@@ -454,7 +440,8 @@
   color: var(--pink-700);
 }
 
-.drawerLink[aria-current="page"] {
+.drawerLink[aria-current="page"],
+.drawerLink[aria-current="location"] {
   background-color: var(--pink-100);
   color: var(--ink);
   font-weight: var(--fw-semibold);
@@ -550,36 +537,24 @@
   }
 }
 
-/* 导航折叠断点:与 AppNav.tsx 的 MOBILE_BREAKPOINT(1200)保持一致(双处互指，§4)。 */
+/* 1025–1200px：横排仍在，收紧项间距与内边距，给左右两组留足空间。 */
 @media (max-width: 1200px) {
+  .inner { gap: var(--s-3); }
+  .link { padding-inline: var(--s-2); }
+}
+
+/* ≤1024px：横排收进汉堡抽屉（与 AppNav.tsx 的 MOBILE_BREAKPOINT 互指）。 */
+@media (max-width: 1024px) {
   .hamburger { display: flex; }
   .links { display: none; }
-  .adminLink { display: none; }
   .loginCta {
     padding: 0 var(--s-3);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .link, .menuItem, .acctBtn, .loginCta, .drawer, .overlay, .hamburger { transition: none; }
+  .link, .menuItem, .acctBtn, .loginCta, .drawer, .overlay, .hamburger, .activeStripeAnimated { transition: none; }
   .menu { animation: none; }
   .loginCta:hover, .loginCta:active, .acctBtn:active { transform: none; }
 }
 
-/* 预告项（尚未上线的分区）：只读一行字,没有悬停反馈、没有手型光标 ——
-   看上去就不像能点的东西,省得用户对着它反复点。
-   **必须放在文件末尾**:与 .menuItem / .drawerLink 同特异性,靠源顺序决胜。
-   标签自带「（开发中）」,因此不再另加角标,避免同一句话说两遍。 */
-.menuItemMuted,
-.drawerLinkMuted {
-  color: var(--text-muted);
-  cursor: default;
-}
-
-.menuItemMuted:hover,
-.drawerLinkMuted:hover,
-.menuItemMuted:active,
-.drawerLinkMuted:active {
-  background-color: transparent;
-  color: var(--text-muted);
-}

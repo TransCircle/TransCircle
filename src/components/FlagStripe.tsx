@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { cx } from "./admin/cx";
 import styles from "./FlagStripe.module.css";
 
@@ -13,6 +15,8 @@ export interface FlagStripeProps {
    */
   scope?: "page" | "footer";
   className?: string;
+  /** 供调用方传入定位用的 CSS 变量（如导航条纹的滑动位置）。 */
+  style?: CSSProperties;
 }
 
 /**
@@ -21,10 +25,11 @@ export interface FlagStripeProps {
  * 纯装饰，故整体 aria-hidden —— 条纹承载的「当前项」「页脚分界」等语义，
  * 由调用方以 aria-current / landmark 等真实语义属性表达，不依赖颜色传达（§7）。
  */
-export function FlagStripe({ variant = "full", rounded = false, scope, className }: FlagStripeProps) {
+export function FlagStripe({ variant = "full", rounded = false, scope, className, style }: FlagStripeProps) {
   return (
     <span
       className={cx(styles.stripe, variant === "mini" && styles.mini, rounded && styles.rounded, className)}
+      style={style}
       data-flag-stripe={scope}
       aria-hidden="true"
     >
