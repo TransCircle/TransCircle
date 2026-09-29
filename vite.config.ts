@@ -1,8 +1,10 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
+import { githubTeamPlugin } from "./scripts/vite-plugin-github-team";
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), githubTeamPlugin()],
   server: {
     port: 5174,
     // 同源代理到后端：账户入口/管理后台走 Bearer + 会话 cookie，

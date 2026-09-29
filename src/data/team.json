@@ -1,0 +1,18 @@
+{
+  "members": [
+    { "github": "epheiamoe", "role": "创始人" },
+    { "github": "CCA8798", "role": "联合创始人" },
+    { "github": "xzdmycbx", "role": "项目负责人" },
+    { "github": "lxgy1024", "role": "全栈工程师" },
+    { "github": "RhenCloud", "role": "全栈工程师" },
+    { "github": "Ryousuke05", "role": "前端" },
+    { "github": "higashitaniyume", "role": "前端" },
+    { "github": "IceLighting0721", "role": "前端" },
+    { "github": "cleversheep2011", "role": "后端" },
+    { "github": "imyoungbilibili-cloud", "role": "文案" },
+    { "github": "huantim", "role": "文案" },
+    { "github": "xiaoyi-0324", "role": "社群运营" },
+    { "github": "basibatuoooooo", "role": "社群运营" },
+    { "github": "xingqimiao", "role": "测试" }
+  ]
+}
