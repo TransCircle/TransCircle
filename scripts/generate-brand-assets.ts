@@ -1,15 +1,18 @@
 /**
  * 生成站点图标、PWA 图标与社交分享图（产物提交进 public/，构建时不重新生成）。
  *
- * 用法：pnpm brand:generate
+ * 用法：pnpm brand:generate（只重出图标、不动分享图：pnpm brand:generate --icons-only）
  * 依赖：系统需装有中文字体（fc-list :lang=zh 非空，如 Noto Sans CJK SC），用于分享图副标题；
  * 缺失时脚本直接报错退出。产物已提交，常规 pnpm build 不需要运行本脚本。
  *
  * 为什么单独维护一套「扁平」几何而不是直接栅格化 public/logo-mark.svg：
  * logo-mark.svg 带 feDropShadow / feTurbulence / 多层渐变，18KB，在 16–48px 下
  * 糊成一团；而它最终可见的其实只是三块等分的纯色丝带（粉 / 白 / 蓝，各旋转 120°）
- * 裁切在一个环里。这里把这层最终构造原样抽出来，放到深色圆角底上 ——
- * 白色那一段在白底搜索结果页上才不会消失。
+ * 裁切在一个环里。这里把这层最终构造原样抽出来。
+ *
+ * 标签页 / 搜索结果用的图标保持透明底（与官方标志一致），沿环的内外缘描一圈
+ * 低不透明度的深色细线：白色那一段在白底搜索结果页上仍有轮廓，在深色标签栏上
+ * 则几乎不可见。只有平台强制不透明的 apple-touch / maskable 才铺浅色底。
  *
  * favicon.ico 用 BMP-DIB 编码（而非 PNG-in-ICO）：百度 / Yandex / 旧解析器
  * 对 PNG 负载的 ICO 支持不稳定，BMP 是所有抓取器都认的最低公约数。
@@ -21,8 +24,13 @@ import sharp from "sharp";
 
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
 
-/** 与 index.css 暗色主题 --bg 一致；也是 manifest / msapplication 的底色来源。 */
-const TILE_BG = "#0c0a13";
+/** 与 index.css 暗色主题 --bg 一致；仅用作社交分享图底色。 */
+const OG_BG = "#0c0a13";
+/** 与 index.css 亮色主题 --bg、manifest background_color 一致：强制不透明的图标用它铺底。 */
+const TILE_BG = "#fdf9fb";
+/** 环缘描边：暗色 --bg 同色，低不透明度，只为让白色段在白底上有边界。 */
+const CONTOUR_COLOR = "#0c0a13";
+const CONTOUR_OPACITY = 0.28;
 const FLAG_BLUE = "#5BCEFA";
 const FLAG_PINK = "#F5A9B8";
 const FLAG_WHITE = "#FFFFFF";
@@ -37,7 +45,7 @@ const RING_PATH =
 const SECTOR_PATH =
   "M1078 367A530 530 0 0 1 619 1162C823 1063 956 793 904 632A285 285 0 0 0 476 385C590 260 890 240 1078 367Z";
 
-type Backdrop = "tile" | "square" | "none";
+type Backdrop = "square" | "none";
 
 interface MarkOptions {
   /** 输出像素尺寸（写进 width/height，让 librsvg 直接按目标尺寸栅格化）。 */
@@ -47,11 +55,24 @@ interface MarkOptions {
   ringRadius: number;
 }
 
+/**
+ * 描边宽度（画布 512 单位）：栅格图按输出尺寸换算成约 1px（大图略粗），
+ * 矢量图（不定尺寸）取 32px 标签页下约 1px 的值。
+ */
+function contourWidth(size: number | undefined): number {
+  if (!size) return 16;
+  return +((Math.max(1, size / 64) * 512) / size).toFixed(3);
+}
+
 /** 环形标志的 SVG 片段，放在 512×512 画布里，中心 (256, 256)。 */
-function markGroup(radius: number): string {
+function markGroup(radius: number, size: number | undefined): string {
   const s = +(radius / MARK_R).toFixed(5);
+  const place = `translate(256 256) scale(${s}) translate(-${MARK_CX} -${MARK_CY})`;
+  // 描边画在裁切组之外，线宽以画布单位给出后换回标志坐标系。
+  const stroke = +(contourWidth(size) / s).toFixed(2);
   return (
-    `<g transform="translate(256 256) scale(${s}) translate(-${MARK_CX} -${MARK_CY})" clip-path="url(#r)">` +
+    `<path transform="${place}" fill="none" stroke="${CONTOUR_COLOR}" stroke-opacity="${CONTOUR_OPACITY}" stroke-width="${stroke}" d="${RING_PATH}"/>` +
+    `<g transform="${place}" clip-path="url(#r)">` +
     // 底层先铺一层粉：三块丝带在接缝处有亚像素缝隙，低分辨率下会透出底色。
     `<path fill="${FLAG_PINK}" fill-rule="evenodd" d="${RING_PATH}"/>` +
     `<g transform="rotate(-30 ${MARK_CX} ${MARK_CY})">` +
@@ -66,19 +87,14 @@ function markGroup(radius: number): string {
 
 function markSvg({ size, backdrop, ringRadius }: MarkOptions): string {
   const dims = size ? ` width="${size}" height="${size}"` : "";
-  const bg =
-    backdrop === "tile"
-      ? `<rect width="512" height="512" rx="112" fill="${TILE_BG}"/>`
-      : backdrop === "square"
-        ? `<rect width="512" height="512" fill="${TILE_BG}"/>`
-        : "";
+  const bg = backdrop === "square" ? `<rect width="512" height="512" fill="${TILE_BG}"/>` : "";
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"${dims}>` +
     `<title>TransCircle</title>` +
     `<defs><clipPath id="r"><path clip-rule="evenodd" d="${RING_PATH}"/></clipPath>` +
     `<path id="s" d="${SECTOR_PATH}"/></defs>` +
     bg +
-    markGroup(ringRadius) +
+    markGroup(ringRadius, size) +
     `</svg>`
   );
 }
@@ -162,7 +178,7 @@ async function renderOgCover(): Promise<Buffer> {
   const cjk = "'Noto Sans CJK SC','Source Han Sans SC','PingFang SC','Microsoft YaHei','WenQuanYi Zen Hei',sans-serif";
   const base =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
-    `<rect width="${W}" height="${H}" fill="${TILE_BG}"/>` +
+    `<rect width="${W}" height="${H}" fill="${OG_BG}"/>` +
     `<text x="600" y="432" text-anchor="middle" font-family="${cjk}" font-size="46" font-weight="700" fill="#f5f2f8">跨环 · 中文 MtF 跨性别社群史官工程</text>` +
     `<text x="600" y="500" text-anchor="middle" font-family="${cjk}" font-size="30" fill="#cfc9da">我们的存在，就是对恶意最大的反抗。</text>` +
     stripe +
@@ -180,7 +196,9 @@ async function renderOgCover(): Promise<Buffer> {
 }
 
 async function main(): Promise<void> {
-  const tile = (size?: number): string => markSvg({ size, backdrop: "tile", ringRadius: 200 });
+  // 透明底：环外半径 240 / 256，四周只留出描边与抗锯齿的余量。
+  const tile = (size?: number): string => markSvg({ size, backdrop: "none", ringRadius: 240 });
+  const iconsOnly = process.argv.includes("--icons-only");
   const outputs: Array<[string, Buffer | string]> = [
     ["favicon.svg", tile() + "\n"],
     ["favicon.ico", await encodeIco([16, 32, 48], tile)],
@@ -191,14 +209,14 @@ async function main(): Promise<void> {
     ["favicon.png", await renderPng(tile(32))],
     ["icon-192.png", await renderPng(tile(192))],
     ["icon-512.png", await renderPng(tile(512))],
-    // iOS 会给透明区域垫黑并自行加圆角：满版不透明方块。
+    // iOS 会给透明区域垫黑并自行加圆角：满版不透明浅色方块。
     ["apple-touch-icon.png", await renderPng(markSvg({ size: 180, backdrop: "square", ringRadius: 188 }))],
     // maskable 安全区是半径 40% 的圆（512 × 0.4 = 204.8）：环外半径 160 留足余量。
     ["icon-maskable.png", await renderPng(markSvg({ size: 512, backdrop: "square", ringRadius: 160 }))],
     // Windows 磁贴由 TileColor 铺底，图标本身透明。
     ["mstile-150x150.png", await renderPng(markSvg({ size: 150, backdrop: "none", ringRadius: 170 }))],
-    ["og-cover.png", await renderOgCover()],
   ];
+  if (!iconsOnly) outputs.push(["og-cover.png", await renderOgCover()]);
 
   for (const [name, content] of outputs) {
     await writeFile(`${PUBLIC_DIR}${name}`, content);
