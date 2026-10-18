@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api, type OffsetPage } from "../../api/client";
@@ -72,14 +72,20 @@ const UsersPage = () => {
   }, [requestSearch]);
 
   // 三者都可能为空（纯 Passkey 账户可以没有邮箱），兜一个可读占位。
-  const nameOf = (u: AdminUserListItem) =>
-    u.displayName || u.username || u.email || t("admin.users.unnamed");
+  const nameOf = useCallback(
+    (u: AdminUserListItem) =>
+      u.displayName || u.username || u.email || t("admin.users.unnamed"),
+    [t],
+  );
 
-  const mfaText = (u: AdminUserListItem) => {
-    if (u.passkeyCount > 0) return t("admin.users.mfaPasskeys", { count: u.passkeyCount });
-    if (u.totpEnabled) return t("admin.users.mfaTotp");
-    return t("admin.users.mfaNone");
-  };
+  const mfaText = useCallback(
+    (u: AdminUserListItem) => {
+      if (u.passkeyCount > 0) return t("admin.users.mfaPasskeys", { count: u.passkeyCount });
+      if (u.totpEnabled) return t("admin.users.mfaTotp");
+      return t("admin.users.mfaNone");
+    },
+    [t],
+  );
 
   const columns = useMemo<ReadonlyArray<Column<AdminUserListItem>>>(
     () => [
@@ -162,7 +168,7 @@ const UsersPage = () => {
         ),
       },
     ],
-    [t, fmt, me],
+    [t, fmt, me, nameOf, mfaText],
   );
 
   return (

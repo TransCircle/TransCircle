@@ -115,6 +115,9 @@ export function Modal({
   if (!open) return null
 
   return createPortal(
+    // 背景层只做「点击遮罩关闭」的增强，真正的关闭路径是 Escape 与面板内的关闭按钮；
+    // 它刻意不可聚焦、不进 Tab 序列，因此不需要交互角色。
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       className={styles.overlay}
       onMouseDown={(e) => {

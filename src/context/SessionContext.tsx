@@ -571,7 +571,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
     window.addEventListener(SESSION_IDENTITY_CHANGED, onIdentityChanged);
     return () =>
       window.removeEventListener(SESSION_IDENTITY_CHANGED, onIdentityChanged);
-  }, [refresh]);
+  }, [refresh, supersedeAlignment, armWakeProbe]);
 
   // 别的标签页登录/登出了。
   //
@@ -703,7 +703,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
     window.addEventListener(SESSION_TOKEN_INSTALLED, onInstalled);
     return () =>
       window.removeEventListener(SESSION_TOKEN_INSTALLED, onInstalled);
-  }, []);
+  }, [supersedeAlignment]);
 
   // 401 自动续期时后端顺带回传的档案：不额外发请求，直接更新。
   useEffect(() => {

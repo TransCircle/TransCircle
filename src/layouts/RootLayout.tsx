@@ -31,6 +31,9 @@ const RootLayout = () => {
   useEffect(() => {
     if (location.hash && document.getElementById(location.hash.slice(1))) return;
     mainRef.current?.focus();
+    // 只在 pathname 变化时重跑：hash 变化交给子页面的 hash 效果处理，
+    // 这里读 location.hash 只是判断「当前是否带可定位锚点」。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   /**
