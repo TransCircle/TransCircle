@@ -196,7 +196,7 @@ const ConsentPage = () => {
     );
   }
 
-  const appName = (info.client?.clientName ?? info.params.client_id).trim() || t("consent.unnamed");
+  const appName = info.client?.clientName?.trim() || info.params.client_id.trim() || t("consent.unnamed");
   const logoUri = info.client?.logoUri ?? null;
   const scopes = (info.params.scope ?? "").split(/\s+/).filter(Boolean);
   const identityName = user ? user.displayName || user.username : "";
