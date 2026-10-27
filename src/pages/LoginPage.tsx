@@ -453,6 +453,15 @@ const LoginPage = () => {
       setError(t("login.profileFetchFailed"));
       return;
     }
+    // **二次验证已经通过，立刻收起那张表单。**
+    //
+    // 走到这里时服务端已经把挑战标记为已使用，但 `mfaToken` 还在屏幕上、
+    // 按钮也还按得动。用户看不到任何「成功」的反馈（接下来的续跑交互是整页跳转，
+    // 期间页面停在原地），于是很自然地再点一次「验证并登录」—— 那一发必然拿到
+    // 410「挑战令牌无效」，把一次**已经成功的登录**显示成了失败。
+    // 收起表单同时避免 `useEffect([user, ...])` 里 `if (handoffPending || mfaToken) return`
+    // 那道让路条件把已经不该存在的二次验证一直当成「还没做完」。
+    clearMfaFlow();
     await finish(identityGen);
   };
 

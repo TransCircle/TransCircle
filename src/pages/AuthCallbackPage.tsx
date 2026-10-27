@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { api, getIdentityGen, installAccessToken } from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { sanitizeRedirect } from "../utils/url";
+import { oidcFromPath } from "../utils/oidcInteraction";
 import { usePageTitle } from "../utils/usePageTitle";
 import type { OAuthExchangeResult } from "../api/types";
 import { StatusScreen } from "../components/ui";
@@ -69,7 +70,28 @@ const AuthCallbackPage = () => {
         setError(t("callback.handoffUnavailable"));
         return;
       }
-      navigate("/login", { replace: true });
+      // **必须把 `?oidc=` 一起带过去。**
+      //
+      // `redirectAfter` 在有授权请求时就是 `/login?oidc=<uid>`（见 `startOAuth`：
+      // 它把 `next` 填成这个地址交给后端），而这里曾经写死 `navigate("/login")` ——
+      // 参数一丢，登录页的 `oidcUid` 就是 null。后果不是「少跳一次」这么轻：
+      //
+      //   二次验证通过 → `onTokens()` → 装令牌 → 拉档案 → `finish()`，
+      //   而 `finish()` 里第一句就是 `if (oidcUid)` —— null 就走普通跳转分支，
+      //   那笔 OIDC 交互**永远没人续跑**。用户回到主站首页以为自己登好了，
+      //   论坛那边却一直等着，授权请求就此悬着；而屏幕上因为 `mfaToken` 还在，
+      //   二次验证表单原样留着，他再点一次「验证并登录」只会拿到
+      //   「挑战令牌无效或已过期」—— 挑战在第一次点击时就已经被消费了。
+      //
+      // `login_ok` 那条路一直是对的（它 `navigate(redirectAfter)`），
+      // mfa 这条把地址写死了，两条路的差异正是这个参数。
+      //
+      // 用 URL 解析而不是字符串拼接：`redirectAfter` 是可被外部构造的（它来自查询串），
+      // 直接拼会拼出 `?oidc=a&x=1` 这种被注入的额外参数。取不到就退回裸 `/login`。
+      const oidcFromRedirect = oidcFromPath(redirectAfter);
+      navigate(oidcFromRedirect ? `/login?oidc=${encodeURIComponent(oidcFromRedirect)}` : "/login", {
+        replace: true,
+      });
       return;
     }
 
