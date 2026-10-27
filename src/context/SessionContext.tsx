@@ -355,7 +355,39 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       const nonRejecting = NON_REJECTING_AUTH_CODES.includes(res.error.code);
       const sessionRejected =
         !nonRejecting && (res.status === 401 || res.status === 403);
-      if (sessionRejected) commitAnonymous();
+      if (sessionRejected) {
+        /**
+         * **「本来就没登录」不是一次身份终结。**
+         *
+         * 这里曾经无条件 `commitAnonymous()`，而它 `invalidate=true` 时会
+         * `markSignedOut()` + `clearUserAuth()`，后者把身份代次 +1。
+         * 于是一个**未登录**用户身上发生的每一次 `/v1/me` 401 都在悄悄推进身份代次。
+         *
+         * 而这条路上 401 是**常态**：统一身份的二次验证是整页跳转出去的，
+         * 回来时浏览器里根本没有 refresh cookie（那枚 cookie 要等第二因素
+         * 验证通过才下发，见后端 OAuth 回调的 `pendingCookies`），
+         * 而登录页此刻正停在一张已签发的 MFA 挑战上，锚着挑战签发那一刻的代次。
+         * 用户切去验证器、再切回来 —— 手机上一次 `visibilitychange` 就够 ——
+         * `armWakeProbe()` 的唤醒重探打一发 `/v1/me`，401，代次 +1，
+         * 那张挑战当场作废：此后**每一次**点「确认」都在 `requireIdentityGen`
+         * 闸门处被本地拦下，请求一个字节都发不出去 ——
+         * 服务端连一次验证码都没收到（`mfa_challenge.failedAttempts` 恒为 0），
+         * 用户看到的却是「登录身份在请求期间发生了变化，本次结果已作废，请重试」：
+         * 一句让他重试、而重试在数学上不可能成功的提示。
+         * 代次单调递增，重试只会一直撞在同一道墙上，唯一出路是整页重来。
+         *
+         * 所以判据改成「此刻本标签页到底有没有一个身份可以被终结」：
+         * 有，才作废在途请求；没有就只把令牌丢掉（`invalidate=false` 走
+         * `clearUserTokenOnly()`），不碰代次、不写登出印记。
+         * 那枚令牌此刻已经无效，留着只会让后面的请求都带着一个必被拒的 Authorization。
+         */
+        const hadIdentity =
+          getUserToken() !== null || statusRef.current === "authenticated";
+        console.warn(`[auth] /v1/me 明确拒绝（HTTP ${res.status}），落定为未登录`, {
+          hadIdentity,
+        });
+        commitAnonymous(hadIdentity);
+      }
       return null;
     })();
 

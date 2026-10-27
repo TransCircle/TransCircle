@@ -1086,6 +1086,17 @@ export async function apiRequest<T = unknown>(
 
   // 锚定的身份已经不是当前身份了：不发。理由见 `requireIdentityGen`。
   if (options.requireIdentityGen !== undefined && options.requireIdentityGen !== _identityGen) {
+    // **这条日志是排障的必需品，不是调试残留。**
+    //
+    // 被这道闸拦下的请求 `status: 0`、`requestId: ""`，服务器端与网络面板里
+    // 都**没有任何痕迹** —— 它连一个字节都没发出去。于是「用户点了确认、
+    // 服务端说没收到」这种现场，从两侧都看不出发生过什么，只能靠猜。
+    // 曾经就是这样耗掉一整个排查：6 张 MFA 挑战 `usedAt` 全为 NULL、
+    // `failedAttempts` 全为 0，而前端只留下一句「请重试」。
+    console.warn(
+      `[auth] 请求因身份代次已变被本地拦下（未发出）：${method} ${path}`,
+      { 锚定代次: options.requireIdentityGen, 当前代次: _identityGen },
+    );
     return {
       ok: false,
       error: { code: "auth_epoch_stale", message: i18n.t("errors.identityChanged") },

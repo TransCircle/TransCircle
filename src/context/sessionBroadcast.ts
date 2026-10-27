@@ -39,9 +39,10 @@ const STORAGE_KEY = "pass:session:signal";
 
 function isEnvelope(value: unknown): value is Envelope {
   if (typeof value !== "object" || value === null) return false;
-  const v = value as { type?: unknown; id?: unknown; at?: unknown };
+  const v = value as { type?: unknown; id?: unknown; at?: unknown; from?: unknown };
   if (v.type !== "signed-in" && v.type !== "signed-out") return false;
   if (typeof v.id !== "string" || v.id.length === 0) return false;
+  if (v.from !== undefined && typeof v.from !== "string") return false;
   // `at` **可以没有**：滚动发布期间，用户开着的旧标签页发出的通知就没有它。
   // 强制要求的话，那些通知会被整条丢掉 —— 旧标签页登出，新标签页毫无察觉，
   // 继续以为自己还登录着。宁可少一项因果信息，也不能把通知本身丢了。
@@ -54,13 +55,41 @@ export type SessionBroadcast =
   | { type: "signed-out" };
 
 /**
- * 线上格式：事件本身 + 用于去重的随机 id + **发出时刻**。
+ * 线上格式：事件本身 + 用于去重的随机 id + **发出时刻** + **发出者标识**。
  *
  * `at` 是给收端判因果用的：一条「比本页刚发起的登录还早**产生**、却晚到」的通知，
  * 不该把那次登录取消掉（见 SessionContext 里对它的使用）。
  * 同源标签页共用系统时钟，这个比较是有意义的；系统时间被改动时最坏退回原行为。
+ *
+ * `from` 用来丢弃「自己发给自己的通知」，**不是可选优化** —— 见 `TAB_ID`。
  */
-type Envelope = SessionBroadcast & { id: string; at?: number };
+type Envelope = SessionBroadcast & { id: string; at?: number; from?: string };
+
+/**
+ * 本标签页的随机标识，进程内不变。用来丢掉自己发出的通知。
+ *
+ * ── 为什么必须有这一层 ────────────────────────────────────────────────────
+ * `BroadcastChannel` 的规范只说发送时 `Remove source from destinations`，
+ * 而那里的 source 是**调用 `postMessage` 的那个对象**。`publishSessionBroadcast()`
+ * 为了「发完就扔」每次都 `new BroadcastChannel(CHANNEL)`，被移除的是这个临时对象；
+ * 订阅者手里那个 channel 完全在 `destinations` 里，照样收到 —— 实测确认（node 与
+ * Chromium 一致，不是某个实现的怪癖）。
+ *
+ * 后果不是「多一次无害的回调」。收到通知的处理是 `bumpIdentityBoundary()`：
+ * 身份代次 +1 且 `abortInflightAuthWrites()`。于是本标签页**每一次**登录/登出
+ * 都会立刻作废自己刚起的登录流程：
+ *
+ *   登录成功 → `installAccessToken()` → 播 signed-in → 自己收到 → 代次 +1
+ *   → 此后所有锚了旧代次的写会话请求（二次验证提交、OAuth 兑换、改密）
+ *     全在 `requireIdentityGen` 闸门处被本地拦下，一个字节都发不出去。
+ *
+ * `localStorage` 那条退路本来就没这个毛病（`storage` 事件只在别的标签页触发），
+ * 两条通路的语义因此还是不一致的 —— 这里把它抹平。
+ *
+ * `from` 缺省时（滚动发布期间，用户开着的旧标签页发出的通知）仍然照收：
+ * 宁可自己多处理一次，也不能把别人真正的登录态变化丢掉。
+ */
+const TAB_ID = newEventId();
 
 /**
  * 去重表的容量上限。
@@ -130,12 +159,20 @@ type Listener = (event: SessionBroadcast, publishedAt?: number) => void;
 export function subscribeSessionBroadcast(listener: Listener): () => void {
   const teardown: Array<() => void> = [];
   const markSeen = createDeduper();
+  /**
+   * 这条通知是不是本标签页自己发的。见 `TAB_ID`。
+   *
+   * 放在去重**之前**判：自己的通知本就不该进 seen 表，否则「发出去 → 自己收到并记下」
+   * 之后，别的标签页真实转发的同一份副本会被当成重复吞掉（这份 id 只可能来自本页，
+   * 但保持判序正确可以省掉一次无谓的状态变更）。
+   */
+  const isOwn = (from: string | undefined) => from !== undefined && from === TAB_ID;
 
   try {
     if (typeof BroadcastChannel !== "undefined") {
       const channel = new BroadcastChannel(CHANNEL);
       const onMessage = (e: MessageEvent) => {
-        if (!isEnvelope(e.data) || !markSeen(e.data.id)) return;
+        if (!isEnvelope(e.data) || isOwn(e.data.from) || !markSeen(e.data.id)) return;
         listener({ type: e.data.type }, e.data.at);
       };
       channel.addEventListener("message", onMessage);
@@ -163,7 +200,7 @@ export function subscribeSessionBroadcast(listener: Listener): () => void {
         if (e.key !== STORAGE_KEY || !e.newValue) return;
         try {
           const parsed: unknown = JSON.parse(e.newValue);
-          if (!isEnvelope(parsed) || !markSeen(parsed.id)) return;
+          if (!isEnvelope(parsed) || isOwn(parsed.from) || !markSeen(parsed.id)) return;
           listener({ type: parsed.type }, parsed.at);
         } catch {
           /* 值被手改成了非法 JSON：忽略 */
@@ -197,7 +234,7 @@ export function publishSessionBroadcast(event: SessionBroadcast): void {
   // 两条通道发的是**同一个** id，收端据此去重（见 `seen`）。
   // 这个 id 同时解决了 storage 的另一个毛病：写入相同的值不会派发事件，
   // 连播两次同类事件会丢掉第二次。
-  const envelope: Envelope = { ...event, id: newEventId(), at: Date.now() };
+  const envelope: Envelope = { ...event, id: newEventId(), at: Date.now(), from: TAB_ID };
   try {
     if (typeof BroadcastChannel !== "undefined") {
       const channel = new BroadcastChannel(CHANNEL);

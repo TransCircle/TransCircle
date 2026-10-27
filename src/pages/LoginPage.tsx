@@ -574,6 +574,14 @@ const LoginPage = () => {
           goVerifyEmail(res.error.data?.email);
           return;
         }
+        // 闸门拦下（`auth_epoch_stale`）：这一发**根本没发出去**，挑战还活着但锚已过期。
+        // 代次单调递增，再点一次「确认」只会撞在同一道墙上 —— 保留表单等于给用户一张
+        // 永远失败、且每次都提示"请重试"的表。清掉流程，让他重新开始。
+        if (res.error.code === "auth_epoch_stale") {
+          clearMfaFlow();
+          setError(t("login.identityChanged"));
+          return;
+        }
         setError(res.error.message);
         return;
       }
@@ -603,6 +611,11 @@ const LoginPage = () => {
       if (!res.ok) {
         if (res.error.code === "EMAIL_NOT_VERIFIED") {
           goVerifyEmail(res.error.data?.email);
+          return;
+        }
+        if (res.error.code === "auth_epoch_stale") {
+          clearMfaFlow();
+          setError(t("login.identityChanged"));
           return;
         }
         setError(res.error.message);
