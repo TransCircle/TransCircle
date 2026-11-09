@@ -1748,7 +1748,7 @@ function ClientWizard(props) {
   function submit() {
     if (!stepUp) { setStepUp(true); return; }
     setResult({ clientId: name.trim() ? 'pass_' + name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 12) : 'pass_new',
-      secret: isConfidential ? 'cs_live_7Kq2xM9pR4vT8wZa1bY6nC3eH5jL0dS' : null });
+      secret: isConfidential ? 'cs_placeholder_REPLACE_WITH_REAL_SECRET' : null });
     setStepUp(false);
   }
 
@@ -2079,7 +2079,7 @@ function ClientDetail(props) {
       message:'生成新密钥。旧密钥保留 24 小时重叠期，接入方在此期间完成替换即可 —— 无需停机。',
       impact:'重叠期内新旧密钥同时有效；重叠期结束旧密钥自动失效。', needStepUp:true, confirmText:'轮换密钥',
       onCancel: function () { setRotating(false); },
-      onConfirm: function () { setRotating(false); setNewSecret('cs_live_2Wq8nP4mR7vX1zA5bK9cE3jH6dL0sT'); } }) : null,
+      onConfirm: function () { setRotating(false); setNewSecret('cs_placeholder_REPLACE_WITH_REAL_SECRET'); } }) : null,
 
     danger ? h(DangerDialog, {
       title: danger === 'delete' ? '删除客户端'
