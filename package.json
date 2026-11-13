@@ -19,7 +19,22 @@
     "brand:generate": "node scripts/generate-brand-assets.ts",
     "deploy": "pnpm build && wrangler deploy && node scripts/indexnow.ts",
     "seo:indexnow": "node scripts/indexnow.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepare": "simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged",
+    "pre-push": "pnpm typecheck",
+    "commit-msg": "node .git-hooks/commit-msg.mjs \"$1\""
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md,yml,yaml,html}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "i18next": "^26.3.0",
@@ -42,9 +57,12 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
     "jsdom": "^29.1.1",
+    "lint-staged": "^17.6.0",
     "prettier": "^3.9.9",
     "sharp": "^0.34.5",
+    "simple-git-hooks": "^2.14.0",
     "typescript": "~5.9.0",
     "typescript-eslint": "^8.71.1",
     "vite": "^7.0.0",

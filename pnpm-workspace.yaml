@@ -3,4 +3,5 @@ packages:
 allowBuilds:
   esbuild: true
   sharp: true
+  simple-git-hooks: true
   workerd: true
