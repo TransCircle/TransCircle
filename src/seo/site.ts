@@ -14,7 +14,12 @@ export const SITE_NAME = "跨环 TransCircle";
 /** 组织的英文官方名。 */
 export const ORG_NAME = "TransCircle Project";
 /** 真实使用过的名称写法；只收录本项目自己的名字，不认领通用词。 */
-export const ORG_ALTERNATE_NAMES = ["跨环", "TransCircle", "TransCircleProject", "跨性别圈工程"] as const;
+export const ORG_ALTERNATE_NAMES = [
+  "跨环",
+  "TransCircle",
+  "TransCircleProject",
+  "跨性别圈工程",
+] as const;
 
 export const SITE_LANGUAGE = "zh-CN";
 /** 首个提交日期，作为项目创立与首页首次发布日期。 */
@@ -50,8 +55,18 @@ export interface Project {
 
 /** 项目组的各个项目，顺序即首页「项目列表」的展示顺序。 */
 export const PROJECTS: readonly Project[] = [
-  { key: "story", url: "https://story.transcircle.org/", seoName: "跨环故事分享", kind: "official" },
-  { key: "community", url: "https://community.transcircle.org/", seoName: "TransCircle 社区论坛", kind: "official" },
+  {
+    key: "story",
+    url: "https://story.transcircle.org/",
+    seoName: "跨环故事分享",
+    kind: "official",
+  },
+  {
+    key: "community",
+    url: "https://community.transcircle.org/",
+    seoName: "TransCircle 社区论坛",
+    kind: "official",
+  },
   { key: "blog", url: "https://blog.transcircle.org/", seoName: "跨环博客", kind: "official" },
   { key: "search", url: "https://search.transcircle.org/", seoName: "跨环内容搜索", kind: "other" },
   { key: "archive", url: null, seoName: "跨环人物归档", kind: "official" },

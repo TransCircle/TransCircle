@@ -65,7 +65,9 @@ export function DiffDialog({
               loading={busy}
               onClick={() => (risky ? setStepUp(true) : onCommit())}
             >
-              {risky ? t("admin.save.verifyAndSave") : t("admin.save.saveN", { count: changes.length })}
+              {risky
+                ? t("admin.save.verifyAndSave")
+                : t("admin.save.saveN", { count: changes.length })}
             </Button>
           </>
         )

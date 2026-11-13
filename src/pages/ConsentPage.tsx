@@ -196,7 +196,8 @@ const ConsentPage = () => {
     );
   }
 
-  const appName = info.client?.clientName?.trim() || info.params.client_id.trim() || t("consent.unnamed");
+  const appName =
+    info.client?.clientName?.trim() || info.params.client_id.trim() || t("consent.unnamed");
   const logoUri = info.client?.logoUri ?? null;
   const scopes = (info.params.scope ?? "").split(/\s+/).filter(Boolean);
   const identityName = user ? user.displayName || user.username : "";
@@ -207,7 +208,11 @@ const ConsentPage = () => {
       <ConsentCard
         appName={appName}
         logoUri={logoUri}
-        viewer={{ name: identityName, email: user?.email ?? null, avatarUrl: user?.avatarUrl ?? null }}
+        viewer={{
+          name: identityName,
+          email: user?.email ?? null,
+          avatarUrl: user?.avatarUrl ?? null,
+        }}
         scopes={scopes}
         redirectHost={redirectHost}
         allowLoading={pending === "confirm"}

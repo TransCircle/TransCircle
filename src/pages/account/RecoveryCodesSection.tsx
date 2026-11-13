@@ -32,7 +32,8 @@ export function RecoveryCodesSection() {
   const { state: iamMfa } = useIamMfa();
   const delegated = iamMfa?.delegated === true;
   // 依会话资料 + 接管状态判断是否已有 2FA——决定是否渲染本区、并在其中任一变化后重取。
-  const sessionHas2fa = !!user && (user.security.totpEnabled || user.security.passkeyCount > 0 || delegated);
+  const sessionHas2fa =
+    !!user && (user.security.totpEnabled || user.security.passkeyCount > 0 || delegated);
 
   const [status, setStatus] = useState<RecoveryCodesStatus | null>(null);
   const [loading, setLoading] = useState(true);

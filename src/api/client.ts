@@ -272,8 +272,7 @@ export type RefreshFailure = "expired" | "transient" | "stale";
 
 /** 续期结果：成功带令牌，失败带原因。 */
 export type RefreshOutcome =
-  | { ok: true; value: RefreshResult }
-  | { ok: false; reason: RefreshFailure };
+  { ok: true; value: RefreshResult } | { ok: false; reason: RefreshFailure };
 
 /**
  * 上一次续期拿到的令牌属于谁（access token 的 `sub`）。
@@ -388,7 +387,6 @@ let _authWriteSeq = 0;
  * 就不该把这次请求取消掉 —— 那是用户更新的意图。见 `bumpIdentityBoundary`。
  */
 let _lastAuthWriteAt = 0;
-
 
 /**
  * 中止在途的「会写会话 cookie」的请求。
@@ -570,7 +568,9 @@ function doRefresh(): Promise<RefreshOutcome> {
         try {
           const body = await res.json().catch(() => ({}));
           console.warn(`[auth] refresh error body:`, body);
-        } catch { /* empty */ }
+        } catch {
+          /* empty */
+        }
         return { ok: false, reason: "transient" };
       }
       const body = (await res.json()) as { data?: { accessToken?: unknown; user?: MeProfile } };
@@ -883,10 +883,7 @@ export function toPageSize(raw: string | number | null | undefined): PageSize {
 type ApiResultBase = { requestId: string; status: number };
 
 export type ApiResult<T = unknown> = ApiResultBase &
-  (
-    | { ok: true; data: T; pagination?: Pagination }
-    | { ok: false; error: ApiErrorBody }
-  );
+  ({ ok: true; data: T; pagination?: Pagination } | { ok: false; error: ApiErrorBody });
 
 /**
  * 身份平面只剩 `user` 一条。
@@ -1093,10 +1090,10 @@ export async function apiRequest<T = unknown>(
     // 服务端说没收到」这种现场，从两侧都看不出发生过什么，只能靠猜。
     // 曾经就是这样耗掉一整个排查：6 张 MFA 挑战 `usedAt` 全为 NULL、
     // `failedAttempts` 全为 0，而前端只留下一句「请重试」。
-    console.warn(
-      `[auth] 请求因身份代次已变被本地拦下（未发出）：${method} ${path}`,
-      { 锚定代次: options.requireIdentityGen, 当前代次: _identityGen },
-    );
+    console.warn(`[auth] 请求因身份代次已变被本地拦下（未发出）：${method} ${path}`, {
+      锚定代次: options.requireIdentityGen,
+      当前代次: _identityGen,
+    });
     return {
       ok: false,
       error: { code: "auth_epoch_stale", message: i18n.t("errors.identityChanged") },
@@ -1203,14 +1200,15 @@ export async function apiRequest<T = unknown>(
     releaseAuthWrite();
     return {
       ok: false,
-      error: aborted && byTimeout
-        ? { code: "request_timeout", message: i18n.t("errors.requestTimeout") }
-        : aborted
-        ? { code: "auth_boundary_aborted", message: i18n.t("errors.authBoundaryAborted") }
-        : {
-            code: "network_error",
-            message: e instanceof Error ? e.message : i18n.t("errors.networkFailed"),
-          },
+      error:
+        aborted && byTimeout
+          ? { code: "request_timeout", message: i18n.t("errors.requestTimeout") }
+          : aborted
+            ? { code: "auth_boundary_aborted", message: i18n.t("errors.authBoundaryAborted") }
+            : {
+                code: "network_error",
+                message: e instanceof Error ? e.message : i18n.t("errors.networkFailed"),
+              },
       requestId: "",
       status: 0,
     };
@@ -1315,16 +1313,17 @@ export async function apiRequest<T = unknown>(
         // transient 标记优先：原始 401 的响应体为空/被网关截断时，
         // 若在这里退回 invalid_response，「令牌过期 + 续期撞上 503」就又会被
         // SessionContext 当成会话失效而登出 —— 恰恰是上一轮要修的那件事。
-        error: refreshFailureError(status, handled.refreshFailure)
-          ?? { code: "invalid_response", message: i18n.t("errors.unknown") },
+        error: refreshFailureError(status, handled.refreshFailure) ?? {
+          code: "invalid_response",
+          message: i18n.t("errors.unknown"),
+        },
         requestId: res.headers.get("X-Request-Id") ?? "",
         status,
       };
     }
     const staleAfterParse = identityStale();
     if (staleAfterParse) return staleAfterParse;
-    const requestId =
-      (json.requestId as string) ?? res.headers.get("X-Request-Id") ?? "";
+    const requestId = (json.requestId as string) ?? res.headers.get("X-Request-Id") ?? "";
 
     if (status >= 200 && status < 300) {
       const csrf = json.csrfToken as string | undefined;
@@ -1340,9 +1339,8 @@ export async function apiRequest<T = unknown>(
     const error = json.error as ApiErrorBody | undefined;
     return {
       ok: false,
-      error: refreshFailureError(status, handled.refreshFailure)
-        ?? error
-        ?? { code: "unknown", message: i18n.t("errors.unknown") },
+      error: refreshFailureError(status, handled.refreshFailure) ??
+        error ?? { code: "unknown", message: i18n.t("errors.unknown") },
       requestId,
       status,
     };
@@ -1353,8 +1351,10 @@ export async function apiRequest<T = unknown>(
   }
   return {
     ok: false,
-    error: refreshFailureError(status, handled.refreshFailure)
-      ?? { code: "http_error", message: i18n.t("errors.requestFailed", { status }) },
+    error: refreshFailureError(status, handled.refreshFailure) ?? {
+      code: "http_error",
+      message: i18n.t("errors.requestFailed", { status }),
+    },
     requestId: "",
     status,
   };

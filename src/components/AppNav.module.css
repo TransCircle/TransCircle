@@ -108,7 +108,8 @@
   color: var(--text-secondary);
   text-decoration: none;
   cursor: pointer;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
 /* §5.3：hover 文字转 --pink-700（暗色 --pink-400，由 token 分支承担）。 */
@@ -161,7 +162,9 @@
 }
 
 /* ── Dropdown menus ────────────────────────────────────── */
-.dropdown { position: relative; }
+.dropdown {
+  position: relative;
+}
 
 /* 下拉为浮动层 → 玻璃面板 + --shadow-3（§5.3 / §1.4）。 */
 .menu {
@@ -183,7 +186,11 @@
   transform-origin: top left;
   animation: menuIn var(--dur-2) var(--ease-out);
 }
-.menuRight { left: auto; right: 0; transform-origin: top right; }
+.menuRight {
+  left: auto;
+  right: 0;
+  transform-origin: top right;
+}
 
 @supports not (backdrop-filter: blur(1px)) {
   .menu {
@@ -207,7 +214,8 @@
   text-decoration: none;
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
 .menuItem:hover {
@@ -259,21 +267,37 @@
   border-radius: var(--r-pill); /* §2.8：pill 仅头像 */
   cursor: pointer;
   color: var(--ink);
-  transition: box-shadow var(--dur-1) var(--ease-standard),
+  transition:
+    box-shadow var(--dur-1) var(--ease-standard),
     transform var(--dur-1) var(--ease-spring);
 }
-.acctBtn:hover { box-shadow: 0 0 0 2px var(--pink-200); }
+.acctBtn:hover {
+  box-shadow: 0 0 0 2px var(--pink-200);
+}
 
-:global([data-theme="dark"]) .acctBtn:hover { box-shadow: 0 0 0 2px var(--pink-500); }
+:global([data-theme="dark"]) .acctBtn:hover {
+  box-shadow: 0 0 0 2px var(--pink-500);
+}
 
 @media (prefers-color-scheme: dark) {
-  :global(:root:not([data-theme])) .acctBtn:hover { box-shadow: 0 0 0 2px var(--pink-500); }
+  :global(:root:not([data-theme])) .acctBtn:hover {
+    box-shadow: 0 0 0 2px var(--pink-500);
+  }
 }
-.acctBtn[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--pink-600); }
-.acctBtn:active { transform: scale(0.97); }
-.acctBtn:focus-visible { outline: 2px solid var(--pink-600); outline-offset: 2px; }
+.acctBtn[aria-expanded="true"] {
+  box-shadow: 0 0 0 2px var(--pink-600);
+}
+.acctBtn:active {
+  transform: scale(0.97);
+}
+.acctBtn:focus-visible {
+  outline: 2px solid var(--pink-600);
+  outline-offset: 2px;
+}
 /* 头像本身不吃指针事件:点击/hover 判定始终落到按钮,保证 hover 打开与点击一致。 */
-.acctBtn > * { pointer-events: none; }
+.acctBtn > * {
+  pointer-events: none;
+}
 
 /* §5.1 Primary 按钮，禁止 pill。 */
 .loginCta {
@@ -289,7 +313,8 @@
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     transform var(--dur-1) var(--ease-spring),
     box-shadow var(--dur-1) var(--ease-standard);
 }
@@ -299,7 +324,9 @@
   transform: translateY(-1px);
   box-shadow: var(--glow-pink);
 }
-.loginCta:active { transform: scale(0.97); }
+.loginCta:active {
+  transform: scale(0.97);
+}
 
 :global([data-theme="dark"]) .loginCta:hover {
   box-shadow: var(--glow-pink-dark);
@@ -330,7 +357,9 @@
   /* 必须压在抽屉之上，关闭按钮（X 态）才点得到。 */
   z-index: calc(var(--z-drawer) + 1);
 }
-.hamburger:hover { background-color: var(--pink-100); }
+.hamburger:hover {
+  background-color: var(--pink-100);
+}
 
 .bar {
   display: block;
@@ -338,7 +367,9 @@
   width: 100%;
   background-color: var(--ink);
   border-radius: var(--r-xs);
-  transition: transform var(--dur-2) var(--ease-standard), opacity var(--dur-2) var(--ease-standard);
+  transition:
+    transform var(--dur-2) var(--ease-standard),
+    opacity var(--dur-2) var(--ease-standard);
   transform-origin: center center;
   will-change: transform, opacity;
 }
@@ -367,7 +398,9 @@
   transition: transform var(--dur-2) var(--ease-out);
   overflow-y: auto;
 }
-.drawerOpen { transform: translateX(0); }
+.drawerOpen {
+  transform: translateX(0);
+}
 
 .drawerHeader {
   position: sticky;
@@ -403,7 +436,8 @@
   font-size: var(--fs-h2);
   line-height: 1;
   cursor: pointer;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
 
@@ -432,7 +466,8 @@
   text-decoration: none;
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
 .drawerLink:hover {
@@ -459,16 +494,36 @@
   .drawerOpen .drawerInner > * {
     animation: drawerLinkIn var(--dur-2) var(--ease-out) both;
   }
-  .drawerOpen .drawerInner > *:nth-child(1) { animation-delay: 40ms; }
-  .drawerOpen .drawerInner > *:nth-child(2) { animation-delay: 80ms; }
-  .drawerOpen .drawerInner > *:nth-child(3) { animation-delay: 120ms; }
-  .drawerOpen .drawerInner > *:nth-child(4) { animation-delay: 160ms; }
-  .drawerOpen .drawerInner > *:nth-child(5) { animation-delay: 200ms; }
-  .drawerOpen .drawerInner > *:nth-child(6) { animation-delay: 240ms; }
-  .drawerOpen .drawerInner > *:nth-child(7) { animation-delay: 280ms; }
-  .drawerOpen .drawerInner > *:nth-child(8) { animation-delay: 320ms; }
-  .drawerOpen .drawerInner > *:nth-child(9) { animation-delay: 360ms; }
-  .drawerOpen .drawerInner > *:nth-child(n + 10) { animation-delay: 400ms; }
+  .drawerOpen .drawerInner > *:nth-child(1) {
+    animation-delay: 40ms;
+  }
+  .drawerOpen .drawerInner > *:nth-child(2) {
+    animation-delay: 80ms;
+  }
+  .drawerOpen .drawerInner > *:nth-child(3) {
+    animation-delay: 120ms;
+  }
+  .drawerOpen .drawerInner > *:nth-child(4) {
+    animation-delay: 160ms;
+  }
+  .drawerOpen .drawerInner > *:nth-child(5) {
+    animation-delay: 200ms;
+  }
+  .drawerOpen .drawerInner > *:nth-child(6) {
+    animation-delay: 240ms;
+  }
+  .drawerOpen .drawerInner > *:nth-child(7) {
+    animation-delay: 280ms;
+  }
+  .drawerOpen .drawerInner > *:nth-child(8) {
+    animation-delay: 320ms;
+  }
+  .drawerOpen .drawerInner > *:nth-child(9) {
+    animation-delay: 360ms;
+  }
+  .drawerOpen .drawerInner > *:nth-child(n + 10) {
+    animation-delay: 400ms;
+  }
 }
 
 /* §5.3：遮罩 --overlay + blur(4px)。 */
@@ -484,7 +539,10 @@
   pointer-events: none;
   transition: opacity var(--dur-2) var(--ease-standard);
 }
-.overlayOn { opacity: 1; pointer-events: auto; }
+.overlayOn {
+  opacity: 1;
+  pointer-events: auto;
+}
 
 /* 退出登录失败的可见反馈:语义软色,role=alert 由读屏播报。 */
 .logoutError {
@@ -500,13 +558,25 @@
 
 /* §5.7：下拉入场 scale(.96→1)。 */
 @keyframes menuIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes drawerLinkIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 触屏(含触屏笔记本,故用 any-pointer 而非 pointer)保证 ≥44px 触控目标。 */
@@ -539,22 +609,44 @@
 
 /* 1025–1200px：横排仍在，收紧项间距与内边距，给左右两组留足空间。 */
 @media (max-width: 1200px) {
-  .inner { gap: var(--s-3); }
-  .link { padding-inline: var(--s-2); }
+  .inner {
+    gap: var(--s-3);
+  }
+  .link {
+    padding-inline: var(--s-2);
+  }
 }
 
 /* ≤1024px：横排收进汉堡抽屉（与 AppNav.tsx 的 MOBILE_BREAKPOINT 互指）。 */
 @media (max-width: 1024px) {
-  .hamburger { display: flex; }
-  .links { display: none; }
+  .hamburger {
+    display: flex;
+  }
+  .links {
+    display: none;
+  }
   .loginCta {
     padding: 0 var(--s-3);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .link, .menuItem, .acctBtn, .loginCta, .drawer, .overlay, .hamburger, .activeStripeAnimated { transition: none; }
-  .menu { animation: none; }
-  .loginCta:hover, .loginCta:active, .acctBtn:active { transform: none; }
+  .link,
+  .menuItem,
+  .acctBtn,
+  .loginCta,
+  .drawer,
+  .overlay,
+  .hamburger,
+  .activeStripeAnimated {
+    transition: none;
+  }
+  .menu {
+    animation: none;
+  }
+  .loginCta:hover,
+  .loginCta:active,
+  .acctBtn:active {
+    transform: none;
+  }
 }
-

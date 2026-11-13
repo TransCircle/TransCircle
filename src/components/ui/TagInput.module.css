@@ -22,7 +22,8 @@
   border: 1.5px solid var(--line-strong);
   border-radius: var(--r-sm);
   background-color: var(--surface-2);
-  transition: border-color var(--dur-1) var(--ease-standard),
+  transition:
+    border-color var(--dur-1) var(--ease-standard),
     box-shadow var(--dur-1) var(--ease-standard);
 }
 
@@ -69,13 +70,14 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
 
 /* Expand the tap target to >=40px without bloating the chip visually. */
 .remove::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -10px;
 }

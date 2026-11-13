@@ -19,7 +19,8 @@ function computeActive(ids: readonly string[]): string | null {
   const present = ids.filter((id) => document.getElementById(id) !== null);
 
   const scroller = document.scrollingElement ?? document.documentElement;
-  const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - BOTTOM_SLACK_PX;
+  const atBottom =
+    scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - BOTTOM_SLACK_PX;
   if (atBottom && scroller.scrollTop > 0) {
     const last = present[present.length - 1];
     if (last) return last;

@@ -374,7 +374,11 @@ export interface AdminUserDetail {
 
 /** GET /v1/admin/users/:id/mfa —— TOTP 与恢复码状态（不返回码本身）。 */
 export interface AdminUserMfa {
-  totp: { status: "active" | "pending" | "disabled" | string; enabledAt: number | null; lastUsedAt: number | null };
+  totp: {
+    status: "active" | "pending" | "disabled" | string;
+    enabledAt: number | null;
+    lastUsedAt: number | null;
+  };
   passkeyCount: number;
   recoveryCodes: { total: number; used: number; remaining: number };
   /** 已交给统一身份接管时，本地 TOTP / Passkey 在登录路径上不生效。 */

@@ -2,11 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { API_BASE, api } from "../../api/client";
-import type {
-  AdminClientCreated,
-  ClientApplicationType,
-  ClientEnvironment,
-} from "../../api/types";
+import type { AdminClientCreated, ClientApplicationType, ClientEnvironment } from "../../api/types";
 import {
   AdminButton as Button,
   Alert,
@@ -63,7 +59,11 @@ const ClientNewPage = () => {
 
   const needsRedirect = type !== "m2m";
   const canNext =
-    step === 1 ? true : step === 2 ? name.trim().length > 0 && (!needsRedirect || redirectUris.length > 0) : true;
+    step === 1
+      ? true
+      : step === 2
+        ? name.trim().length > 0 && (!needsRedirect || redirectUris.length > 0)
+        : true;
 
   const create = async () => {
     const data = await action.run<AdminClientCreated>("create", (idem) =>
@@ -96,10 +96,17 @@ const ClientNewPage = () => {
       `PASS_CLIENT_ID="${result.clientId}"`,
     ];
     if (result.clientSecret) {
-      lines.push(`PASS_CLIENT_SECRET="${result.clientSecret}"   ${t("admin.wizard.config.onceOnly")}`);
+      lines.push(
+        `PASS_CLIENT_SECRET="${result.clientSecret}"   ${t("admin.wizard.config.onceOnly")}`,
+      );
     }
     if (needsRedirect) lines.push(`PASS_REDIRECT_URI="${redirectUris[0] ?? ""}"`);
-    lines.push(`PASS_SCOPE="${scopes.join(" ")}"`, "", t("admin.wizard.config.discovery"), `#   GET ${passIssuer()}/.well-known/openid-configuration`);
+    lines.push(
+      `PASS_SCOPE="${scopes.join(" ")}"`,
+      "",
+      t("admin.wizard.config.discovery"),
+      `#   GET ${passIssuer()}/.well-known/openid-configuration`,
+    );
     const config = lines.join("\n");
 
     return (
@@ -118,9 +125,13 @@ const ClientNewPage = () => {
         </Card>
         <Card accent={!!result.clientSecret}>
           <SectionLabel as="h2">
-            {result.clientSecret ? t("admin.wizard.confirmSavedTitle") : t("admin.wizard.doneTitle")}
+            {result.clientSecret
+              ? t("admin.wizard.confirmSavedTitle")
+              : t("admin.wizard.doneTitle")}
           </SectionLabel>
-          {result.clientSecret && <p className={styles.note}>{t("admin.wizard.confirmSavedDesc")}</p>}
+          {result.clientSecret && (
+            <p className={styles.note}>{t("admin.wizard.confirmSavedDesc")}</p>
+          )}
           <div className={styles.row}>
             <Button variant="primary" onClick={() => navigate(`/admin/clients/${result.clientId}`)}>
               {result.clientSecret ? t("admin.wizard.savedDone") : t("admin.wizard.done")}
@@ -240,9 +251,7 @@ const ClientNewPage = () => {
                     disabled={!!s.locked || (!!s.firstParty && !trusted)}
                     onChange={(e) =>
                       setScopes(
-                        e.target.checked
-                          ? [...scopes, s.key]
-                          : scopes.filter((x) => x !== s.key),
+                        e.target.checked ? [...scopes, s.key] : scopes.filter((x) => x !== s.key),
                       )
                     }
                   />

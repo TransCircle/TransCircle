@@ -73,7 +73,9 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = Object.fromEntries(
 const AVATAR_FILE = /^[A-Za-z0-9-]+-[0-9a-f]{12}\.(png|jpg|gif|webp)$/;
 
 async function readLogins(): Promise<string[]> {
-  const team = JSON.parse(await readFile(TEAM_JSON, "utf8")) as { members: Array<{ github: string }> };
+  const team = JSON.parse(await readFile(TEAM_JSON, "utf8")) as {
+    members: Array<{ github: string }>;
+  };
   return team.members.map((m) => m.github);
 }
 
@@ -131,7 +133,10 @@ async function fetchProfile(login: string): Promise<CachedProfile> {
   if (!res.ok) throw new Error(`GitHub API ${res.status}`);
   const data = (await res.json()) as { login: string; name: string | null; avatar_url: string };
   // 没设昵称的账号显示用户名。
-  return { name: data.name?.trim() || data.login, avatarFile: await downloadAvatar(login, data.avatar_url) };
+  return {
+    name: data.name?.trim() || data.login,
+    avatarFile: await downloadAvatar(login, data.avatar_url),
+  };
 }
 
 async function avatarExists(file: string | null): Promise<boolean> {
@@ -144,12 +149,17 @@ async function avatarExists(file: string | null): Promise<boolean> {
   }
 }
 
-async function loadCachedProfiles(ttlMs: number, warn: (msg: string) => void): Promise<Record<string, CachedProfile>> {
+async function loadCachedProfiles(
+  ttlMs: number,
+  warn: (msg: string) => void,
+): Promise<Record<string, CachedProfile>> {
   const logins = await readLogins();
   const cache = await readCache();
   const covered = cache !== null && logins.every((login) => Object.hasOwn(cache.profiles, login));
   if (cache && covered && Date.now() - cache.fetchedAt < ttlMs) {
-    const files = await Promise.all(logins.map((login) => avatarExists(cache.profiles[login]?.avatarFile ?? null)));
+    const files = await Promise.all(
+      logins.map((login) => avatarExists(cache.profiles[login]?.avatarFile ?? null)),
+    );
     if (files.every(Boolean)) return cache.profiles;
   }
 
@@ -166,7 +176,11 @@ async function loadCachedProfiles(ttlMs: number, warn: (msg: string) => void): P
     }
     failed.push(`${login}（${String(result.reason)}）`);
     const cached = cache?.profiles[login];
-    if (cached) profiles[login] = { ...cached, avatarFile: (await avatarExists(cached.avatarFile)) ? cached.avatarFile : null };
+    if (cached)
+      profiles[login] = {
+        ...cached,
+        avatarFile: (await avatarExists(cached.avatarFile)) ? cached.avatarFile : null,
+      };
   }
   if (failed.length > 0) warn(`拉取 GitHub 成员资料失败，已改用缓存或用户名：${failed.join("；")}`);
 
@@ -221,7 +235,8 @@ export function githubTeamPlugin(): Plugin {
       if (isSsrBuild) {
         // 只读客户端构建交接的快照（见文件头），从不联网。
         const snapshot = await readCache(SNAPSHOT_FILE);
-        if (!snapshot) this.error("SSR 构建未找到客户端构建写入的成员资料快照：请用 pnpm build 按顺序构建");
+        if (!snapshot)
+          this.error("SSR 构建未找到客户端构建写入的成员资料快照：请用 pnpm build 按顺序构建");
         return `export default ${JSON.stringify(toPublic(snapshot.profiles))};`;
       }
       this.addWatchFile(TEAM_JSON);
@@ -230,7 +245,11 @@ export function githubTeamPlugin(): Plugin {
         // 无论资料来自新拉取还是缓存命中，都把本次构建实际使用的那份交给 SSR；
         // 写不进去就会让预渲染读到旧快照、引用未发布的头像，宁可中止构建。
         try {
-          await writeJsonAtomic(SNAPSHOT_FILE, { version: 2, fetchedAt: Date.now(), profiles: resolved } satisfies CacheFile);
+          await writeJsonAtomic(SNAPSHOT_FILE, {
+            version: 2,
+            fetchedAt: Date.now(),
+            profiles: resolved,
+          } satisfies CacheFile);
         } catch (error) {
           this.error(`写入 GitHub 成员资料构建快照失败：${String(error)}`);
         }

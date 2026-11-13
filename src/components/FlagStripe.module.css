@@ -20,7 +20,9 @@
 
 .white {
   background-color: var(--flag-white);
-  box-shadow: inset 0 1px 0 var(--line), inset 0 -1px 0 var(--line);
+  box-shadow:
+    inset 0 1px 0 var(--line),
+    inset 0 -1px 0 var(--line);
 }
 
 .blue {

@@ -51,7 +51,11 @@ const ResetPasswordPage = () => {
     }
     setBusy(true);
     try {
-      const res = await api.post("/v1/auth/password/reset", { token, newPassword: password }, { noAuth: true });
+      const res = await api.post(
+        "/v1/auth/password/reset",
+        { token, newPassword: password },
+        { noAuth: true },
+      );
       if (!res.ok) {
         setError(res.error.message);
         return;
@@ -94,7 +98,9 @@ const ResetPasswordPage = () => {
           type="password"
           autoComplete="new-password"
           autoFocus
-          hint={password ? `${t("password.strengthLabel")}: ${strengthLabels[strength]}` : undefined}
+          hint={
+            password ? `${t("password.strengthLabel")}: ${strengthLabels[strength]}` : undefined
+          }
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required

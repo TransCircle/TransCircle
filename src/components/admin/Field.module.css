@@ -120,7 +120,8 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
 
@@ -175,7 +176,8 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
 

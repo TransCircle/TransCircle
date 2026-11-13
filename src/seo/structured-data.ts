@@ -53,7 +53,10 @@ function personNode({ github, name, avatar }: TeamMember): JsonLdNode {
   };
 }
 
-export function buildHomeStructuredData({ translate, dateModified }: StructuredDataInput): JsonLdNode {
+export function buildHomeStructuredData({
+  translate,
+  dateModified,
+}: StructuredDataInput): JsonLdNode {
   const description = translate("seo.homeDescription");
 
   const organization: JsonLdNode = {
@@ -62,7 +65,14 @@ export function buildHomeStructuredData({ translate, dateModified }: StructuredD
     name: ORG_NAME,
     alternateName: [...ORG_ALTERNATE_NAMES],
     url: SITE_URL,
-    logo: { "@type": "ImageObject", "@id": LOGO_ID, url: LOGO.url, width: LOGO.width, height: LOGO.height, caption: SITE_NAME },
+    logo: {
+      "@type": "ImageObject",
+      "@id": LOGO_ID,
+      url: LOGO.url,
+      width: LOGO.width,
+      height: LOGO.height,
+      caption: SITE_NAME,
+    },
     image: { "@id": OG_IMAGE_ID },
     description,
     slogan: translate("landing.subtitle"),
@@ -173,7 +183,15 @@ export function buildHomeStructuredData({ translate, dateModified }: StructuredD
 
   return {
     "@context": "https://schema.org",
-    "@graph": [organization, website, primaryImage, webpage, faq, ...TEAM_MEMBERS.map(personNode), ...sisterSites],
+    "@graph": [
+      organization,
+      website,
+      primaryImage,
+      webpage,
+      faq,
+      ...TEAM_MEMBERS.map(personNode),
+      ...sisterSites,
+    ],
   };
 }
 

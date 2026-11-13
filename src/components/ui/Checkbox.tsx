@@ -6,16 +6,19 @@ import {
   useRef,
   type InputHTMLAttributes,
   type ReactNode,
-} from 'react'
-import { cx } from '../admin/cx'
-import styles from './Checkbox.module.css'
+} from "react";
+import { cx } from "../admin/cx";
+import styles from "./Checkbox.module.css";
 
-export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'children'> {
-  label: ReactNode
-  hint?: string
-  invalid?: boolean
-  indeterminate?: boolean
-  fieldClassName?: string
+export interface CheckboxProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "type" | "children"
+> {
+  label: ReactNode;
+  hint?: string;
+  invalid?: boolean;
+  indeterminate?: boolean;
+  fieldClassName?: string;
 }
 
 /**
@@ -27,20 +30,23 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
   { label, hint, invalid, indeterminate, id, className, fieldClassName, disabled, ...rest },
   ref,
 ) {
-  const autoId = useId()
-  const inputId = id ?? autoId
-  const hintId = hint ? `${inputId}-hint` : undefined
-  const innerRef = useRef<HTMLInputElement>(null)
+  const autoId = useId();
+  const inputId = id ?? autoId;
+  const hintId = hint ? `${inputId}-hint` : undefined;
+  const innerRef = useRef<HTMLInputElement>(null);
 
-  useImperativeHandle(ref, () => innerRef.current as HTMLInputElement, [])
+  useImperativeHandle(ref, () => innerRef.current as HTMLInputElement, []);
 
   useEffect(() => {
-    if (innerRef.current) innerRef.current.indeterminate = !!indeterminate
-  }, [indeterminate])
+    if (innerRef.current) innerRef.current.indeterminate = !!indeterminate;
+  }, [indeterminate]);
 
   return (
     <div className={cx(styles.field, fieldClassName)}>
-      <label htmlFor={inputId} className={cx(styles.row, disabled && styles.disabled, invalid && styles.invalid)}>
+      <label
+        htmlFor={inputId}
+        className={cx(styles.row, disabled && styles.disabled, invalid && styles.invalid)}
+      >
         <input
           ref={innerRef}
           id={inputId}
@@ -52,7 +58,18 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
           {...rest}
         />
         <span className={styles.box} aria-hidden="true">
-          <svg className={styles.check} viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" focusable="false">
+          <svg
+            className={styles.check}
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            focusable="false"
+          >
             <path d="M20 6 9 17l-5-5" />
           </svg>
           <span className={styles.dash} />
@@ -65,5 +82,5 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         </span>
       )}
     </div>
-  )
-})
+  );
+});

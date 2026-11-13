@@ -1,6 +1,6 @@
-import { useCallback } from 'react'
-import { useTranslation } from 'react-i18next'
-import i18n from '../i18n/config'
+import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n/config";
 
 /**
  * Locale-aware timestamp formatter.
@@ -19,19 +19,19 @@ export function formatTs(
   locale?: string,
   opts?: { utc?: boolean },
 ): string {
-  if (ts === null || ts === undefined || ts === '') return ''
-  const n = typeof ts === 'string' ? Number(ts) : ts
-  if (typeof n !== 'number' || Number.isNaN(n)) return String(ts)
-  const lng = locale ?? i18n.language ?? 'zh-CN'
+  if (ts === null || ts === undefined || ts === "") return "";
+  const n = typeof ts === "string" ? Number(ts) : ts;
+  if (typeof n !== "number" || Number.isNaN(n)) return String(ts);
+  const lng = locale ?? i18n.language ?? "zh-CN";
   return new Intl.DateTimeFormat(lng, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: false,
-    ...(opts?.utc ? { timeZone: 'UTC' } : {}),
-  }).format(new Date(n))
+    ...(opts?.utc ? { timeZone: "UTC" } : {}),
+  }).format(new Date(n));
 }
 
 /**
@@ -39,10 +39,10 @@ export function formatTs(
  * inside components don't thread `locale` manually and output updates on language switch.
  */
 export function useFormatTs() {
-  const { i18n: instance } = useTranslation()
+  const { i18n: instance } = useTranslation();
   return useCallback(
     (ts: number | string | null | undefined, opts?: { utc?: boolean }) =>
       formatTs(ts, instance.language, opts),
     [instance.language],
-  )
+  );
 }

@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type RefObject,
+} from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSession } from "../context/SessionContext";
@@ -30,8 +39,8 @@ const SECTION_TITLE_KEYS: Record<SectionId, string> = {
 };
 
 const prefersReducedMotion = (): boolean =>
-  typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
+  typeof window.matchMedia === "function" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 interface NavLinkDef {
   /** 完整名称：抽屉、悬停提示。 */
@@ -120,7 +129,10 @@ export function AppNav() {
    *（adminAuthed 另有来源，且必须等真实接口）。
    */
   const navIdentity =
-    user ?? (status === "unknown" && hint ? { displayName: hint.displayName, avatarUrl: hint.avatarUrl } : null);
+    user ??
+    (status === "unknown" && hint
+      ? { displayName: hint.displayName, avatarUrl: hint.avatarUrl }
+      : null);
   const navUser = navIdentity;
   /**
    * 身份还只是「提示」时，头像只作占位、不可交互。
@@ -285,7 +297,9 @@ export function AppNav() {
     const main = document.querySelector<HTMLElement>("main");
     if (main) main.inert = true;
     const focusables = () =>
-      drawer?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      drawer?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
     focusables()?.[0]?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
@@ -381,7 +395,9 @@ export function AppNav() {
   };
 
   // user 的 displayName 可能为空串，回落用户名；hint 在写入时已经做过同样的回落。
-  const displayName = user ? user.displayName || user.username || "" : navIdentity?.displayName ?? "";
+  const displayName = user
+    ? user.displayName || user.username || ""
+    : (navIdentity?.displayName ?? "");
   const avatarUrl = navIdentity?.avatarUrl ?? null;
   const logoutLabel = loggingOut ? t("nav.loggingOut") : t("nav.logout");
   /** 管理员的角色说明（原先画在后台左栏底部）；非管理员不显示。 */
@@ -494,7 +510,8 @@ export function AppNav() {
                       setAcctOpen(true);
                     } else {
                       // 已(悬停)打开且焦点在触发器上时,方向键把焦点送入菜单,后续由 useMenuKeyboard 接管。
-                      const items = acctMenuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]');
+                      const items =
+                        acctMenuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]');
                       if (items && items.length > 0) {
                         (e.key === "ArrowDown" ? items[0] : items[items.length - 1])?.focus();
                       }
@@ -510,13 +527,23 @@ export function AppNav() {
                         这里对读屏隐藏，避免 role=menu 里混入非菜单项。 */}
                     <li aria-hidden="true" className={styles.menuHeader}>
                       <span className={styles.menuHeaderName}>{displayName}</span>
-                      {adminRoleText && <span className={styles.menuHeaderMeta}>{adminRoleText}</span>}
+                      {adminRoleText && (
+                        <span className={styles.menuHeaderMeta}>{adminRoleText}</span>
+                      )}
                     </li>
                     <li role="separator" className={styles.menuSeparator} />
                     {/* 账户中心对所有人都在：管理员首先也是普通用户，个人资料 / 安全设置同样要能找到。 */}
-                    <li role="none"><Link role="menuitem" to="/account" className={styles.menuItem}>{t("nav.account")}</Link></li>
+                    <li role="none">
+                      <Link role="menuitem" to="/account" className={styles.menuItem}>
+                        {t("nav.account")}
+                      </Link>
+                    </li>
                     {adminAuthed && (
-                      <li role="none"><Link role="menuitem" to="/admin" className={styles.menuItem}>{t("nav.admin")}</Link></li>
+                      <li role="none">
+                        <Link role="menuitem" to="/admin" className={styles.menuItem}>
+                          {t("nav.admin")}
+                        </Link>
+                      </li>
                     )}
                     <li role="separator" className={styles.menuSeparator} />
                     <li role="none">
@@ -532,14 +559,18 @@ export function AppNav() {
                     </li>
                     {logoutFailed && (
                       <li role="none">
-                        <p className={styles.logoutError} role="alert">{t("nav.logoutFailed")}</p>
+                        <p className={styles.logoutError} role="alert">
+                          {t("nav.logoutFailed")}
+                        </p>
                       </li>
                     )}
                   </ul>
                 )}
               </div>
             ) : (
-              <Link to="/login" className={styles.loginCta}>{t("nav.login")}</Link>
+              <Link to="/login" className={styles.loginCta}>
+                {t("nav.login")}
+              </Link>
             )}
           </div>
         </div>
@@ -554,7 +585,7 @@ export function AppNav() {
         inert={drawerOpen ? undefined : true}
         role="dialog"
         aria-modal="true"
-        aria-label={t('nav.primary')}
+        aria-label={t("nav.primary")}
       >
         <div className={styles.drawerHeader}>
           <div className={styles.drawerBrand} aria-hidden="true">
@@ -584,19 +615,35 @@ export function AppNav() {
         </div>
         <div className={styles.drawerInner}>
           {navLinks.map((l) => (
-            <Link key={l.to} to={l.to} className={styles.drawerLink} aria-current={currentKind(l)} onClick={onNavClick(l)}>
+            <Link
+              key={l.to}
+              to={l.to}
+              className={styles.drawerLink}
+              aria-current={currentKind(l)}
+              onClick={onNavClick(l)}
+            >
               {l.label}
             </Link>
           ))}
           <hr className={styles.drawerDivider} />
-          {identityUnconfirmed ? (
-            // 身份提示未证实：不提供账户/退出等可能失败的操作。
-            null
-          ) : navUser ? (
+          {identityUnconfirmed ? // 身份提示未证实：不提供账户/退出等可能失败的操作。
+          null : navUser ? (
             <>
-              <Link to="/account" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.account")}</Link>
+              <Link
+                to="/account"
+                className={styles.drawerLink}
+                onClick={() => setDrawerOpen(false)}
+              >
+                {t("nav.account")}
+              </Link>
               {adminAuthed && (
-                <Link to="/admin" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.admin")}</Link>
+                <Link
+                  to="/admin"
+                  className={styles.drawerLink}
+                  onClick={() => setDrawerOpen(false)}
+                >
+                  {t("nav.admin")}
+                </Link>
               )}
               <button
                 type="button"
@@ -607,11 +654,15 @@ export function AppNav() {
                 {logoutLabel}
               </button>
               {logoutFailed && (
-                <p className={styles.logoutError} role="alert">{t("nav.logoutFailed")}</p>
+                <p className={styles.logoutError} role="alert">
+                  {t("nav.logoutFailed")}
+                </p>
               )}
             </>
           ) : (
-            <Link to="/login" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>{t("nav.login")}</Link>
+            <Link to="/login" className={styles.drawerLink} onClick={() => setDrawerOpen(false)}>
+              {t("nav.login")}
+            </Link>
           )}
         </div>
       </div>

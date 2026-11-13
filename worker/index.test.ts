@@ -8,7 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import worker from "./index";
 
-const INDEX_HTML = '<html><head><title>home</title></head><body><div id="root">prerendered</div></body></html>';
+const INDEX_HTML =
+  '<html><head><title>home</title></head><body><div id="root">prerendered</div></body></html>';
 
 /** 模拟 wrangler assets：已知文件直接返回，其余走 SPA 回退（index.html，200）。 */
 function makeEnv(files: Record<string, { body: string; type: string }> = {}): Env {
@@ -17,7 +18,9 @@ function makeEnv(files: Record<string, { body: string; type: string }> = {}): En
       const { pathname } = new URL(input instanceof Request ? input.url : String(input));
       const file = files[pathname];
       if (file) return new Response(file.body, { headers: { "Content-Type": file.type } });
-      return new Response(INDEX_HTML, { headers: { "Content-Type": "text/html; charset=utf-8", ETag: '"abc"' } });
+      return new Response(INDEX_HTML, {
+        headers: { "Content-Type": "text/html; charset=utf-8", ETag: '"abc"' },
+      });
     }),
   };
   return { ASSETS: assets, PASS_API_URL: "https://pass.example.test" } as unknown as Env;
@@ -73,7 +76,9 @@ describe("HTML 路由", () => {
   it("非首页请求去掉条件请求头（防止资源层回 304 跳过改写），首页保留", async () => {
     const env = makeEnv();
     const assets = env.ASSETS.fetch as unknown as ReturnType<typeof vi.fn>;
-    const conditional = { headers: { "If-None-Match": '"abc"', "If-Modified-Since": "Sat, 26 Sep 2026 00:00:00 GMT" } };
+    const conditional = {
+      headers: { "If-None-Match": '"abc"', "If-Modified-Since": "Sat, 26 Sep 2026 00:00:00 GMT" },
+    };
     await call("/login", conditional, env);
     const forwarded = assets.mock.calls[0]?.[0] as Request;
     expect(forwarded.headers.get("If-None-Match")).toBeNull();
@@ -162,14 +167,19 @@ describe("API 代理与 well-known", () => {
   it("security.txt 由静态资源提供，不代理到后端", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
-    const env = makeEnv({ "/.well-known/security.txt": { body: "Contact: x", type: "text/plain" } });
+    const env = makeEnv({
+      "/.well-known/security.txt": { body: "Contact: x", type: "text/plain" },
+    });
     const res = await call("/.well-known/security.txt", undefined, env);
     expect(await res.text()).toBe("Contact: x");
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("其余 well-known（OIDC discovery）与 /v1/ 代理到 Pass，原样透传响应", async () => {
-    const upstream = new Response("{}", { status: 200, headers: { "Set-Cookie": "rt=1; HttpOnly" } });
+    const upstream = new Response("{}", {
+      status: 200,
+      headers: { "Set-Cookie": "rt=1; HttpOnly" },
+    });
     const fetchSpy = vi.fn(async () => upstream);
     vi.stubGlobal("fetch", fetchSpy);
     const res = await call("/.well-known/openid-configuration");
@@ -179,11 +189,17 @@ describe("API 代理与 well-known", () => {
     );
     expect(res).toBe(upstream);
     await call("/v1/session?x=1", { method: "POST", body: "{}" });
-    expect(fetchSpy).toHaveBeenLastCalledWith("https://pass.example.test/v1/session?x=1", expect.objectContaining({ method: "POST" }));
+    expect(fetchSpy).toHaveBeenLastCalledWith(
+      "https://pass.example.test/v1/session?x=1",
+      expect.objectContaining({ method: "POST" }),
+    );
   });
 
   it("后端不可达时返回 502 错误信封", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new Error("down"))));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Promise.reject(new Error("down"))),
+    );
     const res = await call("/v1/me");
     expect(res.status).toBe(502);
     const body = (await res.json()) as { error: { code: string }; requestId: string };

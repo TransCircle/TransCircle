@@ -24,8 +24,20 @@ import { useIamMfa } from "./IamMfaContext";
 import s from "./Account.module.css";
 
 const FingerIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M5 13a7 7 0 0 1 14 0c0 1.96-.14 4-1 6" /><path d="M12 11a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" /><path d="M8 21c.5-2 1-4 1-8" />
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M5 13a7 7 0 0 1 14 0c0 1.96-.14 4-1 6" />
+    <path d="M12 11a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" />
+    <path d="M8 21c.5-2 1-4 1-8" />
   </svg>
 );
 
@@ -83,10 +95,10 @@ export function PasskeysSection() {
     setNotice(null);
     setAdding(true);
     try {
-      const start = await api.post<{ registrationId: string; publicKey: Parameters<typeof performRegistration>[0] }>(
-        "/v1/me/passkeys/register/start",
-        {},
-      );
+      const start = await api.post<{
+        registrationId: string;
+        publicKey: Parameters<typeof performRegistration>[0];
+      }>("/v1/me/passkeys/register/start", {});
       if (!start.ok) {
         setAddError(start.error.message);
         return;
@@ -113,7 +125,8 @@ export function PasskeysSection() {
       // 而这批码只出现这一次。无码时立即同步 passkeyCount 让「恢复码」分区随之显隐。
       if (!newCodes) await refresh();
     } catch (err) {
-      if ((err as DOMException)?.name !== "NotAllowedError") setAddError(t("account.passkeys.registerFailed"));
+      if ((err as DOMException)?.name !== "NotAllowedError")
+        setAddError(t("account.passkeys.registerFailed"));
     } finally {
       setAdding(false);
     }
@@ -123,7 +136,9 @@ export function PasskeysSection() {
     if (!renameTarget) return;
     setBusy(true);
     setRenameError(null);
-    const res = await api.patch(`/v1/me/passkeys/${encodeURIComponent(renameTarget.id)}`, { name: renameValue });
+    const res = await api.patch(`/v1/me/passkeys/${encodeURIComponent(renameTarget.id)}`, {
+      name: renameValue,
+    });
     setBusy(false);
     if (res.ok) {
       setNotice(t("account.passkeys.renamedOk"));
@@ -190,33 +205,47 @@ export function PasskeysSection() {
           ) : (
             <ul className={s.list}>
               {items.map((pk) => (
-              <li key={pk.id} className={s.listRow}>
-                <div className={s.rowMain}>
-                  <span className={s.providerIcon} aria-hidden="true"><FingerIcon /></span>
-                  <div className={s.rowText}>
-                    <span className={s.rowTitle}>
-                      {pk.name || t("account.passkeys.title")}
-                      <StatusBadge
-                        size="sm"
-                        tone={pk.status === "active" ? "green" : "amber"}
-                        label={pk.status === "active" ? t("account.passkeys.active") : t("account.passkeys.frozen")}
-                      />
+                <li key={pk.id} className={s.listRow}>
+                  <div className={s.rowMain}>
+                    <span className={s.providerIcon} aria-hidden="true">
+                      <FingerIcon />
                     </span>
-                    <span className={s.rowMeta}>
-                      <span>{`${t("account.passkeys.createdAt")}: ${fmt(pk.createdAt) || "—"}`}</span>
-                      <span>{`${t("account.passkeys.lastUsed")}: ${fmt(pk.lastUsedAt) || t("common.never")}`}</span>
-                    </span>
+                    <div className={s.rowText}>
+                      <span className={s.rowTitle}>
+                        {pk.name || t("account.passkeys.title")}
+                        <StatusBadge
+                          size="sm"
+                          tone={pk.status === "active" ? "green" : "amber"}
+                          label={
+                            pk.status === "active"
+                              ? t("account.passkeys.active")
+                              : t("account.passkeys.frozen")
+                          }
+                        />
+                      </span>
+                      <span className={s.rowMeta}>
+                        <span>{`${t("account.passkeys.createdAt")}: ${fmt(pk.createdAt) || "—"}`}</span>
+                        <span>{`${t("account.passkeys.lastUsed")}: ${fmt(pk.lastUsedAt) || t("common.never")}`}</span>
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className={s.rowActions}>
-                  <Button variant="ghost" size="sm" onClick={() => { setRenameTarget(pk); setRenameValue(pk.name ?? ""); setRenameError(null); }}>
-                    {t("common.rename")}
-                  </Button>
-                  <Button variant="danger" size="sm" onClick={() => setDeleteTarget(pk)}>
-                    {t("common.delete")}
-                  </Button>
-                </div>
-              </li>
+                  <div className={s.rowActions}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setRenameTarget(pk);
+                        setRenameValue(pk.name ?? "");
+                        setRenameError(null);
+                      }}
+                    >
+                      {t("common.rename")}
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => setDeleteTarget(pk)}>
+                      {t("common.delete")}
+                    </Button>
+                  </div>
+                </li>
               ))}
             </ul>
           )}
@@ -271,7 +300,12 @@ export function PasskeysSection() {
             <Button variant="secondary" disabled={busy} onClick={() => setRenameTarget(null)}>
               {t("common.cancel")}
             </Button>
-            <Button variant="primary" loading={busy} disabled={!renameValue} onClick={() => void doRename()}>
+            <Button
+              variant="primary"
+              loading={busy}
+              disabled={!renameValue}
+              onClick={() => void doRename()}
+            >
               {t("common.save")}
             </Button>
           </>

@@ -13,7 +13,18 @@ interface AvatarDialogProps {
 }
 
 const UploadIcon = () => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+  <svg
+    width="26"
+    height="26"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
     <path d="M12 3v12" />
     <path d="m7 8 5-5 5 5" />
@@ -42,7 +53,6 @@ export function AvatarDialog({ open, onClose }: AvatarDialogProps) {
       setCropFile(null);
     }
   }, [open]);
-
 
   // 选好文件后不直接上传,先进入编辑器裁剪;裁剪产出的 dataURL 再上传。
   const onFile = (e: ChangeEvent<HTMLInputElement>) => {

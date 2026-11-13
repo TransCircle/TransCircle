@@ -20,13 +20,35 @@ import s from "./Account.module.css";
 import sec from "./Security.module.css";
 
 const CopyIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
     <rect x="9" y="9" width="13" height="13" rx="2" />
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
   </svg>
 );
 const CheckIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path d="M20 6 9 17l-5-5" />
   </svg>
 );
@@ -141,7 +163,10 @@ export function TwoFactorSection() {
     setError(null);
     setBusy(true);
     try {
-      const res = await api.post<{ recoveryCodes?: string[] }>("/v1/me/mfa/totp/enable", { setupId: setup.setupId, code });
+      const res = await api.post<{ recoveryCodes?: string[] }>("/v1/me/mfa/totp/enable", {
+        setupId: setup.setupId,
+        code,
+      });
       if (!res.ok) {
         setError(res.error.message);
         return;
@@ -229,7 +254,9 @@ export function TwoFactorSection() {
                     <StatusBadge
                       size="sm"
                       tone={enabled ? "green" : "neutral"}
-                      label={enabled ? t("account.twoFactor.enabled") : t("account.twoFactor.disabled")}
+                      label={
+                        enabled ? t("account.twoFactor.enabled") : t("account.twoFactor.disabled")
+                      }
                     />
                   </span>
                   <span className={s.rowMeta}>
@@ -252,7 +279,12 @@ export function TwoFactorSection() {
                     {t("account.twoFactor.disable")}
                   </Button>
                 ) : (
-                  <Button variant="primary" size="sm" loading={busy} onClick={() => void startSetup()}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    loading={busy}
+                    onClick={() => void startSetup()}
+                  >
                     {t("account.twoFactor.setup")}
                   </Button>
                 )}
@@ -274,7 +306,12 @@ export function TwoFactorSection() {
             <Button variant="secondary" disabled={busy} onClick={cancelSetup}>
               {t("common.cancel")}
             </Button>
-            <Button variant="primary" loading={busy} disabled={code.length !== 6} onClick={() => void enable()}>
+            <Button
+              variant="primary"
+              loading={busy}
+              disabled={code.length !== 6}
+              onClick={() => void enable()}
+            >
               {t("account.twoFactor.enable")}
             </Button>
           </>
@@ -291,14 +328,22 @@ export function TwoFactorSection() {
           <p className={s.muted}>{t("account.twoFactor.scanQr")}</p>
           {setup?.qrCodeImage && (
             <div className={sec.qrWrap}>
-              <img src={setup.qrCodeImage} alt={t("account.twoFactor.qrAlt")} className={sec.qr} width={200} height={200} />
+              <img
+                src={setup.qrCodeImage}
+                alt={t("account.twoFactor.qrAlt")}
+                className={sec.qr}
+                width={200}
+                height={200}
+              />
             </div>
           )}
           {/* 密钥默认隐藏,点「无法扫描」再展开,并提供复制按钮。 */}
           {showSecret ? (
             <div className={sec.secretReveal}>
               <span className={sec.secretRevealLabel}>{t("account.twoFactor.secretLabel")}</span>
-              <code ref={secretBoxRef} className={sec.secretBox}>{setup?.secret}</code>
+              <code ref={secretBoxRef} className={sec.secretBox}>
+                {setup?.secret}
+              </code>
               <button
                 type="button"
                 className={cx(sec.copyBtn, secretCopied && sec.copyBtnDone)}
@@ -347,7 +392,12 @@ export function TwoFactorSection() {
             <Button variant="secondary" disabled={busy} onClick={() => setDisableOpen(false)}>
               {t("common.cancel")}
             </Button>
-            <Button variant="danger" loading={busy} disabled={!disableCode} onClick={() => void disable()}>
+            <Button
+              variant="danger"
+              loading={busy}
+              disabled={!disableCode}
+              onClick={() => void disable()}
+            >
               {t("account.twoFactor.disable")}
             </Button>
           </>

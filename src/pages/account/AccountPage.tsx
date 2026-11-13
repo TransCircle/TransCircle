@@ -20,7 +20,18 @@ import { DangerSection } from "./DangerSection";
 import s from "./Account.module.css";
 
 const PencilIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path d="M12 20h9" />
     <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
   </svg>
@@ -155,11 +166,7 @@ const AccountPage = () => {
               <strong className={s.noticeTitle}>{t("account.password.mustChangeTitle")}</strong>
               <span>{t("account.password.mustChangeDesc")}</span>
             </span>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => setPasswordOpenRequest((n) => n + 1)}
-            >
+            <Button variant="danger" size="sm" onClick={() => setPasswordOpenRequest((n) => n + 1)}>
               {t("account.password.mustChangeAction")}
             </Button>
           </div>
@@ -189,17 +196,33 @@ const AccountPage = () => {
         <div className={s.sections}>
           <IamMfaProvider>
             {/* 锚点包一层 div：分区组件内部结构不动，只为左侧导航提供跳转目标。 */}
-            <div id="profile" className={s.anchor}><ProfileSection /></div>
+            <div id="profile" className={s.anchor}>
+              <ProfileSection />
+            </div>
             <div id="password" className={s.anchor}>
               <PasswordSection openRequest={passwordOpenRequest} mustChange={mustChangePassword} />
             </div>
-            <div id="two-factor" className={s.anchor}><TwoFactorSection /></div>
-            <div id="passkeys" className={s.anchor}><PasskeysSection /></div>
-            <div id="recovery-codes" className={s.anchor}><RecoveryCodesSection /></div>
-            <div id="iam-mfa" className={s.anchor}><IamMfaSection /></div>
-            <div id="oauth" className={s.anchor}><OAuthSection /></div>
-            <div id="sessions" className={s.anchor}><SessionsSection /></div>
-            <div id="danger" className={s.anchor}><DangerSection /></div>
+            <div id="two-factor" className={s.anchor}>
+              <TwoFactorSection />
+            </div>
+            <div id="passkeys" className={s.anchor}>
+              <PasskeysSection />
+            </div>
+            <div id="recovery-codes" className={s.anchor}>
+              <RecoveryCodesSection />
+            </div>
+            <div id="iam-mfa" className={s.anchor}>
+              <IamMfaSection />
+            </div>
+            <div id="oauth" className={s.anchor}>
+              <OAuthSection />
+            </div>
+            <div id="sessions" className={s.anchor}>
+              <SessionsSection />
+            </div>
+            <div id="danger" className={s.anchor}>
+              <DangerSection />
+            </div>
           </IamMfaProvider>
         </div>
       </div>

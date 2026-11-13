@@ -146,7 +146,9 @@ describe("Theme system accessibility regression", () => {
 
       // Suppress console.error for this expected error
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      expect(() => render(<BadComponent />)).toThrow("useTheme must be used within a ThemeProvider");
+      expect(() => render(<BadComponent />)).toThrow(
+        "useTheme must be used within a ThemeProvider",
+      );
       consoleSpy.mockRestore();
     });
   });

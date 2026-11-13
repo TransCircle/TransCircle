@@ -22,7 +22,7 @@
     transform var(--dur-1) var(--ease-spring);
 }
 
-.btn:not(:disabled):not([aria-disabled='true']):active {
+.btn:not(:disabled):not([aria-disabled="true"]):active {
   transform: scale(0.97);
   transition-duration: 0.06s;
 }
@@ -45,7 +45,7 @@
 
 /* 链接形态无原生 disabled，用 aria-disabled 承担同一视觉降级。 */
 .btn:disabled,
-.btn[aria-disabled='true'] {
+.btn[aria-disabled="true"] {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -65,18 +65,18 @@
   color: var(--on-pink);
 }
 
-.primary:not(:disabled):not([aria-disabled='true']):hover {
+.primary:not(:disabled):not([aria-disabled="true"]):hover {
   background-color: var(--pink-600-hover);
   transform: translateY(-1px);
   box-shadow: var(--glow-pink);
 }
 
-:global([data-theme='dark']) .primary:not(:disabled):not([aria-disabled='true']):hover {
+:global([data-theme="dark"]) .primary:not(:disabled):not([aria-disabled="true"]):hover {
   box-shadow: var(--glow-pink-dark);
 }
 
 @media (prefers-color-scheme: dark) {
-  :global(:root:not([data-theme])) .primary:not(:disabled):not([aria-disabled='true']):hover {
+  :global(:root:not([data-theme])) .primary:not(:disabled):not([aria-disabled="true"]):hover {
     box-shadow: var(--glow-pink-dark);
   }
 }
@@ -91,19 +91,19 @@
   border-color: var(--line-strong);
 }
 
-.secondary:not(:disabled):not([aria-disabled='true']):hover {
+.secondary:not(:disabled):not([aria-disabled="true"]):hover {
   border-color: var(--pink-600);
   color: var(--pink-700);
   background-color: var(--pink-100);
 }
 
-:global([data-theme='dark']) .secondary:not(:disabled):not([aria-disabled='true']):hover {
+:global([data-theme="dark"]) .secondary:not(:disabled):not([aria-disabled="true"]):hover {
   border-color: var(--pink-400);
   color: var(--pink-400);
 }
 
 @media (prefers-color-scheme: dark) {
-  :global(:root:not([data-theme])) .secondary:not(:disabled):not([aria-disabled='true']):hover {
+  :global(:root:not([data-theme])) .secondary:not(:disabled):not([aria-disabled="true"]):hover {
     border-color: var(--pink-500);
     color: var(--pink-500);
   }
@@ -118,7 +118,7 @@
   border-color: var(--error-border);
 }
 
-.softError:not(:disabled):not([aria-disabled='true']):hover {
+.softError:not(:disabled):not([aria-disabled="true"]):hover {
   border-color: var(--error-border);
   background-color: var(--error-bg);
 }
@@ -130,7 +130,7 @@
   color: var(--pink-700);
 }
 
-.ghost:not(:disabled):not([aria-disabled='true']):hover {
+.ghost:not(:disabled):not([aria-disabled="true"]):hover {
   background-color: var(--pink-100);
 }
 
@@ -144,7 +144,7 @@
   border-color: var(--error-border);
 }
 
-.danger:not(:disabled):not([aria-disabled='true']):hover {
+.danger:not(:disabled):not([aria-disabled="true"]):hover {
   border-color: var(--error-border);
   background-color: var(--error-bg);
 }
@@ -161,7 +161,7 @@
   .btn {
     transition: none;
   }
-  .primary:not(:disabled):not([aria-disabled='true']):hover {
+  .primary:not(:disabled):not([aria-disabled="true"]):hover {
     transform: none;
   }
 }

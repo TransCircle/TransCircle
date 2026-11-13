@@ -126,10 +126,14 @@ const ClientDetailPage = () => {
   const commitSave = async () => {
     if (!entity || !reviewKeys) return;
     const data = await save.run<AdminClientDetail>("save", () =>
-      api.patch<AdminClientDetail>(`/v1/admin/clients/${entity.clientId}`, edit.patchFor(reviewKeys), {
-        plane: "user",
-        ifMatch: entity.updatedAt,
-      }),
+      api.patch<AdminClientDetail>(
+        `/v1/admin/clients/${entity.clientId}`,
+        edit.patchFor(reviewKeys),
+        {
+          plane: "user",
+          ifMatch: entity.updatedAt,
+        },
+      ),
     );
     if (data) {
       // 新基线取服务端返回的实体：后端会规范化 URI、排序 scope，草稿顶替会漂移。

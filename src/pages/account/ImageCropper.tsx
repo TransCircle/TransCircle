@@ -61,7 +61,18 @@ function drawInto(
 }
 
 const RotateIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path d="M21 12a9 9 0 1 1-3.4-7.05" />
     <path d="M21 3v5h-5" />
   </svg>
@@ -268,7 +279,12 @@ export function ImageCropper({ file, onApply, onCancel }: ImageCropperProps) {
       </div>
       <p className={cs.hint}>{t("account.profile.dragHint")}</p>
       <div className={cs.controls}>
-        <button type="button" className={cs.iconBtn} onClick={rotate} aria-label={t("account.profile.rotate")}>
+        <button
+          type="button"
+          className={cs.iconBtn}
+          onClick={rotate}
+          aria-label={t("account.profile.rotate")}
+        >
           <RotateIcon />
         </button>
         <input

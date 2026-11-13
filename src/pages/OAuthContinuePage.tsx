@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api, getIdentityGen, installAccessToken, getCsrfToken, saveCsrfToken, clearCsrfToken } from "../api/client";
+import {
+  api,
+  getIdentityGen,
+  installAccessToken,
+  getCsrfToken,
+  saveCsrfToken,
+  clearCsrfToken,
+} from "../api/client";
 import { useSession } from "../context/SessionContext";
 import { sanitizeRedirect } from "../utils/url";
 import { usePageTitle } from "../utils/usePageTitle";
@@ -42,9 +49,11 @@ const OAuthContinuePage = () => {
    * 提交一个必然被后端 400 ACK_REQUIRED 打回的请求，且反复点都不会好。
    * 所以失败时给一条可重试的错误，而不是默认 false 硬着头皮往下走。
    */
-  const [providers, setProviders] = useState<
-    Array<{ provider: string; label?: string; permanent: boolean }> | null
-  >(null);
+  const [providers, setProviders] = useState<Array<{
+    provider: string;
+    label?: string;
+    permanent: boolean;
+  }> | null>(null);
   const [providersFailed, setProvidersFailed] = useState(false);
   /** 重试计数：递增即重跑下面的 effect。 */
   const [providersAttempt, setProvidersAttempt] = useState(0);
@@ -169,16 +178,22 @@ const OAuthContinuePage = () => {
         `/v1/auth/oauth/complete-registration?provider=${encodeURIComponent(provider)}`,
         // 不可解绑的提供商（统一身份）：后端要求先拿到不可逆确认。
         // 这一页上面已经把「绑定后无法自行解除」摆出来了，用户点提交即视为确认。
-        { username, email, password, displayName, ...(permanent ? { acknowledgedPermanent: true } : {}) },
+        {
+          username,
+          email,
+          password,
+          displayName,
+          ...(permanent ? { acknowledgedPermanent: true } : {}),
+        },
         // 第三方邮箱已验证时，这一步后端就会写 refresh cookie 并建立 SSO ——
         // 不只是拿个 loginCode，所以同样要能被认证边界掐掉。
         {
           noAuth: true,
           authWrite: true,
-        // 锚就在上面几行同步取的，这道闸此刻恒真 —— 带上它是为了**统一不变量**：
-        // 「每一个 authWrite 都随身带着自己的身份锚」。哪天有人把取锚那行往上挪
-        // （挪进 useMemo、挪到组件顶层、挪进某个 hook），窗口就出现了，
-        // 而那时不会有人记得回来补这个参数。
+          // 锚就在上面几行同步取的，这道闸此刻恒真 —— 带上它是为了**统一不变量**：
+          // 「每一个 authWrite 都随身带着自己的身份锚」。哪天有人把取锚那行往上挪
+          // （挪进 useMemo、挪到组件顶层、挪进某个 hook），窗口就出现了，
+          // 而那时不会有人记得回来补这个参数。
           requireIdentityGen: identityGen,
           headers: csrfToken ? { "X-CSRF-Token": csrfToken } : undefined,
         },
@@ -197,10 +212,9 @@ const OAuthContinuePage = () => {
       }
       // 邮箱未由 provider 验证：不自动登录，引导到「重发/完成邮箱验证」页（验证邮件已发出）。
       if (res.data.requiresEmailVerification || !res.data.loginCode) {
-        navigate(
-          `/verify-email?reason=email_not_verified&email=${encodeURIComponent(email)}`,
-          { replace: true },
-        );
+        navigate(`/verify-email?reason=email_not_verified&email=${encodeURIComponent(email)}`, {
+          replace: true,
+        });
         return;
       }
       // 用 loginCode 兑换 access token（refresh cookie 已就绪）。
@@ -274,13 +288,50 @@ const OAuthContinuePage = () => {
       <form className={cx(authStyles.form, authStyles.registerGrid)} onSubmit={submit}>
         {/* 横屏：左栏身份信息、右栏密码 +「取消 | 完成注册」（见 .registerGrid）。 */}
         <div className={authStyles.formCol}>
-          <TextField label={t("account.profile.displayName")} autoComplete="nickname" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
-          <TextField label={t("account.profile.username")} autoComplete="username" hint={t("register.usernameHint")} value={username} onChange={(e) => setUsername(e.target.value)} required />
-          <TextField label={t("login.email")} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <TextField
+            label={t("account.profile.displayName")}
+            autoComplete="nickname"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            required
+          />
+          <TextField
+            label={t("account.profile.username")}
+            autoComplete="username"
+            hint={t("register.usernameHint")}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+          <TextField
+            label={t("login.email")}
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
         <div className={authStyles.formCol}>
-          <TextField label={t("register.password")} type="password" autoComplete="new-password" hint={t("register.passwordHint")} value={password} onChange={(e) => setPassword(e.target.value)} required />
-          <TextField label={t("register.passwordConfirm")} type="password" autoComplete="new-password" invalid={mismatch} hint={mismatch ? t("account.password.mismatch") : undefined} value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
+          <TextField
+            label={t("register.password")}
+            type="password"
+            autoComplete="new-password"
+            hint={t("register.passwordHint")}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <TextField
+            label={t("register.passwordConfirm")}
+            type="password"
+            autoComplete="new-password"
+            invalid={mismatch}
+            hint={mismatch ? t("account.password.mismatch") : undefined}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+          />
           <div className={authStyles.formActions}>
             {/* 名单到手才放行提交：permanent 警告与 acknowledgedPermanent 都依赖它。
                 加载中显示 loading，加载失败则保持 disabled，由上面的重试提示接手。 */}
@@ -294,7 +345,13 @@ const OAuthContinuePage = () => {
               {t("continue.submit")}
             </Button>
             {/* 放弃补注册：回登录页换一种方式登录（pending Cookie 会自然过期）。 */}
-            <Button variant="secondary" fullWidth to="/login" disabled={busy} className={authStyles.formActionsCancel}>
+            <Button
+              variant="secondary"
+              fullWidth
+              to="/login"
+              disabled={busy}
+              className={authStyles.formActionsCancel}
+            >
               {t("continue.cancel")}
             </Button>
           </div>

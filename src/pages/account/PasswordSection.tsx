@@ -1,15 +1,16 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { abortInflightRefresh, api, getIdentityGen, installAccessToken, setUserToken } from "../../api/client";
+import {
+  abortInflightRefresh,
+  api,
+  getIdentityGen,
+  installAccessToken,
+  setUserToken,
+} from "../../api/client";
 import { useAuthenticatedUser, useSession } from "../../context/SessionContext";
 import { checkPasswordStrength } from "../../utils/string";
 import { StepUpDialog } from "../../components/StepUpDialog";
-import {
-  Card,
-  TextField,
-  AdminButton as Button,
-  Alert,
-} from "../../components/ui";
+import { Card, TextField, AdminButton as Button, Alert } from "../../components/ui";
 import { Dialog } from "../../components/ui/Dialog";
 import s from "./Account.module.css";
 
@@ -32,7 +33,10 @@ export interface PasswordSectionProps {
 }
 
 /** 登录密码分区:一行状态 + 弹窗内修改/设置密码;成功后用轮换的 accessToken 续期会话。 */
-export function PasswordSection({ openRequest = 0, mustChange = false }: PasswordSectionProps = {}) {
+export function PasswordSection({
+  openRequest = 0,
+  mustChange = false,
+}: PasswordSectionProps = {}) {
   const { t } = useTranslation();
   const { refresh } = useSession();
   const user = useAuthenticatedUser();

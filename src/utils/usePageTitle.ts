@@ -9,13 +9,14 @@ export function usePageTitle(title?: string | null): void {
   const { t } = useTranslation();
 
   useEffect(() => {
-    document.title = title
-      ? `${title} · ${t("common.siteName")}`
-      : t("common.defaultTitle");
+    document.title = title ? `${title} · ${t("common.siteName")}` : t("common.defaultTitle");
   }, [title, t]);
 
   // 卸载时恢复默认,避免跳回主页后残留子页标题。
-  useEffect(() => () => {
-    document.title = t("common.defaultTitle");
-  }, [t]);
+  useEffect(
+    () => () => {
+      document.title = t("common.defaultTitle");
+    },
+    [t],
+  );
 }

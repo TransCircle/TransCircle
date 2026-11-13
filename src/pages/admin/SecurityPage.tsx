@@ -35,7 +35,10 @@ const SecurityPage = () => {
   const { t } = useTranslation();
   const fmt = useFormatTs();
   const { hasPermission } = useAdmin();
-  useAdminPageHeader({ title: t("admin.head.security.title"), subtitle: t("admin.head.security.sub") });
+  useAdminPageHeader({
+    title: t("admin.head.security.title"),
+    subtitle: t("admin.head.security.sub"),
+  });
 
   const policy = useAdminResource<AdminPolicy>("/v1/admin/policy");
   const keys = useAdminList<AdminSigningKey>("/v1/admin/keys");

@@ -64,7 +64,13 @@ export function UriEditor({
       {check && (
         <p className={cx(styles.uriCheck, levelClass)} role="status">
           <span aria-hidden="true">
-            {check.level === "ok" ? <IconCheck /> : check.level === "warn" ? <IconWarn /> : <IconX />}
+            {check.level === "ok" ? (
+              <IconCheck />
+            ) : check.level === "warn" ? (
+              <IconWarn />
+            ) : (
+              <IconX />
+            )}
           </span>
           <span>{t(`admin.uriCheck.${check.reason}`)}</span>
         </p>

@@ -11,7 +11,8 @@
   color: var(--text-muted);
   cursor: pointer;
   padding: 0;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard),
     transform var(--dur-1) var(--ease-standard);
 }
@@ -45,7 +46,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity var(--dur-3) var(--ease-out),
+  transition:
+    opacity var(--dur-3) var(--ease-out),
     transform var(--dur-3) var(--ease-out),
     clip-path var(--dur-3) var(--ease-out);
 }

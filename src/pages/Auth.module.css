@@ -313,7 +313,7 @@
   border-color: var(--line-strong);
 }
 
-.oauthBtn:not(:disabled):not([aria-disabled='true']):hover {
+.oauthBtn:not(:disabled):not([aria-disabled="true"]):hover {
   background-color: var(--pink-100);
   border-color: var(--pink-600);
   color: var(--pink-700);
@@ -350,7 +350,7 @@
 
 .divider::before,
 .divider::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 1px;
   background-color: var(--line);

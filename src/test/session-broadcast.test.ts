@@ -16,10 +16,7 @@
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import {
-  publishSessionBroadcast,
-  subscribeSessionBroadcast,
-} from "../context/sessionBroadcast";
+import { publishSessionBroadcast, subscribeSessionBroadcast } from "../context/sessionBroadcast";
 
 /** 等广播投递。jsdom 的 BroadcastChannel 是异步派发的，需要让出一轮宏任务。 */
 const flush = () => new Promise((r) => setTimeout(r, 30));
@@ -49,7 +46,12 @@ describe("subscribeSessionBroadcast 的自身过滤", () => {
     // 模拟另一个标签页：它有自己的 TAB_ID，所以 `from` 与本页不同。
     // 直接经 localStorage 送进去 —— `storage` 事件的语义正是「只有别的标签页收得到」，
     // 也是最贴近真实跨标签页投递的一条通路。
-    const foreign = { type: "signed-out", id: "evt-from-other-tab", at: Date.now(), from: "other-tab-id" };
+    const foreign = {
+      type: "signed-out",
+      id: "evt-from-other-tab",
+      at: Date.now(),
+      from: "other-tab-id",
+    };
     localStorage.setItem("pass:session:signal", JSON.stringify(foreign));
     // jsdom 不会真的派发 StorageEvent，这里手动派发一次，模拟浏览器的行为。
     window.dispatchEvent(

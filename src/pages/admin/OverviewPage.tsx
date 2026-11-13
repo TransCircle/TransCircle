@@ -14,7 +14,17 @@ import { useAdminPageHeader } from "./shared/header";
 import { useAdminResource } from "./shared/useAdminResource";
 import styles from "./Admin.module.css";
 
-function Kpi({ label, value, unit, sub }: { label: string; value: ReactNode; unit?: string; sub?: string }) {
+function Kpi({
+  label,
+  value,
+  unit,
+  sub,
+}: {
+  label: string;
+  value: ReactNode;
+  unit?: string;
+  sub?: string;
+}) {
   return (
     <div className={styles.kpi}>
       <span className={styles.kpiLabel}>{label}</span>
@@ -35,7 +45,10 @@ function Kpi({ label, value, unit, sub }: { label: string; value: ReactNode; uni
  */
 const OverviewPage = () => {
   const { t } = useTranslation();
-  useAdminPageHeader({ title: t("admin.head.overview.title"), subtitle: t("admin.head.overview.sub") });
+  useAdminPageHeader({
+    title: t("admin.head.overview.title"),
+    subtitle: t("admin.head.overview.sub"),
+  });
 
   const { data, loading, error } = useAdminResource<AdminOverview>("/v1/admin/overview");
 

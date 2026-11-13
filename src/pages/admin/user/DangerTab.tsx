@@ -106,7 +106,8 @@ export function DangerTab({
             stepUp: false,
             reason: true,
             variant: "danger" as const,
-            path: (u: AdminUserDetail) => `/v1/admin/users/${u.id}/${suspended ? "unsuspend" : "suspend"}`,
+            path: (u: AdminUserDetail) =>
+              `/v1/admin/users/${u.id}/${suspended ? "unsuspend" : "suspend"}`,
           },
         ]),
     {
@@ -139,14 +140,18 @@ export function DangerTab({
   ];
 
   const allowed = ACTIONS.filter(
-    (a) => hasPermission(a.perm) && (!LIFECYCLE_KEYS.has(a.key) || allowedLifecycle.includes(a.key)),
+    (a) =>
+      hasPermission(a.perm) && (!LIFECYCLE_KEYS.has(a.key) || allowedLifecycle.includes(a.key)),
   );
   const hidden = ACTIONS.length - allowed.length;
   const current = allowed.find((a) => a.key === open) ?? null;
 
   const run = async (a: DangerAction, reason: string) => {
     const result = await action.run<unknown>(a.key, (idem) =>
-      api.post(a.path(user), a.reason ? { reason } : undefined, { plane: "user", idempotent: idem }),
+      api.post(a.path(user), a.reason ? { reason } : undefined, {
+        plane: "user",
+        idempotent: idem,
+      }),
     );
     if (result !== null) {
       // 导出返回的是**可携权导出文档本身**，不是一个状态。
@@ -207,7 +212,9 @@ export function DangerTab({
           </div>
         )}
         {hidden > 0 && (
-          <p className={styles.note}>{t("admin.userDetail.danger.hiddenCount", { count: hidden })}</p>
+          <p className={styles.note}>
+            {t("admin.userDetail.danger.hiddenCount", { count: hidden })}
+          </p>
         )}
       </Card>
 

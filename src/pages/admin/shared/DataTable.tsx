@@ -61,7 +61,8 @@ export function DataTable<Row>({
     );
   }
 
-  const colClass = (c: Column<Row>) => (c.hideAt === 1 ? styles.col1 : c.hideAt === 2 ? styles.col2 : undefined);
+  const colClass = (c: Column<Row>) =>
+    c.hideAt === 1 ? styles.col1 : c.hideAt === 2 ? styles.col2 : undefined;
 
   return (
     <div className={styles.tableWrap}>
@@ -90,7 +91,11 @@ export function DataTable<Row>({
                     }
                   >
                     {sortKey && onSort ? (
-                      <button type="button" className={styles.thSort} onClick={() => onSort(sortKey)}>
+                      <button
+                        type="button"
+                        className={styles.thSort}
+                        onClick={() => onSort(sortKey)}
+                      >
                         {c.label}
                         {active && <span aria-hidden="true">{sort.dir === "asc" ? "↑" : "↓"}</span>}
                         <span className={styles.srOnly}>

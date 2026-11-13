@@ -73,7 +73,9 @@
     box-shadow: var(--shadow-3);
   }
   40% {
-    box-shadow: var(--shadow-3), 0 0 0 3px var(--focus-halo);
+    box-shadow:
+      var(--shadow-3),
+      0 0 0 3px var(--focus-halo);
   }
 }
 

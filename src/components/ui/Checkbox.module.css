@@ -45,7 +45,8 @@
   border: 1.5px solid var(--line);
   border-radius: var(--r-xs);
   background-color: var(--surface);
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     border-color var(--dur-1) var(--ease-standard);
 }
 
@@ -54,7 +55,8 @@
   color: var(--on-pink);
   opacity: 0;
   transform: scale(0.6);
-  transition: opacity var(--dur-1) var(--ease-standard),
+  transition:
+    opacity var(--dur-1) var(--ease-standard),
     transform var(--dur-1) var(--ease-spring);
 }
 

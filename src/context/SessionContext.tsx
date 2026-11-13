@@ -44,10 +44,7 @@ import {
   tryRefreshOutcome,
 } from "../api/client";
 import type { MeProfile } from "../api/types";
-import {
-  publishSessionBroadcast,
-  subscribeSessionBroadcast,
-} from "./sessionBroadcast";
+import { publishSessionBroadcast, subscribeSessionBroadcast } from "./sessionBroadcast";
 import {
   clearSessionHint,
   readSessionHint,
@@ -74,8 +71,7 @@ export type SessionStatus = "unknown" | "authenticated" | "anonymous";
  * 查得太松等于没查。
  */
 export function isMeProfile(value: unknown): value is MeProfile {
-  if (typeof value !== "object" || value === null || Array.isArray(value))
-    return false;
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
   const v = value as Partial<MeProfile>;
   if (typeof v.id !== "string" || v.id === "") return false;
   if (typeof v.username !== "string") return false;
@@ -186,8 +182,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const commitUser = useCallback((next: MeProfile) => {
     // 用 ref 而不是 setState 的更新函数来做这个判断：更新函数必须是纯的，
     // StrictMode 会双调用它，把提代次这种副作用放进去会跑两遍。
-    const switched =
-      currentUserIdRef.current !== null && currentUserIdRef.current !== next.id;
+    const switched = currentUserIdRef.current !== null && currentUserIdRef.current !== next.id;
     if (switched) bumpAuthEpoch();
     // 首次登录与换号都要告诉别的标签页：它们可能正挂着一个属于旧身份的续期请求，
     // 那个请求落地时会把旧账号的 cookie 写回来。
@@ -241,8 +236,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       if (lastAnnouncedIdRef.current !== null) {
         publishSessionBroadcast({ type: "signed-out" });
       }
-    }
-    else {
+    } else {
       // `invalidate=false` 也要把内存里那枚令牌丢掉。
       //
       // 不丢的话，界面显示未登录、请求却仍带着它出门 —— 而服务端那条会话完全可能
@@ -353,8 +347,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       // 一个属于旧身份的请求返回 403 时，若按状态码先判，就会把刚登录的新身份清掉 ——
       // 而那个 403 说的是上一个人的事。
       const nonRejecting = NON_REJECTING_AUTH_CODES.includes(res.error.code);
-      const sessionRejected =
-        !nonRejecting && (res.status === 401 || res.status === 403);
+      const sessionRejected = !nonRejecting && (res.status === 401 || res.status === 403);
       if (sessionRejected) {
         /**
          * **「本来就没登录」不是一次身份终结。**
@@ -381,8 +374,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
          * `clearUserTokenOnly()`），不碰代次、不写登出印记。
          * 那枚令牌此刻已经无效，留着只会让后面的请求都带着一个必被拒的 Authorization。
          */
-        const hadIdentity =
-          getUserToken() !== null || statusRef.current === "authenticated";
+        const hadIdentity = getUserToken() !== null || statusRef.current === "authenticated";
         console.warn(`[auth] /v1/me 明确拒绝（HTTP ${res.status}），落定为未登录`, {
           hadIdentity,
         });
@@ -520,12 +512,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       //
       // 而**只有后端明确拒绝过**（sessionRejected）才落定未登录：
       // 两次都撞上网关抖动不构成「你没登录」的结论，维持 unknown 等下一次触发的续期。
-      if (
-        sessionRejected &&
-        !sessionProven &&
-        statusRef.current === "unknown" &&
-        !getUserToken()
-      ) {
+      if (sessionRejected && !sessionProven && statusRef.current === "unknown" && !getUserToken()) {
         commitAnonymous(false);
         return;
       }
@@ -575,8 +562,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       // 随后的 `commitUser()` 才知道「这个人已经宣告过了」而不再播第二遍 ——
       // 否则同一次换人会被反复宣告，在多标签页之间来回激起额外的续期。
       const subject = (e as CustomEvent<{ subject?: unknown }>).detail?.subject;
-      const nextId =
-        typeof subject === "string" && subject !== "" ? subject : null;
+      const nextId = typeof subject === "string" && subject !== "" ? subject : null;
       if (lastAnnouncedIdRef.current !== nextId) {
         publishSessionBroadcast({ type: "signed-in" });
         lastAnnouncedIdRef.current = nextId;
@@ -601,8 +587,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       })();
     };
     window.addEventListener(SESSION_IDENTITY_CHANGED, onIdentityChanged);
-    return () =>
-      window.removeEventListener(SESSION_IDENTITY_CHANGED, onIdentityChanged);
+    return () => window.removeEventListener(SESSION_IDENTITY_CHANGED, onIdentityChanged);
   }, [refresh, supersedeAlignment, armWakeProbe]);
 
   // 别的标签页登录/登出了。
@@ -716,8 +701,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       // 本地登录成功：任何在跑的广播对齐都已经过时了。
       supersedeAlignment();
       const subject = (e as CustomEvent<{ subject?: unknown }>).detail?.subject;
-      const nextId =
-        typeof subject === "string" && subject !== "" ? subject : null;
+      const nextId = typeof subject === "string" && subject !== "" ? subject : null;
       // **就地宣告**，不等 `/v1/me` 回来。
       //
       // 等 `commitUser()` 才播的话，中间隔着一整个档案往返。别的标签页在这段时间里
@@ -733,8 +717,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
       if (nextId === null) lastAnnouncedIdRef.current = null;
     };
     window.addEventListener(SESSION_TOKEN_INSTALLED, onInstalled);
-    return () =>
-      window.removeEventListener(SESSION_TOKEN_INSTALLED, onInstalled);
+    return () => window.removeEventListener(SESSION_TOKEN_INSTALLED, onInstalled);
   }, [supersedeAlignment]);
 
   // 401 自动续期时后端顺带回传的档案：不额外发请求，直接更新。
@@ -794,9 +777,7 @@ export const useSession = (): SessionContextValue => {
 export const useAuthenticatedUser = (): MeProfile => {
   const { user } = useSession();
   if (!user) {
-    throw new Error(
-      "useAuthenticatedUser 必须用在登录门控之内（status === 'authenticated' 之后）",
-    );
+    throw new Error("useAuthenticatedUser 必须用在登录门控之内（status === 'authenticated' 之后）");
   }
   return user;
 };

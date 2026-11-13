@@ -31,7 +31,16 @@ interface ProfileTabProps {
   unlocking: boolean;
 }
 
-export function ProfileTab({ user, iam, canEdit, disabledHint, edit, onSave, onUnlock, unlocking }: ProfileTabProps) {
+export function ProfileTab({
+  user,
+  iam,
+  canEdit,
+  disabledHint,
+  edit,
+  onSave,
+  onUnlock,
+  unlocking,
+}: ProfileTabProps) {
   const { t } = useTranslation();
   const fmt = useFormatTs();
   const { value, setField, changesFor, resetKeys } = edit;
@@ -137,7 +146,9 @@ export function ProfileTab({ user, iam, canEdit, disabledHint, edit, onSave, onU
               },
               {
                 term: t("admin.userDetail.account.sessions"),
-                value: t("admin.userDetail.account.countUnit", { count: user.security.activeSessions }),
+                value: t("admin.userDetail.account.countUnit", {
+                  count: user.security.activeSessions,
+                }),
               },
               {
                 term: t("admin.userDetail.account.grants"),

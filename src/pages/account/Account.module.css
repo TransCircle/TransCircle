@@ -82,7 +82,8 @@
   font-weight: var(--fw-medium);
   color: var(--text-secondary);
   text-decoration: none;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
 
@@ -255,7 +256,6 @@
     font-size: var(--fs-h3);
   }
 }
-
 
 /* ── 节式分区(对齐主页 .actionSection 的分隔线节奏) ── */
 .section {

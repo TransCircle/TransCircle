@@ -114,10 +114,12 @@ const VerifyEmailPage = () => {
         actions={
           user
             ? [{ label: t("verify.toAccount"), to: "/account" }]
-            : [{
-                label: t("nav.login"),
-                to: resumeOidc ? `/login?oidc=${encodeURIComponent(resumeOidc)}` : "/login",
-              }]
+            : [
+                {
+                  label: t("nav.login"),
+                  to: resumeOidc ? `/login?oidc=${encodeURIComponent(resumeOidc)}` : "/login",
+                },
+              ]
         }
       />
     );
@@ -129,10 +131,12 @@ const VerifyEmailPage = () => {
         kind="success"
         title={t("verify.resendDoneTitle")}
         description={t("verify.resendDoneDesc")}
-        actions={[{
-          label: t("nav.login"),
-          to: resumeOidc ? `/login?oidc=${encodeURIComponent(resumeOidc)}` : "/login",
-        }]}
+        actions={[
+          {
+            label: t("nav.login"),
+            to: resumeOidc ? `/login?oidc=${encodeURIComponent(resumeOidc)}` : "/login",
+          },
+        ]}
       />
     );
   }

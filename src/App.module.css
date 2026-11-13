@@ -20,12 +20,12 @@
 }
 
 :global([data-theme="dark"]) .hero {
-  --aura-opacity: 0.20;
+  --aura-opacity: 0.2;
 }
 
 @media (prefers-color-scheme: dark) {
   :global(:root:not([data-theme])) .hero {
-    --aura-opacity: 0.20;
+    --aura-opacity: 0.2;
   }
 }
 
@@ -130,9 +130,12 @@
   text-decoration: none;
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
-  transition: background-color var(--dur-1) var(--ease-standard),
-    border-color var(--dur-1) var(--ease-standard), color var(--dur-1) var(--ease-standard),
-    box-shadow var(--dur-1) var(--ease-standard), transform var(--dur-1) var(--ease-spring);
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard),
+    color var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-1) var(--ease-standard),
+    transform var(--dur-1) var(--ease-spring);
 }
 
 .ctaPrimary {

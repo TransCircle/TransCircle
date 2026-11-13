@@ -49,7 +49,18 @@ function trapFocus(e: KeyboardEvent, container: HTMLElement | null) {
 }
 
 const CloseIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path d="M18 6 6 18" />
     <path d="m6 6 12 12" />
   </svg>
@@ -328,7 +339,11 @@ export function Dialog({
       window.clearTimeout(springTimer.current);
       springTimer.current = null;
     }
-    drag.current = { startY: e.clientY, active: true, height: panel.getBoundingClientRect().height };
+    drag.current = {
+      startY: e.clientY,
+      active: true,
+      height: panel.getBoundingClientRect().height,
+    };
     panel.style.transition = "none";
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
@@ -412,7 +427,10 @@ export function Dialog({
               <span className={styles.grabber} aria-hidden="true" />
               <div className={styles.header}>
                 {icon && (
-                  <span className={cx(styles.icon, tone === "danger" && styles.iconDanger)} aria-hidden="true">
+                  <span
+                    className={cx(styles.icon, tone === "danger" && styles.iconDanger)}
+                    aria-hidden="true"
+                  >
                     {icon}
                   </span>
                 )}
@@ -436,13 +454,23 @@ export function Dialog({
 
         {/* 关闭 X:固定于面板右上角(在滚动区之外),不随内容滑动。 */}
         {showClose && (
-          <button type="button" className={styles.closeBtn} aria-label={t("common.close")} onClick={requestClose}>
+          <button
+            type="button"
+            className={styles.closeBtn}
+            aria-label={t("common.close")}
+            onClick={requestClose}
+          >
             <CloseIcon />
           </button>
         )}
 
         {/* 自定义滚动条:面板子元素(不随滚动),圆角内,可拖动。 */}
-        <div ref={trackRef} className={styles.scrollbar} data-visible={scrollbarVisible || undefined} aria-hidden="true">
+        <div
+          ref={trackRef}
+          className={styles.scrollbar}
+          data-visible={scrollbarVisible || undefined}
+          aria-hidden="true"
+        >
           <div
             ref={thumbRef}
             className={styles.thumb}

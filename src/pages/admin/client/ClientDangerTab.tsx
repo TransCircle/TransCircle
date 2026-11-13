@@ -48,7 +48,11 @@ export function ClientDangerTab({
 
   const remove = async (reason: string) => {
     const ok = await action.run("delete", (idem) =>
-      api.del(`/v1/admin/clients/${client.clientId}`, { reason }, { plane: "user", idempotent: idem }),
+      api.del(
+        `/v1/admin/clients/${client.clientId}`,
+        { reason },
+        { plane: "user", idempotent: idem },
+      ),
     );
     if (ok !== null) navigate("/admin/clients", { replace: true });
   };
@@ -76,7 +80,9 @@ export function ClientDangerTab({
         <DangerDialog
           title={active ? t("admin.clientDetail.disable") : t("admin.clientDetail.enable")}
           subject={client.name}
-          message={active ? t("admin.clientDetail.disableDesc") : t("admin.clientDetail.enableDesc")}
+          message={
+            active ? t("admin.clientDetail.disableDesc") : t("admin.clientDetail.enableDesc")
+          }
           impact={t("admin.clientDetail.toggleImpact", { count: client.grantedUsers })}
           confirmText={active ? t("admin.clientDetail.disable") : t("admin.clientDetail.enable")}
           needStepUp

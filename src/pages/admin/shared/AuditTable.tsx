@@ -20,7 +20,13 @@ interface AuditTableProps {
  * 展开用真 `<button>` 语义（行带 role/tabIndex + aria-expanded/aria-controls），
  * 键盘能开能关；折叠内容挂在紧随其后的一行上，读屏器顺序与视觉一致。
  */
-export function AuditTable({ rows, showTarget = true, emptyTitle, emptyDesc, ariaLabel }: AuditTableProps) {
+export function AuditTable({
+  rows,
+  showTarget = true,
+  emptyTitle,
+  emptyDesc,
+  ariaLabel,
+}: AuditTableProps) {
   const { t } = useTranslation();
   const fmt = useFormatTs();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -72,7 +78,9 @@ export function AuditTable({ rows, showTarget = true, emptyTitle, emptyDesc, ari
                     aria-expanded={open}
                     aria-controls={`audit-detail-${log.id}`}
                     aria-label={t("admin.audit.toggleRow", {
-                      action: t(`admin.audit.actionLabels.${log.action}`, { defaultValue: log.action }),
+                      action: t(`admin.audit.actionLabels.${log.action}`, {
+                        defaultValue: log.action,
+                      }),
                       at: fmt(log.createdAt),
                     })}
                     onClick={toggle}
@@ -97,14 +105,18 @@ export function AuditTable({ rows, showTarget = true, emptyTitle, emptyDesc, ari
                     <td data-label={t("admin.audit.col.action")}>
                       <span className={styles.cellText}>
                         <span>
-                          {t(`admin.audit.actionLabels.${log.action}`, { defaultValue: log.action })}
+                          {t(`admin.audit.actionLabels.${log.action}`, {
+                            defaultValue: log.action,
+                          })}
                         </span>
                         <span className={`${styles.cellSub} ${styles.mono}`}>{log.action}</span>
                       </span>
                     </td>
                     {showTarget && (
                       <td data-label={t("admin.audit.col.target")} className={styles.col1}>
-                        <span className={styles.num}>{log.resourceName || log.resourceType || "—"}</span>
+                        <span className={styles.num}>
+                          {log.resourceName || log.resourceType || "—"}
+                        </span>
                       </td>
                     )}
                     <td data-label="">

@@ -24,7 +24,8 @@
   border-radius: var(--r-sm);
   cursor: pointer;
   white-space: nowrap;
-  transition: color var(--dur-1) var(--ease-standard),
+  transition:
+    color var(--dur-1) var(--ease-standard),
     background-color var(--dur-1) var(--ease-standard);
   min-height: calc(var(--btn-h) - 4px);
 }

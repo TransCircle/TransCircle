@@ -66,12 +66,15 @@ export default {
     // 未登记的路由上、带扩展名的路径（按解码后判断，/a%2Ejs 也算）视为文件请求：
     // 真实文件由资源层直接返回；缺失时 SPA 回退会给出 index.html，下面改成纯文本 404。
     // 已登记的页面路由（如 /admin/users/foo.bar）即使带点也按页面处理。
-    const isFileRequest = policy.kind === "not-found" && FILE_EXTENSION.test(decodePathname(pathname) ?? pathname);
+    const isFileRequest =
+      policy.kind === "not-found" && FILE_EXTENSION.test(decodePathname(pathname) ?? pathname);
     // 会被改写的 HTML（私有页、未知页面）去掉条件请求头：否则资源层可能对共享的
     // index.html 回 304，304 没有正文，改写（标题、noindex、清空 #root）就无从发生。
     // 首页与真实静态文件保留条件请求，照常享受 304。
     const isRewrittenPage = policy.kind !== "home" && !isFileRequest;
-    const response = await env.ASSETS.fetch(isRewrittenPage ? withoutConditionals(request) : request);
+    const response = await env.ASSETS.fetch(
+      isRewrittenPage ? withoutConditionals(request) : request,
+    );
     // 静态文件（图标、txt、manifest……）与 304 原样返回；只有 SPA 的 HTML 外壳需要处理。
     if (!isHtml(response)) {
       return response;
@@ -113,7 +116,9 @@ function permanentRedirect(url: URL, pathname: string): Response {
 /** 按点分 key 取 zh-CN 文案；取不到时回落到站点名，保证 <title> 不为空。 */
 function translate(key: string): string {
   const value = key.split(".").reduce<unknown>((node, part) => {
-    return node !== null && typeof node === "object" ? (node as Record<string, unknown>)[part] : undefined;
+    return node !== null && typeof node === "object"
+      ? (node as Record<string, unknown>)[part]
+      : undefined;
   }, zhCN);
   return typeof value === "string" ? value : zhCN.common.siteName;
 }
@@ -197,8 +202,11 @@ async function proxyToPass(request: Request, url: URL, env: Env): Promise<Respon
 
 /** 502 信封；requestId 用 Workers 原生 crypto，不手写弱随机。 */
 function jsonError(code: string, message: string): Response {
-  return new Response(JSON.stringify({ error: { code, message }, requestId: `req_${crypto.randomUUID()}` }), {
-    status: 502,
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({ error: { code, message }, requestId: `req_${crypto.randomUUID()}` }),
+    {
+      status: 502,
+      headers: { "Content-Type": "application/json" },
+    },
+  );
 }

@@ -29,7 +29,8 @@
   border: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: color var(--dur-1) var(--ease-standard),
+  transition:
+    color var(--dur-1) var(--ease-standard),
     background-color var(--dur-1) var(--ease-standard),
     border-color var(--dur-2) var(--ease-out);
 }

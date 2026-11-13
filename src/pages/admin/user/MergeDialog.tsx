@@ -119,13 +119,26 @@ export function MergeDialog({ userId, subject, onCancel, onDone }: MergeDialogPr
             </Card>
             <div className={styles.impact}>
               <strong>
-                {t("admin.userDetail.merge.impactTitle", { from: subject, to: targetName(preview) })}
+                {t("admin.userDetail.merge.impactTitle", {
+                  from: subject,
+                  to: targetName(preview),
+                })}
               </strong>
               <ul>
-                <li>{t("admin.userDetail.merge.impactBindings", { count: preview.migrate.bindings.length })}</li>
-                <li>{t("admin.userDetail.merge.impactPasskeys", { count: preview.migrate.passkeys })}</li>
-                <li>{t("admin.userDetail.merge.impactGrants", { count: preview.revoke.grants })}</li>
-                <li>{t("admin.userDetail.merge.impactSessions", { count: preview.revoke.sessions })}</li>
+                <li>
+                  {t("admin.userDetail.merge.impactBindings", {
+                    count: preview.migrate.bindings.length,
+                  })}
+                </li>
+                <li>
+                  {t("admin.userDetail.merge.impactPasskeys", { count: preview.migrate.passkeys })}
+                </li>
+                <li>
+                  {t("admin.userDetail.merge.impactGrants", { count: preview.revoke.grants })}
+                </li>
+                <li>
+                  {t("admin.userDetail.merge.impactSessions", { count: preview.revoke.sessions })}
+                </li>
                 {preview.conflicts.bindings.length > 0 && (
                   // 目标账户已占用同一 provider 的绑定 —— 这些迁不过去，必须让操作者事先知道，
                   // 否则合并完才发现「GitHub 绑定丢了」。

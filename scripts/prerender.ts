@@ -52,7 +52,9 @@ type TeamList = ReadonlyArray<{ github: string; name: string; role: string }>;
 /** 两种文本格式：humans.txt 按其惯例「职位: 名字」，llms-full.txt 用 Markdown 列表。 */
 function formatTeam(file: string, team: TeamList): string {
   if (file === "humans.txt") {
-    return team.map((m) => `${m.role}: ${m.name}\nGitHub: https://github.com/${m.github}`).join("\n\n");
+    return team
+      .map((m) => `${m.role}: ${m.name}\nGitHub: https://github.com/${m.github}`)
+      .join("\n\n");
   }
   return team.map((m) => `- **${m.name}**（${m.role}）：https://github.com/${m.github}`).join("\n");
 }
@@ -77,7 +79,9 @@ function lastModifiedDate(): string | null {
 function injectOnce(html: string, placeholder: string, content: string): string {
   const parts = html.split(placeholder);
   if (parts.length !== 2) {
-    throw new Error(`dist/index.html 中应恰好有一个 ${placeholder} 占位符，实际 ${parts.length - 1} 个`);
+    throw new Error(
+      `dist/index.html 中应恰好有一个 ${placeholder} 占位符，实际 ${parts.length - 1} 个`,
+    );
   }
   return parts.join(content);
 }
@@ -89,7 +93,11 @@ function injectTeam(file: string, text: string, team: TeamList): string {
 }
 
 function escapeXml(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function buildSitemap(lastmod: string | null): string {
@@ -117,7 +125,9 @@ function buildSitemap(lastmod: string | null): string {
 
 async function main(): Promise<void> {
   const dateModified = lastModifiedDate();
-  const { render } = (await import(pathToFileURL(`${SSR_OUT}entry-prerender.js`).href)) as PrerenderModule;
+  const { render } = (await import(
+    pathToFileURL(`${SSR_OUT}entry-prerender.js`).href
+  )) as PrerenderModule;
   const { appHtml, headHtml, team } = await render({ dateModified });
 
   const indexPath = `${DIST}index.html`;
@@ -125,14 +135,19 @@ async function main(): Promise<void> {
   html = injectOnce(html, "<!--app-head-->", headHtml);
   html = injectOnce(html, "<!--app-html-->", appHtml);
   await writeFile(indexPath, html);
-  console.log(`✓ dist/index.html 预渲染完成（正文 ${appHtml.length} 字符，dateModified ${dateModified ?? "未知，已省略"}）`);
+  console.log(
+    `✓ dist/index.html 预渲染完成（正文 ${appHtml.length} 字符，dateModified ${dateModified ?? "未知，已省略"}）`,
+  );
 
   // 源文件里的日期只是占位：以内容源的 git 日期为准，未知时删掉整行，不留过期日期。
   for (const [file, line, label] of DATED_TEXT_FILES) {
     const path = `${DIST}${file}`;
     const text = injectTeam(file, await readFile(path, "utf8"), team);
     if (!line.test(text)) throw new Error(`dist/${file} 缺少「${label}」日期行`);
-    await writeFile(path, text.replace(line, dateModified ? `${label}${dateModified}` : "").replace(/\n{3,}/g, "\n\n"));
+    await writeFile(
+      path,
+      text.replace(line, dateModified ? `${label}${dateModified}` : "").replace(/\n{3,}/g, "\n\n"),
+    );
   }
 
   await writeFile(`${DIST}sitemap.xml`, buildSitemap(dateModified));

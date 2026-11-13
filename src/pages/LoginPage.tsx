@@ -8,10 +8,7 @@ import { readSignoutEpoch } from "../context/signoutEpoch";
 import type { LoginResult, OAuthProviderInfo, WebAuthnRequestOptions } from "../api/types";
 import { performAssertion, isWebAuthnSupported } from "../utils/webauthn";
 import { sanitizeRedirect } from "../utils/url";
-import {
-  clearOidcInteraction,
-  readOidcInteraction,
-} from "../utils/oidcInteraction";
+import { clearOidcInteraction, readOidcInteraction } from "../utils/oidcInteraction";
 import { cx } from "../components/admin/cx";
 import { usePageTitle } from "../utils/usePageTitle";
 import { saveIamMfaHandoff } from "./AuthMfaDonePage";
@@ -29,19 +26,45 @@ import { TurnstileWidget, type TurnstileWidgetHandle } from "../components/ui/Tu
 import authStyles from "./Auth.module.css";
 
 const GithubIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.23c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.25 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.69.82.57A12 12 0 0 0 24 12c0-6.63-5.37-12-12-12Z" />
   </svg>
 );
 const XIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path d="M18.24 2.25h3.31l-7.23 8.26L23.04 21.75h-6.66l-4.71-6.23-5.4 6.23H2.96l7.73-8.84L1.25 2.25h6.83l4.71 6.23 5.45-6.23Zm-1.16 17.52h1.83L7.08 4.13H5.12L17.08 19.77Z" />
   </svg>
 );
 // 统一身份（IAM）。与 GitHub / X 并列，是同一层级的授权登录方式。
 const ShieldIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-    <path d="M12 2 4 5.5v6c0 5 3.4 9.2 8 10.5 4.6-1.3 8-5.5 8-10.5v-6L12 2Z" /><path d="m9 12 2 2 4-4" />
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M12 2 4 5.5v6c0 5 3.4 9.2 8 10.5 4.6-1.3 8-5.5 8-10.5v-6L12 2Z" />
+    <path d="m9 12 2 2 4-4" />
   </svg>
 );
 /** provider key → 图标。未知 provider 用盾牌兜底，不留空白按钮。 */
@@ -53,13 +76,30 @@ const providerIcon = (provider: string) => {
 /** 第三方按钮文案：完整 / 简短两版都渲染，由容器宽度决定显示哪一版（纯视觉，名称走 aria-label）。 */
 const OAuthLabel = ({ full, short }: { full: string; short: string }) => (
   <>
-    <span className={authStyles.labelFull} aria-hidden="true">{full}</span>
-    <span className={authStyles.labelShort} aria-hidden="true">{short}</span>
+    <span className={authStyles.labelFull} aria-hidden="true">
+      {full}
+    </span>
+    <span className={authStyles.labelShort} aria-hidden="true">
+      {short}
+    </span>
   </>
 );
 const FingerIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-    <path d="M5 13a7 7 0 0 1 14 0c0 1.96-.14 4-1 6" /><path d="M12 11a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" /><path d="M8 21c.5-2 1-4 1-8" />
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M5 13a7 7 0 0 1 14 0c0 1.96-.14 4-1 6" />
+    <path d="M12 11a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" />
+    <path d="M8 21c.5-2 1-4 1-8" />
   </svg>
 );
 
@@ -381,7 +421,16 @@ const LoginPage = () => {
     }
     navigate(redirectTo, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, oidcUid, handoffPending, mfaToken, handoffFailed, error, interactionRetryable, interactionFailed]);
+  }, [
+    user,
+    oidcUid,
+    handoffPending,
+    mfaToken,
+    handoffFailed,
+    error,
+    interactionRetryable,
+    interactionFailed,
+  ]);
 
   /** 清掉本次二次验证流程的全部残留（挑战已被服务端消费，不能再让用户对着它提交）。 */
   const clearMfaFlow = () => {
@@ -656,10 +705,9 @@ const LoginPage = () => {
     // 的占位条数也一起写歪。作废标记让「已经不作数」的那一发彻底闭嘴。
     let active = true;
     void (async () => {
-      const res = await api.get<{ providers: OAuthProviderInfo[] }>(
-        "/v1/auth/oauth/providers",
-        { noAuth: true },
-      );
+      const res = await api.get<{ providers: OAuthProviderInfo[] }>("/v1/auth/oauth/providers", {
+        noAuth: true,
+      });
       if (!active) return;
       // 同样要校验形状：不是数组就当作没取到（下面那条注释说的退化路径），
       // 而不是让 `res.data.providers` 在 effect 里抛异常。
@@ -733,11 +781,10 @@ const LoginPage = () => {
     setPendingDeletion(false);
     setPending("passkey");
     try {
-      const start = await api.post<{ challengeId: string; publicKey: Parameters<typeof performAssertion>[0] }>(
-        "/v1/auth/passkey/login/start",
-        identifier ? { identifier } : {},
-        { noAuth: true },
-      );
+      const start = await api.post<{
+        challengeId: string;
+        publicKey: Parameters<typeof performAssertion>[0];
+      }>("/v1/auth/passkey/login/start", identifier ? { identifier } : {}, { noAuth: true });
       if (!start.ok) {
         setError(start.error.message);
         return;
@@ -921,7 +968,9 @@ const LoginPage = () => {
               </div>
               {TURNSTILE_ENABLED && (
                 <div className={authStyles.fieldGroup}>
-                  {captchaNotice && <Alert tone="error">{t(CAPTCHA_NOTICE_KEYS[captchaNotice])}</Alert>}
+                  {captchaNotice && (
+                    <Alert tone="error">{t(CAPTCHA_NOTICE_KEYS[captchaNotice])}</Alert>
+                  )}
                   <TurnstileWidget
                     ref={turnstileRef}
                     onToken={(token) => {
@@ -941,7 +990,13 @@ const LoginPage = () => {
                   />
                 </div>
               )}
-              <Button type="submit" variant="primary" fullWidth loading={pending === "login"} disabled={busy}>
+              <Button
+                type="submit"
+                variant="primary"
+                fullWidth
+                loading={pending === "login"}
+                disabled={busy}
+              >
                 {t("login.submit")}
               </Button>
             </form>
@@ -956,7 +1011,11 @@ const LoginPage = () => {
                     {providers === null
                       ? // 等列表的这一秒画等高骨架：落地时原地换成按钮，卡片高度不变。
                         Array.from({ length: providerSlots }, (_, i) => (
-                          <div key={`slot-${i}`} className={authStyles.oauthSkeleton} aria-hidden="true" />
+                          <div
+                            key={`slot-${i}`}
+                            className={authStyles.oauthSkeleton}
+                            aria-hidden="true"
+                          />
                         ))
                       : providers.map((p) => {
                           const label = providerLabel(p);
@@ -1018,7 +1077,8 @@ const LoginPage = () => {
           const legacy = mfaMethods.length === 0; // 旧契约:未下发 availableMethods
           const hasTotp = mfaMethods.includes("totp");
           // Passkey 二次验证需环境支持 WebAuthn(与独立 Passkey 登录按钮一致),否则展示的按钮点了必失败。
-          const hasPasskey = isWebAuthnSupported() && mfaPasskey !== null && mfaMethods.includes("passkey");
+          const hasPasskey =
+            isWebAuthnSupported() && mfaPasskey !== null && mfaMethods.includes("passkey");
           const hasRecovery = mfaMethods.includes("recovery_code");
           // 该账户把登录第二因素交给了统一身份接管：本地 passkey / TOTP 在登录路径上
           // 已被后端拒绝，这里只能引导去 IAM 完成；恢复码仍是可用的兜底。
@@ -1027,20 +1087,20 @@ const LoginPage = () => {
           const hasCode = hasTotp || legacy;
 
           /**
-            * 跳去统一身份完成第二因素。
-            * 整页跳转会清空 React 状态，所以挑战令牌与 verificationId 必须先落 sessionStorage，
-            * 由 /auth/mfa/done 回来后据此向后端回查权威结果。
-            */
+           * 跳去统一身份完成第二因素。
+           * 整页跳转会清空 React 状态，所以挑战令牌与 verificationId 必须先落 sessionStorage，
+           * 由 /auth/mfa/done 回来后据此向后端回查权威结果。
+           */
           const startIamMfa = async () => {
             if (!mfaToken) return;
             setPending("mfa");
             setError(null);
             setPendingDeletion(false);
-            const res = await api.post<{ verificationId: string; verifyUrl: string; expiresAt: number }>(
-              "/v1/auth/mfa/iam/start",
-              { mfaChallengeToken: mfaToken },
-              { noAuth: true },
-            );
+            const res = await api.post<{
+              verificationId: string;
+              verifyUrl: string;
+              expiresAt: number;
+            }>("/v1/auth/mfa/iam/start", { mfaChallengeToken: mfaToken }, { noAuth: true });
             setPending(null);
             if (!res.ok) {
               const key = `authError.${res.error.code}`;
@@ -1100,14 +1160,24 @@ const LoginPage = () => {
                   onChange={(e) => setMfaCode(e.target.value)}
                   required
                 />
-                <Button type="submit" variant="primary" fullWidth loading={pending === "mfa"} disabled={busy}>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  fullWidth
+                  loading={pending === "mfa"}
+                  disabled={busy}
+                >
                   {t("login.mfaSubmit")}
                 </Button>
                 <button
                   type="button"
                   className={authStyles.mfaAltLink}
                   disabled={busy}
-                  onClick={() => { setMfaRecoveryMode(false); setMfaCode(""); setError(null); }}
+                  onClick={() => {
+                    setMfaRecoveryMode(false);
+                    setMfaCode("");
+                    setError(null);
+                  }}
                 >
                   {t("login.mfaBackToOther")}
                 </button>
@@ -1139,7 +1209,11 @@ const LoginPage = () => {
                     type="button"
                     className={authStyles.mfaAltLink}
                     disabled={busy}
-                    onClick={() => { setMfaRecoveryMode(true); setMfaCode(""); setError(null); }}
+                    onClick={() => {
+                      setMfaRecoveryMode(true);
+                      setMfaCode("");
+                      setError(null);
+                    }}
                   >
                     {t("login.mfaUseRecovery")}
                   </button>
@@ -1182,13 +1256,21 @@ const LoginPage = () => {
                     onChange={(e) => setMfaCode(e.target.value)}
                     required
                   />
-                  <Button type="submit" variant="primary" fullWidth loading={pending === "mfa"} disabled={busy}>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    fullWidth
+                    loading={pending === "mfa"}
+                    disabled={busy}
+                  >
                     {t("login.mfaSubmit")}
                   </Button>
                 </>
               )}
 
-              {hasCode && hasPasskey && <div className={authStyles.divider}>{t("login.mfaOr")}</div>}
+              {hasCode && hasPasskey && (
+                <div className={authStyles.divider}>{t("login.mfaOr")}</div>
+              )}
 
               {/* Passkey：与验证码同级的主方式（无验证码时为唯一主操作）。 */}
               {hasPasskey && (
@@ -1211,7 +1293,11 @@ const LoginPage = () => {
                   type="button"
                   className={authStyles.mfaAltLink}
                   disabled={busy}
-                  onClick={() => { setMfaRecoveryMode(true); setMfaCode(""); setError(null); }}
+                  onClick={() => {
+                    setMfaRecoveryMode(true);
+                    setMfaCode("");
+                    setError(null);
+                  }}
                 >
                   {t("login.mfaUseRecovery")}
                 </button>

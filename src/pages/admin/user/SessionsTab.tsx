@@ -54,11 +54,7 @@ export function SessionsTab({ userId, subject, canRevoke, onDone }: SessionsTabP
       key: "device",
       label: t("admin.userDetail.sessions.device"),
       primary: true,
-      render: (s) => (
-        <span className={styles.cellName}>
-          {deviceOf(s)}
-        </span>
-      ),
+      render: (s) => <span className={styles.cellName}>{deviceOf(s)}</span>,
     },
     {
       key: "ip",

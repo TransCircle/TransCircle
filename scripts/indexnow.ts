@@ -32,7 +32,9 @@ async function main(): Promise<void> {
       console.warn(`⚠ IndexNow 返回 HTTP ${response.status}：${await response.text()}`);
     }
   } catch (error) {
-    console.warn(`⚠ IndexNow 推送失败（不影响部署）：${error instanceof Error ? error.message : String(error)}`);
+    console.warn(
+      `⚠ IndexNow 推送失败（不影响部署）：${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 

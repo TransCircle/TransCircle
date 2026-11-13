@@ -45,10 +45,9 @@ const RegisterPage = () => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await api.get<{ registrationEnabled: boolean }>(
-          "/v1/auth/register/status",
-          { noAuth: true },
-        );
+        const res = await api.get<{ registrationEnabled: boolean }>("/v1/auth/register/status", {
+          noAuth: true,
+        });
         if (!cancelled) setRegistrationEnabled(res.ok ? res.data.registrationEnabled : true);
       } catch {
         // 读不到状态时按「开放」处理，提交阶段后端仍会以 403 兜底。
@@ -191,7 +190,11 @@ const RegisterPage = () => {
             label={t("register.password")}
             type="password"
             autoComplete="new-password"
-            hint={password ? `${t("password.strengthLabel")}: ${strengthLabels[strength]}` : t("register.passwordHint")}
+            hint={
+              password
+                ? `${t("password.strengthLabel")}: ${strengthLabels[strength]}`
+                : t("register.passwordHint")
+            }
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -226,7 +229,13 @@ const RegisterPage = () => {
             </div>
           )}
         </div>
-        <Button type="submit" variant="primary" fullWidth loading={busy} className={authStyles.registerSubmit}>
+        <Button
+          type="submit"
+          variant="primary"
+          fullWidth
+          loading={busy}
+          className={authStyles.registerSubmit}
+        >
           {t("register.submit")}
         </Button>
       </form>

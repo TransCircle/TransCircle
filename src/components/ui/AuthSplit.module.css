@@ -75,14 +75,18 @@
 :global([data-theme="dark"]) .card {
   border-color: rgba(255, 255, 255, 0.12);
   background-color: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 24px 48px -16px rgba(0, 0, 0, 0.6);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.3),
+    0 24px 48px -16px rgba(0, 0, 0, 0.6);
 }
 
 @media (prefers-color-scheme: dark) {
   :global(:root:not([data-theme])) .card {
     border-color: rgba(255, 255, 255, 0.12);
     background-color: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 24px 48px -16px rgba(0, 0, 0, 0.6);
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.3),
+      0 24px 48px -16px rgba(0, 0, 0, 0.6);
   }
 }
 

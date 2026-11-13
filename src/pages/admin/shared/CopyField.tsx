@@ -27,7 +27,11 @@ export function CopyField({ value, ariaLabel }: { value: string; ariaLabel: stri
       <code>{value}</code>
       <Button variant="ghost" size="sm" aria-label={ariaLabel} onClick={() => void copy()}>
         <span aria-live="polite">
-          {state === "ok" ? t("common.copied") : state === "fail" ? t("common.copyFailed") : t("common.copy")}
+          {state === "ok"
+            ? t("common.copied")
+            : state === "fail"
+              ? t("common.copyFailed")
+              : t("common.copy")}
         </span>
       </Button>
     </div>

@@ -35,7 +35,12 @@ const NAV: readonly NavDef[] = [
   // 后端 GET /keys 对 pass.key:rotate 与 pass.policy:manage 都开放，安全页内部也分区判权。
   // 导航只认 policyManage 的话，只被授予「轮换签名密钥」的管理员看不到入口，
   // 只能手敲 /admin/security —— 有权限却找不到门。
-  { to: "/admin/security", key: "security", icon: <IconShield />, perm: [PERM.policyManage, PERM.keyRotate] },
+  {
+    to: "/admin/security",
+    key: "security",
+    icon: <IconShield />,
+    perm: [PERM.policyManage, PERM.keyRotate],
+  },
 ];
 
 /**
@@ -95,7 +100,9 @@ const AdminLayout = () => {
   const navItems = useMemo(
     () =>
       NAV.filter((n) =>
-        Array.isArray(n.perm) ? n.perm.some((p) => hasPermission(p)) : hasPermission(n.perm as string),
+        Array.isArray(n.perm)
+          ? n.perm.some((p) => hasPermission(p))
+          : hasPermission(n.perm as string),
       ),
     [hasPermission],
   );

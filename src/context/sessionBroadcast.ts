@@ -50,9 +50,7 @@ function isEnvelope(value: unknown): value is Envelope {
 }
 
 /** 广播的事件。刻意只有「发生了什么」，不带任何身份数据。 */
-export type SessionBroadcast =
-  | { type: "signed-in" }
-  | { type: "signed-out" };
+export type SessionBroadcast = { type: "signed-in" } | { type: "signed-out" };
 
 /**
  * 线上格式：事件本身 + 用于去重的随机 id + **发出时刻** + **发出者标识**。

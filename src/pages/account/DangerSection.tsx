@@ -4,13 +4,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../../api/client";
 import { useAuthenticatedUser } from "../../context/SessionContext";
 import { StepUpDialog } from "../../components/StepUpDialog";
-import {
-  Card,
-  SectionLabel,
-  TextField,
-  AdminButton as Button,
-  Alert,
-} from "../../components/ui";
+import { Card, SectionLabel, TextField, AdminButton as Button, Alert } from "../../components/ui";
 import { Dialog } from "../../components/ui/Dialog";
 import s from "./Account.module.css";
 
@@ -51,7 +45,9 @@ export function DangerSection() {
     try {
       const body: Record<string, unknown> = { confirmation: CONFIRM_PHRASE };
       if (hasPassword) body.password = password;
-      const res = await api.post<{ cancelUrl?: string }>("/v1/me/delete", body, { idempotent: true });
+      const res = await api.post<{ cancelUrl?: string }>("/v1/me/delete", body, {
+        idempotent: true,
+      });
       if (res.ok) {
         setRequested(true);
         setCancelUrl(res.data?.cancelUrl ?? null);
@@ -129,7 +125,12 @@ export function DangerSection() {
             <Button variant="secondary" disabled={deleting} onClick={() => setDeleteOpen(false)}>
               {t("common.cancel")}
             </Button>
-            <Button variant="danger" loading={deleting} disabled={!canSubmit} onClick={() => void submitDelete()}>
+            <Button
+              variant="danger"
+              loading={deleting}
+              disabled={!canSubmit}
+              onClick={() => void submitDelete()}
+            >
               {t("account.danger.delete")}
             </Button>
           </>
@@ -146,7 +147,9 @@ export function DangerSection() {
           <div className={s.stackSm}>
             <p className={s.muted}>{t("account.danger.confirmInstruction")}</p>
             {/* 短语红色醒目(aria-hidden:朗读交给输入框 aria-label,避免重复播报)。 */}
-            <p className={s.dangerPhrase} aria-hidden="true">{localizedPhrase}</p>
+            <p className={s.dangerPhrase} aria-hidden="true">
+              {localizedPhrase}
+            </p>
             <TextField
               ref={phraseRef}
               aria-label={t("account.danger.confirmTypeLabel", { phrase: localizedPhrase })}

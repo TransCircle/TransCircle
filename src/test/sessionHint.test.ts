@@ -7,11 +7,7 @@
  */
 import { beforeEach, describe, expect, it } from "vitest";
 
-import {
-  clearSessionHint,
-  readSessionHint,
-  writeSessionHint,
-} from "../context/sessionHint";
+import { clearSessionHint, readSessionHint, writeSessionHint } from "../context/sessionHint";
 import type { MeProfile } from "../api/types";
 
 const KEY = "pass_session_hint";

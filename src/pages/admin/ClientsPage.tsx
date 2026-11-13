@@ -21,7 +21,10 @@ const ClientsPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { hasPermission } = useAdmin();
-  useAdminPageHeader({ title: t("admin.head.clients.title"), subtitle: t("admin.head.clients.sub") });
+  useAdminPageHeader({
+    title: t("admin.head.clients.title"),
+    subtitle: t("admin.head.clients.sub"),
+  });
 
   const { query, setPage, setPageSize, setFilter, toggleSort, requestSearch } = useListQuery({
     defaultSort: "createdAt:desc",
@@ -38,9 +41,12 @@ const ClientsPage = () => {
     setLoading(true);
     setError(null);
     void (async () => {
-      const res = await api.get<OffsetPage<AdminClientListItem>>(`/v1/admin/clients?${requestSearch}`, {
-        plane: "user",
-      });
+      const res = await api.get<OffsetPage<AdminClientListItem>>(
+        `/v1/admin/clients?${requestSearch}`,
+        {
+          plane: "user",
+        },
+      );
       if (!alive) return;
       setLoading(false);
       if (res.ok) setPageData(res.data);
@@ -92,7 +98,11 @@ const ClientsPage = () => {
           <StatusBadge
             tone={c.status === "active" ? "green" : "muted"}
             size="sm"
-            label={c.status === "active" ? t("admin.clients.statusActive") : t("admin.clients.statusDisabled")}
+            label={
+              c.status === "active"
+                ? t("admin.clients.statusActive")
+                : t("admin.clients.statusDisabled")
+            }
           />
         ),
       },
@@ -116,7 +126,9 @@ const ClientsPage = () => {
             );
           }
           return (
-            <span className={styles.num}>{t("admin.clients.secretAge", { count: c.secretAgeDays })}</span>
+            <span className={styles.num}>
+              {t("admin.clients.secretAge", { count: c.secretAgeDays })}
+            </span>
           );
         },
       },
@@ -204,7 +216,9 @@ const ClientsPage = () => {
         </>
       )}
 
-      <p className={styles.note}>{t("admin.clients.secretColumnNote", { days: SECRET_STALE_DAYS })}</p>
+      <p className={styles.note}>
+        {t("admin.clients.secretColumnNote", { days: SECRET_STALE_DAYS })}
+      </p>
     </div>
   );
 };

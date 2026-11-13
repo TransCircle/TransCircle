@@ -2,11 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Card, Checkbox, SectionLabel, Select } from "../../../components/ui";
 import type { AdminClientDetail, ClientTokenPolicy } from "../../../api/types";
 import { SaveBar } from "../shared/SaveBar";
-import {
-  ABSOLUTE_TTL_OPTIONS,
-  ACCESS_TTL_OPTIONS,
-  REFRESH_TTL_OPTIONS,
-} from "../shared/constants";
+import { ABSOLUTE_TTL_OPTIONS, ACCESS_TTL_OPTIONS, REFRESH_TTL_OPTIONS } from "../shared/constants";
 import type { CardEdit } from "../shared/useCardEdit";
 import styles from "../Admin.module.css";
 
@@ -35,7 +31,8 @@ export function TokensTab({ client, canManage, disabledHint, edit, onSave }: Tok
   // 服务间调用没有用户在场，也就没有刷新令牌与会话上限可言。
   const isM2m = client.applicationType === "m2m";
 
-  const patch = (next: Partial<ClientTokenPolicy>) => setField("tokenPolicy", { ...policy, ...next });
+  const patch = (next: Partial<ClientTokenPolicy>) =>
+    setField("tokenPolicy", { ...policy, ...next });
 
   /**
    * 当前值不在可选档位里时（m2m 恒为 0；或历史/手工数据留下的旧值），
@@ -43,7 +40,10 @@ export function TokensTab({ client, canManage, disabledHint, edit, onSave }: Tok
    * 看的人无从知道这个客户端现在到底是什么设置。
    */
   const absoluteOptions = (() => {
-    const base = ABSOLUTE_TTL_OPTIONS.map((v) => ({ value: v, label: t(`admin.ttl.absolute.${v}`) }));
+    const base = ABSOLUTE_TTL_OPTIONS.map((v) => ({
+      value: v,
+      label: t(`admin.ttl.absolute.${v}`),
+    }));
     const current = String(policy.absoluteTtl);
     if (base.some((o) => o.value === current)) return base;
     return [
@@ -74,15 +74,22 @@ export function TokensTab({ client, canManage, disabledHint, edit, onSave }: Tok
           label={t("admin.clientDetail.refreshTtl")}
           value={String(policy.refreshTtl)}
           disabled={!canManage || isM2m}
-          hint={isM2m ? t("admin.clientDetail.m2mNoRefresh") : t("admin.clientDetail.refreshTtlHint")}
+          hint={
+            isM2m ? t("admin.clientDetail.m2mNoRefresh") : t("admin.clientDetail.refreshTtlHint")
+          }
           onChange={(v) => patch({ refreshTtl: Number(v) })}
-          options={REFRESH_TTL_OPTIONS.map((v) => ({ value: v, label: t(`admin.ttl.refresh.${v}`) }))}
+          options={REFRESH_TTL_OPTIONS.map((v) => ({
+            value: v,
+            label: t(`admin.ttl.refresh.${v}`),
+          }))}
         />
         <Select
           label={t("admin.clientDetail.absoluteTtl")}
           value={String(policy.absoluteTtl)}
           disabled={!canManage || isM2m}
-          hint={isM2m ? t("admin.clientDetail.m2mNoAbsolute") : t("admin.clientDetail.absoluteTtlHint")}
+          hint={
+            isM2m ? t("admin.clientDetail.m2mNoAbsolute") : t("admin.clientDetail.absoluteTtlHint")
+          }
           onChange={(v) => patch({ absoluteTtl: Number(v) })}
           options={absoluteOptions}
         />

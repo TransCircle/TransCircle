@@ -4,18 +4,23 @@ import { api } from "../../api/client";
 import type { MeProfile } from "../../api/types";
 import { isMeProfile, useAuthenticatedUser, useSession } from "../../context/SessionContext";
 import { useFormatTs } from "../../utils/datetime";
-import {
-  Card,
-  AdminButton as Button,
-  Alert,
-  StatusBadge,
-  TextField,
-} from "../../components/ui";
+import { Card, AdminButton as Button, Alert, StatusBadge, TextField } from "../../components/ui";
 import { Dialog } from "../../components/ui/Dialog";
 import s from "./Account.module.css";
 
 const PencilIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path d="M12 20h9" />
     <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
   </svg>
@@ -35,7 +40,6 @@ export function ProfileSection() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
 
   const openEdit = () => {
     setDisplayName(user.displayName ?? "");
@@ -91,7 +95,12 @@ export function ProfileSection() {
               </div>
             </div>
             <div className={s.rowActions}>
-              <button type="button" className={s.rowIconBtn} aria-label={t("common.edit")} onClick={openEdit}>
+              <button
+                type="button"
+                className={s.rowIconBtn}
+                aria-label={t("common.edit")}
+                onClick={openEdit}
+              >
                 <PencilIcon />
               </button>
             </div>
@@ -105,7 +114,11 @@ export function ProfileSection() {
                   <StatusBadge
                     size="sm"
                     tone={user.emailVerified ? "green" : "amber"}
-                    label={user.emailVerified ? t("account.profile.emailVerified") : t("account.profile.emailUnverified")}
+                    label={
+                      user.emailVerified
+                        ? t("account.profile.emailVerified")
+                        : t("account.profile.emailUnverified")
+                    }
                   />
                 </span>
                 <span className={s.rowMeta}>

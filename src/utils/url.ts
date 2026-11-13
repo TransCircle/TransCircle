@@ -19,7 +19,8 @@ export function sanitizeRedirect(raw: string | null | undefined, fallback = "/")
     // 确认解析后的 pathname 与原路径一致,防止 /%2Fevil.com 一类编码绕过。
     const pathPart = raw.split("?")[0]!;
     const parsed = new URL(raw, "http://localhost");
-    if (parsed.pathname !== pathPart && decodeURIComponent(parsed.pathname) !== pathPart) return fallback;
+    if (parsed.pathname !== pathPart && decodeURIComponent(parsed.pathname) !== pathPart)
+      return fallback;
     return raw;
   } catch {
     return fallback;

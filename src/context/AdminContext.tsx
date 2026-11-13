@@ -169,9 +169,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const hasPermission = useCallback(
     (perm: string) =>
-      !!me &&
-      identitySettled &&
-      (me.permissions.includes("*") || me.permissions.includes(perm)),
+      !!me && identitySettled && (me.permissions.includes("*") || me.permissions.includes(perm)),
     [me, identitySettled],
   );
 

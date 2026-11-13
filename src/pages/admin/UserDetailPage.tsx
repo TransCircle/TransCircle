@@ -303,7 +303,9 @@ const UserDetailPage = () => {
               page={auditPage}
               pageSize={auditPageSize}
               onPage={(p) => writeParams({ page: p > 1 ? String(p) : "" })}
-              onPageSize={(s: PageSize) => writeParams({ pageSize: s === 10 ? "" : String(s), page: "" })}
+              onPageSize={(s: PageSize) =>
+                writeParams({ pageSize: s === 10 ? "" : String(s), page: "" })
+              }
             />
           )}
           {tab === "danger" && (

@@ -1,80 +1,80 @@
-import type { ReactNode } from 'react'
-import { cx } from './cx'
-import styles from './Surface.module.css'
+import type { ReactNode } from "react";
+import { cx } from "./cx";
+import styles from "./Surface.module.css";
 
 /* ── Card / Panel ────────────────────────────────────────── */
 
 export interface CardProps {
-  children: ReactNode
-  padding?: 'none' | 'sm' | 'md'
-  tone?: 'surface' | 'subtle'
-  accent?: boolean
-  className?: string
+  children: ReactNode;
+  padding?: "none" | "sm" | "md";
+  tone?: "surface" | "subtle";
+  accent?: boolean;
+  className?: string;
 }
 
-export function Card({ children, padding = 'md', tone = 'surface', accent, className }: CardProps) {
+export function Card({ children, padding = "md", tone = "surface", accent, className }: CardProps) {
   return (
     <div
       className={cx(
         styles.card,
-        tone === 'subtle' ? styles.subtle : styles.surface,
-        padding === 'md' && styles.padMd,
-        padding === 'sm' && styles.padSm,
+        tone === "subtle" ? styles.subtle : styles.surface,
+        padding === "md" && styles.padMd,
+        padding === "sm" && styles.padSm,
         accent && styles.accent,
         className,
       )}
     >
       {children}
     </div>
-  )
+  );
 }
 
 /* ── SectionLabel ────────────────────────────────────────── */
 
 export interface SectionLabelProps {
-  children: ReactNode
+  children: ReactNode;
   /** 渲染的标签名：按页面文档大纲选择层级，默认 h3（不改变既有调用方）。 */
-  as?: 'h2' | 'h3' | 'h4' | 'p'
-  className?: string
+  as?: "h2" | "h3" | "h4" | "p";
+  className?: string;
 }
 
-export function SectionLabel({ children, as: Tag = 'h3', className }: SectionLabelProps) {
-  return <Tag className={cx(styles.sectionLabel, className)}>{children}</Tag>
+export function SectionLabel({ children, as: Tag = "h3", className }: SectionLabelProps) {
+  return <Tag className={cx(styles.sectionLabel, className)}>{children}</Tag>;
 }
 
 /* ── Toolbar ─────────────────────────────────────────────── */
 
 export interface ToolbarProps {
-  children: ReactNode
-  justify?: 'start' | 'between' | 'end'
-  className?: string
+  children: ReactNode;
+  justify?: "start" | "between" | "end";
+  className?: string;
 }
 
-export function Toolbar({ children, justify = 'start', className }: ToolbarProps) {
+export function Toolbar({ children, justify = "start", className }: ToolbarProps) {
   return (
     <div
       className={cx(
         styles.toolbar,
-        justify === 'between' && styles.justifyBetween,
-        justify === 'end' && styles.justifyEnd,
+        justify === "between" && styles.justifyBetween,
+        justify === "end" && styles.justifyEnd,
         className,
       )}
     >
       {children}
     </div>
-  )
+  );
 }
 
 /* ── DescriptionList ─────────────────────────────────────── */
 
 export interface DescriptionItem {
-  term: string
-  value: ReactNode
+  term: string;
+  value: ReactNode;
 }
 
 export interface DescriptionListProps {
-  items: DescriptionItem[]
-  columns?: 1 | 2
+  items: DescriptionItem[];
+  columns?: 1 | 2;
 }
 
 export function DescriptionList({ items, columns = 2 }: DescriptionListProps) {
@@ -87,19 +87,19 @@ export function DescriptionList({ items, columns = 2 }: DescriptionListProps) {
         </div>
       ))}
     </dl>
-  )
+  );
 }
 
 /* ── VoteProgress ────────────────────────────────────────── */
 
 export interface VoteProgressProps {
-  approve: number
-  reject: number
-  required: number
-  total: number
-  approveLabel: string
-  rejectLabel: string
-  thresholdLabel: string
+  approve: number;
+  reject: number;
+  required: number;
+  total: number;
+  approveLabel: string;
+  rejectLabel: string;
+  thresholdLabel: string;
 }
 
 export function VoteProgress({
@@ -111,10 +111,10 @@ export function VoteProgress({
   rejectLabel,
   thresholdLabel,
 }: VoteProgressProps) {
-  const denom = Math.max(required, total, 1)
-  const approvePct = Math.min((approve / denom) * 100, 100)
-  const rejectPct = Math.min((reject / denom) * 100, 100 - approvePct)
-  const thresholdPct = Math.min((required / denom) * 100, 100)
+  const denom = Math.max(required, total, 1);
+  const approvePct = Math.min((approve / denom) * 100, 100);
+  const rejectPct = Math.min((reject / denom) * 100, 100 - approvePct);
+  const thresholdPct = Math.min((required / denom) * 100, 100);
   return (
     <div className={styles.vote}>
       <div
@@ -129,7 +129,11 @@ export function VoteProgress({
         <span className={styles.voteApprove} style={{ width: `${approvePct}%` }} />
         <span className={styles.voteReject} style={{ width: `${rejectPct}%` }} />
         {required > 0 && (
-          <span className={styles.voteThreshold} style={{ left: `${thresholdPct}%` }} aria-hidden="true" />
+          <span
+            className={styles.voteThreshold}
+            style={{ left: `${thresholdPct}%` }}
+            aria-hidden="true"
+          />
         )}
       </div>
       <div className={styles.voteLegend}>
@@ -146,5 +150,5 @@ export function VoteProgress({
         </span>
       </div>
     </div>
-  )
+  );
 }

@@ -98,7 +98,10 @@ const OAuthBindConfirmPage = () => {
       // 不用 { csrf: true }：那条路只读 Cookie/sessionStorage，会被同名的陈旧 Cookie
       // 盖掉本次流程的令牌（localhost 下多个服务共用一个 cookie jar，这很容易发生）。
       // 本次流程的权威值就在 flow.csrfToken 里，直接显式发。
-      { headers: flow.csrfToken ? { "X-CSRF-Token": flow.csrfToken } : undefined, idempotent: true },
+      {
+        headers: flow.csrfToken ? { "X-CSRF-Token": flow.csrfToken } : undefined,
+        idempotent: true,
+      },
     );
     if (res.ok) {
       finish();

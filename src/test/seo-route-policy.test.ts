@@ -44,11 +44,22 @@ describe("route policy ↔ router.tsx", () => {
 describe("resolveRoutePolicy", () => {
   it("只有首页可被收录", () => {
     expect(INDEXABLE_PATHS).toEqual(["/"]);
-    expect(resolveRoutePolicy("/")).toMatchObject({ kind: "home", indexable: true, titleKey: null });
+    expect(resolveRoutePolicy("/")).toMatchObject({
+      kind: "home",
+      indexable: true,
+      titleKey: null,
+    });
   });
 
   it("认证 / 账户 / 管理页 noindex 并带标题 key", () => {
-    for (const path of ["/login", "/register", "/account", "/admin", "/oauth/consent", "/auth/callback"]) {
+    for (const path of [
+      "/login",
+      "/register",
+      "/account",
+      "/admin",
+      "/oauth/consent",
+      "/auth/callback",
+    ]) {
       const policy = resolveRoutePolicy(path);
       expect(policy.kind, path).toBe("private");
       expect(policy.indexable, path).toBe(false);

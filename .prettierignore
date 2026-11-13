@@ -7,3 +7,7 @@ pnpm-lock.yaml
 assets/
 public/
 design/
+# Prettier 会把 meta 标签拆成多行，seo-static-files.test.ts 按单行解析 content
+index.html
+# 表格对齐与行尾双空格（Markdown 硬换行）由人工维护
+AGENTS.md

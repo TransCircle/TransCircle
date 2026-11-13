@@ -12,7 +12,9 @@ function graphOf(): JsonLdNode[] {
 }
 
 function byType(type: string): JsonLdNode {
-  const node = graphOf().find((n) => n["@type"] === type || (Array.isArray(n["@type"]) && n["@type"].includes(type)));
+  const node = graphOf().find(
+    (n) => n["@type"] === type || (Array.isArray(n["@type"]) && n["@type"].includes(type)),
+  );
   if (!node) throw new Error(`graph 中缺少 ${type}`);
   return node;
 }
@@ -70,15 +72,24 @@ describe("首页结构化数据", () => {
     const members = org.member as Array<{ roleName: string; member: { "@id": string } }>;
     expect(members.map((m) => m.roleName)).toEqual(TEAM_MEMBERS.map((m) => m.role));
     const people = graphOf().filter((n) => n["@type"] === "Person");
-    expect(people.map((p) => p.url)).toEqual(TEAM_MEMBERS.map((m) => `https://github.com/${m.github}`));
-    const founders = (org.founder as Array<{ "@id": string }>).map(({ "@id": id }) => people.find((p) => p["@id"] === id)?.url);
-    const expected = TEAM_MEMBERS.filter((m) => m.role.endsWith("创始人")).map((m) => `https://github.com/${m.github}`);
+    expect(people.map((p) => p.url)).toEqual(
+      TEAM_MEMBERS.map((m) => `https://github.com/${m.github}`),
+    );
+    const founders = (org.founder as Array<{ "@id": string }>).map(
+      ({ "@id": id }) => people.find((p) => p["@id"] === id)?.url,
+    );
+    const expected = TEAM_MEMBERS.filter((m) => m.role.endsWith("创始人")).map(
+      (m) => `https://github.com/${m.github}`,
+    );
     expect(expected.length).toBeGreaterThan(0);
     expect(founders).toEqual(expected);
   });
 
   it("WebPage 带发布与修改日期", () => {
-    expect(byType("WebPage")).toMatchObject({ datePublished: "2026-05-09", dateModified: "2026-09-26" });
+    expect(byType("WebPage")).toMatchObject({
+      datePublished: "2026-05-09",
+      dateModified: "2026-09-26",
+    });
   });
 
   it("序列化时转义 <，防止文案提前闭合 <script>", () => {

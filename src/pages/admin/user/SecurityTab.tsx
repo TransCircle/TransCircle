@@ -77,14 +77,22 @@ export function SecurityTab({
       ),
     );
     if (ok !== null) {
-      onDone(forceChange ? t("admin.userDetail.security.passwordSetForced") : t("admin.userDetail.security.passwordSet"));
+      onDone(
+        forceChange
+          ? t("admin.userDetail.security.passwordSetForced")
+          : t("admin.userDetail.security.passwordSet"),
+      );
       close();
     }
   };
 
   const submitDisableTotp = async (reason: string) => {
     const ok = await action.run("totp", (idem) =>
-      api.post(`/v1/admin/users/${userId}/totp/disable`, { reason }, { plane: "user", idempotent: idem }),
+      api.post(
+        `/v1/admin/users/${userId}/totp/disable`,
+        { reason },
+        { plane: "user", idempotent: idem },
+      ),
     );
     if (ok !== null) {
       onDone(t("admin.userDetail.security.totpDisabled"));
@@ -111,10 +119,14 @@ export function SecurityTab({
   const submitRevokePasskey = async (passkey: AdminUserPasskey, reason: string) => {
     // 按具体那把通行密钥分作用域：同一页面吊销第二把时不能复用第一把的幂等键。
     const ok = await action.run(`passkey:${passkey.id}`, (idem) =>
-      api.del(`/v1/admin/users/${userId}/passkeys/${passkey.id}`, { reason }, {
-        plane: "user",
-        idempotent: idem,
-      }),
+      api.del(
+        `/v1/admin/users/${userId}/passkeys/${passkey.id}`,
+        { reason },
+        {
+          plane: "user",
+          idempotent: idem,
+        },
+      ),
     );
     if (ok !== null) {
       onDone(t("admin.userDetail.security.passkeyRevoked", { name: passkeyName(passkey) }));
@@ -123,7 +135,8 @@ export function SecurityTab({
     }
   };
 
-  const passkeyName = (k: AdminUserPasskey) => k.name || t("admin.userDetail.security.unnamedPasskey");
+  const passkeyName = (k: AdminUserPasskey) =>
+    k.name || t("admin.userDetail.security.unnamedPasskey");
 
   const passkeyColumns: ReadonlyArray<Column<AdminUserPasskey>> = [
     {

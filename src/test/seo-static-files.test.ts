@@ -8,7 +8,14 @@ import { fileURLToPath } from "node:url";
 
 import zhCN from "../i18n/locales/zh-CN/common.json";
 import { FAQ_KEYS } from "../seo/faq";
-import { INDEXNOW_KEY, LICENSE_URL, PROJECTS, SITE_NAME, SITE_URL, SOCIAL_PROFILES } from "../seo/site";
+import {
+  INDEXNOW_KEY,
+  LICENSE_URL,
+  PROJECTS,
+  SITE_NAME,
+  SITE_URL,
+  SOCIAL_PROFILES,
+} from "../seo/site";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const read = (path: string): string => readFileSync(`${ROOT}${path}`, "utf8");
@@ -69,7 +76,9 @@ describe("index.html <head>", () => {
   });
 
   it("提供 Google 搜索结果要求的 ≥48px 方形图标", () => {
-    const pngSizes = tags(/<link rel="icon" type="image\/png"[^>]*>/g).map((tag) => attr(tag, "sizes"));
+    const pngSizes = tags(/<link rel="icon" type="image\/png"[^>]*>/g).map((tag) =>
+      attr(tag, "sizes"),
+    );
     expect(pngSizes).toContain("48x48");
     expect(pngSizes).toContain("96x96");
   });

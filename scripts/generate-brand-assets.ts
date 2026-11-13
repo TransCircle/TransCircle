@@ -104,7 +104,10 @@ async function renderPng(svg: string): Promise<Buffer> {
 }
 
 /** 32bpp BMP-DIB 条目的 ICO 编码器（含 1bpp AND 掩码，兼容只认掩码的旧解析器）。 */
-async function encodeIco(sizes: readonly number[], svgFor: (size: number) => string): Promise<Buffer> {
+async function encodeIco(
+  sizes: readonly number[],
+  svgFor: (size: number) => string,
+): Promise<Buffer> {
   const images: Buffer[] = [];
   for (const size of sizes) {
     const { data } = await sharp(Buffer.from(svgFor(size)))
@@ -163,7 +166,9 @@ async function encodeIco(sizes: readonly number[], svgFor: (size: number) => str
 function assertCjkFont(): void {
   const families = execFileSync("fc-list", [":lang=zh", "family"], { encoding: "utf8" }).trim();
   if (!families) {
-    throw new Error("分享图需要系统中文字体（如 Noto Sans CJK SC / WenQuanYi Zen Hei），fc-list :lang=zh 为空。");
+    throw new Error(
+      "分享图需要系统中文字体（如 Noto Sans CJK SC / WenQuanYi Zen Hei），fc-list :lang=zh 为空。",
+    );
   }
 }
 
@@ -175,7 +180,8 @@ async function renderOgCover(): Promise<Buffer> {
   const stripe = [FLAG_BLUE, FLAG_PINK, FLAG_WHITE, FLAG_PINK, FLAG_BLUE]
     .map((color, i) => `<rect y="${H - 40 + i * 8}" width="${W}" height="8" fill="${color}"/>`)
     .join("");
-  const cjk = "'Noto Sans CJK SC','Source Han Sans SC','PingFang SC','Microsoft YaHei','WenQuanYi Zen Hei',sans-serif";
+  const cjk =
+    "'Noto Sans CJK SC','Source Han Sans SC','PingFang SC','Microsoft YaHei','WenQuanYi Zen Hei',sans-serif";
   const base =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
     `<rect width="${W}" height="${H}" fill="${OG_BG}"/>` +
@@ -185,7 +191,9 @@ async function renderOgCover(): Promise<Buffer> {
     `</svg>`;
 
   const LOGO_W = 720;
-  const logoSvg = await readFile(new URL("brand/transcircle-horizontal-on-dark.svg", `file://${PUBLIC_DIR}`));
+  const logoSvg = await readFile(
+    new URL("brand/transcircle-horizontal-on-dark.svg", `file://${PUBLIC_DIR}`),
+  );
   const logo = await sharp(logoSvg, { density: 400 }).resize({ width: LOGO_W }).png().toBuffer();
   const { height: logoH = 216 } = await sharp(logo).metadata();
 
@@ -210,11 +218,20 @@ async function main(): Promise<void> {
     ["icon-192.png", await renderPng(tile(192))],
     ["icon-512.png", await renderPng(tile(512))],
     // iOS 会给透明区域垫黑并自行加圆角：满版不透明浅色方块。
-    ["apple-touch-icon.png", await renderPng(markSvg({ size: 180, backdrop: "square", ringRadius: 188 }))],
+    [
+      "apple-touch-icon.png",
+      await renderPng(markSvg({ size: 180, backdrop: "square", ringRadius: 188 })),
+    ],
     // maskable 安全区是半径 40% 的圆（512 × 0.4 = 204.8）：环外半径 160 留足余量。
-    ["icon-maskable.png", await renderPng(markSvg({ size: 512, backdrop: "square", ringRadius: 160 }))],
+    [
+      "icon-maskable.png",
+      await renderPng(markSvg({ size: 512, backdrop: "square", ringRadius: 160 })),
+    ],
     // Windows 磁贴由 TileColor 铺底，图标本身透明。
-    ["mstile-150x150.png", await renderPng(markSvg({ size: 150, backdrop: "none", ringRadius: 170 }))],
+    [
+      "mstile-150x150.png",
+      await renderPng(markSvg({ size: 150, backdrop: "none", ringRadius: 170 })),
+    ],
   ];
   if (!iconsOnly) outputs.push(["og-cover.png", await renderOgCover()]);
 

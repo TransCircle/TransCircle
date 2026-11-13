@@ -89,9 +89,12 @@ const AuthCallbackPage = () => {
       // 用 URL 解析而不是字符串拼接：`redirectAfter` 是可被外部构造的（它来自查询串），
       // 直接拼会拼出 `?oidc=a&x=1` 这种被注入的额外参数。取不到就退回裸 `/login`。
       const oidcFromRedirect = oidcFromPath(redirectAfter);
-      navigate(oidcFromRedirect ? `/login?oidc=${encodeURIComponent(oidcFromRedirect)}` : "/login", {
-        replace: true,
-      });
+      navigate(
+        oidcFromRedirect ? `/login?oidc=${encodeURIComponent(oidcFromRedirect)}` : "/login",
+        {
+          replace: true,
+        },
+      );
       return;
     }
 

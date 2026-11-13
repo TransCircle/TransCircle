@@ -8,7 +8,11 @@ import {
   TagInput,
   TextField,
 } from "../../../components/ui";
-import type { AdminClientDetail, ClientApplicationType, ClientEnvironment } from "../../../api/types";
+import type {
+  AdminClientDetail,
+  ClientApplicationType,
+  ClientEnvironment,
+} from "../../../api/types";
 import { useFormatTs } from "../../../utils/datetime";
 import { SaveBar } from "../shared/SaveBar";
 import { APPLICATION_TYPES } from "../shared/constants";
@@ -100,7 +104,10 @@ export function SettingsTab({ client, canManage, disabledHint, edit, onSave }: S
                 term: t("admin.clientDetail.field.authMethod"),
                 value: <code className={styles.mono}>{client.tokenEndpointAuthMethod}</code>,
               },
-              { term: t("admin.clientDetail.field.createdAt"), value: fmt(client.createdAt) || "—" },
+              {
+                term: t("admin.clientDetail.field.createdAt"),
+                value: fmt(client.createdAt) || "—",
+              },
             ]}
           />
           <p className={styles.note}>{t("admin.clientDetail.immutableNote")}</p>

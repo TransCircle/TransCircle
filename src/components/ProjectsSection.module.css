@@ -56,7 +56,9 @@
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   text-decoration: none;
-  transition: border-color var(--dur-1) var(--ease-standard), box-shadow var(--dur-1) var(--ease-standard),
+  transition:
+    border-color var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-1) var(--ease-standard),
     transform var(--dur-1) var(--ease-standard);
 }
 

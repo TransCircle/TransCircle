@@ -132,7 +132,12 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
               {t("stepUp.passkeyVerify")}
             </Button>
           ) : (
-            <Button variant="primary" loading={busy} disabled={!secret} onClick={() => void verify()}>
+            <Button
+              variant="primary"
+              loading={busy}
+              disabled={!secret}
+              onClick={() => void verify()}
+            >
               {t("stepUp.verify")}
             </Button>
           )}

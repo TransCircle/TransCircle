@@ -15,8 +15,20 @@ import { ConfirmDialog } from "../../components/ui/Dialog";
 import s from "./Account.module.css";
 
 const DeviceIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8" /><path d="M12 16v4" />
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="3" y="4" width="18" height="12" rx="2" />
+    <path d="M8 20h8" />
+    <path d="M12 16v4" />
   </svg>
 );
 
@@ -50,7 +62,9 @@ export function SessionsSection() {
   const load = async (nextCursor?: string) => {
     if (nextCursor) setLoadingMore(true);
     else setLoading(true);
-    const res = await api.get<SessionDevice[]>(`/v1/me/sessions${nextCursor ? `?cursor=${encodeURIComponent(nextCursor)}` : ""}`);
+    const res = await api.get<SessionDevice[]>(
+      `/v1/me/sessions${nextCursor ? `?cursor=${encodeURIComponent(nextCursor)}` : ""}`,
+    );
     if (res.ok) {
       setSessions((prev) => (nextCursor ? [...prev, ...res.data] : res.data));
       setCursor(res.pagination?.hasMore ? res.pagination.nextCursor : null);
@@ -125,11 +139,19 @@ export function SessionsSection() {
                 {sessions.map((sess) => (
                   <li key={sess.id} className={s.listRow}>
                     <div className={s.rowMain}>
-                      <span className={s.providerIcon} aria-hidden="true"><DeviceIcon /></span>
+                      <span className={s.providerIcon} aria-hidden="true">
+                        <DeviceIcon />
+                      </span>
                       <div className={s.rowText}>
                         <span className={s.rowTitle}>
                           {`${sess.device.browser ?? "—"} · ${sess.device.os ?? "—"}`}
-                          {sess.current && <StatusBadge size="sm" tone="green" label={t("account.sessions.current")} />}
+                          {sess.current && (
+                            <StatusBadge
+                              size="sm"
+                              tone="green"
+                              label={t("account.sessions.current")}
+                            />
+                          )}
                         </span>
                         <span className={s.rowMeta}>
                           {sess.ipPrefix && <span>{sess.ipPrefix}</span>}
@@ -140,7 +162,12 @@ export function SessionsSection() {
                     </div>
                     {!sess.current && (
                       <div className={s.rowActions}>
-                        <Button variant="danger" size="sm" disabled={busy} onClick={() => setRevokeId(sess.id)}>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => setRevokeId(sess.id)}
+                        >
                           {t("account.sessions.revoke")}
                         </Button>
                       </div>

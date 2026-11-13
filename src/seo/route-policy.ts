@@ -61,7 +61,10 @@ const PRIVATE_ROUTES: ReadonlyArray<readonly [pattern: string, titleKey: string]
 ];
 
 /** 登记在案的全部路由模式（供测试与 router.tsx 对账）。 */
-export const KNOWN_ROUTE_PATTERNS: readonly string[] = [...INDEXABLE_PATHS, ...PRIVATE_ROUTES.map(([p]) => p)];
+export const KNOWN_ROUTE_PATTERNS: readonly string[] = [
+  ...INDEXABLE_PATHS,
+  ...PRIVATE_ROUTES.map(([p]) => p),
+];
 
 const PRIVATE_MATCHERS = PRIVATE_ROUTES.map(([pattern, titleKey]) => ({
   // 与 react-router 的 `:param` 语义一致：匹配单个非空路径段（在解码后的路径上匹配）。

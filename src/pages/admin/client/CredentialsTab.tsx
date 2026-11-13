@@ -61,11 +61,15 @@ export function CredentialsTab({
 
   const rotate = async () => {
     const data = await action.run<AdminSecretRotated>("rotate", (idem) =>
-      api.post<AdminSecretRotated>(`/v1/admin/clients/${client.clientId}/rotate-secret`, undefined, {
-        plane: "user",
-        // 网络抖动重试会连轮两次，把接入方刚拿到的新密钥又换掉 —— 幂等键是必需的。
-        idempotent: idem,
-      }),
+      api.post<AdminSecretRotated>(
+        `/v1/admin/clients/${client.clientId}/rotate-secret`,
+        undefined,
+        {
+          plane: "user",
+          // 网络抖动重试会连轮两次，把接入方刚拿到的新密钥又换掉 —— 幂等键是必需的。
+          idempotent: idem,
+        },
+      ),
     );
     if (data) {
       setRotated(data);
@@ -112,8 +116,14 @@ export function CredentialsTab({
                     ? t("admin.clientDetail.secretAgeStale", { count: client.secretAgeDays })
                     : t("admin.clients.secretAge", { count: client.secretAgeDays }),
             },
-            { term: t("admin.clientDetail.secretStorage"), value: t("admin.clientDetail.secretStorageValue") },
-            { term: t("admin.clientDetail.secretOverlap"), value: t("admin.clientDetail.secretOverlapValue") },
+            {
+              term: t("admin.clientDetail.secretStorage"),
+              value: t("admin.clientDetail.secretStorageValue"),
+            },
+            {
+              term: t("admin.clientDetail.secretOverlap"),
+              value: t("admin.clientDetail.secretOverlapValue"),
+            },
           ]}
         />
 
@@ -127,7 +137,10 @@ export function CredentialsTab({
                   : t("admin.clientDetail.rotatedOverlap")}
               </div>
             </Alert>
-            <CopyField value={rotated.clientSecret} ariaLabel={t("admin.clientDetail.copySecret")} />
+            <CopyField
+              value={rotated.clientSecret}
+              ariaLabel={t("admin.clientDetail.copySecret")}
+            />
             <div className={styles.row}>
               <Button variant="primary" size="sm" onClick={() => setRotated(null)}>
                 {t("admin.clientDetail.secretSaved")}

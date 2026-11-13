@@ -33,7 +33,8 @@
   cursor: pointer;
   text-align: left;
   outline: none;
-  transition: border-color var(--dur-1) var(--ease-standard),
+  transition:
+    border-color var(--dur-1) var(--ease-standard),
     box-shadow var(--dur-1) var(--ease-standard);
 }
 

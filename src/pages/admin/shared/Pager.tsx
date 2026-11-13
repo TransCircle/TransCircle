@@ -40,7 +40,15 @@ interface PagerProps {
  * 禁用态用 aria-disabled 而非真 disabled：键盘用户连按「下一页」到末页时，
  * 真 disabled 会把焦点踢回 body，aria-disabled 保留焦点（handler 内拦截）。
  */
-export function Pager({ total, page, pageSize, onPage, onPageSize, ariaLabel, loading }: PagerProps) {
+export function Pager({
+  total,
+  page,
+  pageSize,
+  onPage,
+  onPageSize,
+  ariaLabel,
+  loading,
+}: PagerProps) {
   const { t } = useTranslation();
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const first = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -59,7 +67,10 @@ export function Pager({ total, page, pageSize, onPage, onPageSize, ariaLabel, lo
           ariaLabel={t("admin.pager.perPage")}
           value={String(pageSize)}
           onChange={(v) => onPageSize(Number(v) as PageSize)}
-          options={PAGE_SIZES.map((n) => ({ value: String(n), label: t("admin.pager.perPageN", { count: n }) }))}
+          options={PAGE_SIZES.map((n) => ({
+            value: String(n),
+            label: t("admin.pager.perPageN", { count: n }),
+          }))}
         />
       </span>
       <div className={styles.pagerNav}>

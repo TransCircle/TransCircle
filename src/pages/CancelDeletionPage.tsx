@@ -51,7 +51,6 @@ const CancelDeletionPage = () => {
 
   usePageTitle(t("cancelDeletion.title"));
 
-
   if (done) {
     return (
       <StatusScreen
@@ -70,9 +69,10 @@ const CancelDeletionPage = () => {
   };
 
   /** 提交撤销。`credential` 为通行密钥断言（走 Passkey 时提供）。 */
-  const submitCancel = async (
-    credential?: { passkeyAssertion: unknown; challengeId: string },
-  ): Promise<void> => {
+  const submitCancel = async (credential?: {
+    passkeyAssertion: unknown;
+    challengeId: string;
+  }): Promise<void> => {
     const res = await api.post(
       "/v1/me/delete/cancel",
       {

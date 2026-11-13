@@ -1,36 +1,38 @@
-import type { ReactNode } from 'react'
-import { cx } from './cx'
-import styles from './StatusBadge.module.css'
+import type { ReactNode } from "react";
+import { cx } from "./cx";
+import styles from "./StatusBadge.module.css";
 
-export type BadgeTone = 'neutral' | 'amber' | 'blue' | 'green' | 'red' | 'muted' | 'accent'
+export type BadgeTone = "neutral" | "amber" | "blue" | "green" | "red" | "muted" | "accent";
 
 export interface StatusBadgeProps {
-  tone: BadgeTone
-  label: string
-  size?: 'sm' | 'md'
+  tone: BadgeTone;
+  label: string;
+  size?: "sm" | "md";
   /** 悬停提示；默认取 label——长文案被省略号截断时仍可读到完整值。 */
-  title?: string
+  title?: string;
 }
 
 /** 语义状态标签：圆点 + 文字（始终带文字，满足 WCAG 1.4.1 不依赖颜色）。 */
-export function StatusBadge({ tone, label, size = 'md', title }: StatusBadgeProps) {
+export function StatusBadge({ tone, label, size = "md", title }: StatusBadgeProps) {
   return (
     <span
-      className={cx(styles.badge, styles[`tone_${tone}`], size === 'sm' && styles.sm)}
+      className={cx(styles.badge, styles[`tone_${tone}`], size === "sm" && styles.sm)}
       title={title ?? label}
     >
       <span className={styles.dot} aria-hidden="true" />
       <span className={styles.badgeLabel}>{label}</span>
     </span>
-  )
+  );
 }
 
 export interface PillProps {
-  children: ReactNode
-  tone?: 'neutral' | 'accent'
+  children: ReactNode;
+  tone?: "neutral" | "accent";
 }
 
 /** 轻量中性标记（如分类、摘要片段）。 */
-export function Pill({ children, tone = 'neutral' }: PillProps) {
-  return <span className={cx(styles.pill, tone === 'accent' && styles.pillAccent)}>{children}</span>
+export function Pill({ children, tone = "neutral" }: PillProps) {
+  return (
+    <span className={cx(styles.pill, tone === "accent" && styles.pillAccent)}>{children}</span>
+  );
 }

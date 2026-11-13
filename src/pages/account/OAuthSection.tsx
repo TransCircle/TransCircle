@@ -5,13 +5,7 @@ import { isNonEmptyString } from "../../api/shape";
 import type { OAuthBinding } from "../../api/types";
 import { useFormatTs } from "../../utils/datetime";
 import { StepUpDialog } from "../../components/StepUpDialog";
-import {
-  Card,
-  AdminButton as Button,
-  Alert,
-  Spinner,
-  StatusBadge,
-} from "../../components/ui";
+import { Card, AdminButton as Button, Alert, Spinner, StatusBadge } from "../../components/ui";
 import { Dialog, ConfirmDialog } from "../../components/ui/Dialog";
 import s from "./Account.module.css";
 
@@ -27,7 +21,17 @@ const XIcon = () => (
 );
 /** 统一身份：盾牌 + 对钩，与「工作人员身份」的语义对上，且不与第三方品牌图标混淆。 */
 const IamIcon = () => (
-  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg
+    width="19"
+    height="19"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.9"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <path d="M12 3l7 3v5.5c0 4.2-2.9 7.6-7 8.5-4.1-.9-7-4.3-7-8.5V6l7-3Z" />
     <path d="m9 12 2 2 4-4" />
   </svg>
@@ -318,7 +322,11 @@ export function OAuthSection() {
             <Button variant="secondary" disabled={dialogBusy} onClick={cancelPermanentBind}>
               {t("common.cancel")}
             </Button>
-            <Button variant="danger" loading={dialogBusy} onClick={() => void confirmPermanentBind()}>
+            <Button
+              variant="danger"
+              loading={dialogBusy}
+              onClick={() => void confirmPermanentBind()}
+            >
               {t("account.oauth.permanentConfirm")}
             </Button>
           </>
@@ -350,7 +358,10 @@ export function OAuthSection() {
 
       <StepUpDialog
         open={stepUpOpen}
-        onClose={() => { setStepUpOpen(false); setPendingUnbind(null); }}
+        onClose={() => {
+          setStepUpOpen(false);
+          setPendingUnbind(null);
+        }}
         onVerified={() => {
           const provider = pendingUnbind;
           setStepUpOpen(false);

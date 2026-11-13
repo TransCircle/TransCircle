@@ -72,7 +72,8 @@
   font-size: var(--fs-sm);
   white-space: nowrap;
   text-decoration: none;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
 /* 只在真能悬停的设备上给 hover 底色：触屏上 :hover 会「粘」在刚点过的那一项上，
@@ -273,7 +274,8 @@
   padding: var(--s-1) var(--s-3);
   border-radius: var(--r-sm);
   color: var(--text-secondary);
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
 .chip:hover {
@@ -334,26 +336,27 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--dur-1) var(--ease-standard),
+  transition:
+    background-color var(--dur-1) var(--ease-standard),
     border-color var(--dur-1) var(--ease-standard),
     color var(--dur-1) var(--ease-standard);
 }
-.pageBtn:hover:not([aria-disabled=true]) {
+.pageBtn:hover:not([aria-disabled="true"]) {
   background-color: var(--pink-100);
   border-color: var(--pink-300);
   color: var(--pink-700);
 }
-.pageBtn:active:not([aria-disabled=true]) {
+.pageBtn:active:not([aria-disabled="true"]) {
   transform: scale(0.97);
 }
 /* aria-disabled 方案（真 disabled 会把焦点踢回 body）。 */
-.pageBtn[aria-disabled=true] {
+.pageBtn[aria-disabled="true"] {
   opacity: 0.45;
   cursor: not-allowed;
 }
 /* 当前页：选中态而非主行动——淡粉填充 + 粉描边 + 墨字（对齐 Frontend/blog，§5.8）。 */
 .pageBtnCurrent,
-.pageBtnCurrent:hover:not([aria-disabled=true]) {
+.pageBtnCurrent:hover:not([aria-disabled="true"]) {
   background-color: var(--pink-200);
   border-color: var(--pink-600);
   color: var(--ink);

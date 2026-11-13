@@ -117,7 +117,13 @@ export function StepUpPanel({ what, onVerified, onCancel }: StepUpPanelProps) {
       }
       // 404 / 410：挑战已过期或不存在（含串号——用户完成的是另一个 verificationId）。
       // 继续盲等没有意义，立即停轮并给一句能自救的提示，而不是静默退避到超时。
-      if (!res.ok && (res.error.code === "IAM_MFA_NOT_FOUND" || res.error.code === "IAM_MFA_ALREADY_USED" || res.status === 404 || res.status === 410)) {
+      if (
+        !res.ok &&
+        (res.error.code === "IAM_MFA_NOT_FOUND" ||
+          res.error.code === "IAM_MFA_ALREADY_USED" ||
+          res.status === 404 ||
+          res.status === 410)
+      ) {
         setError(t("admin.stepup.expired"));
         return;
       }

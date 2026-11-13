@@ -227,7 +227,10 @@ const AuthMfaDonePage = () => {
    * - 此刻是另一个人 → 拦下，这条挑战属于上一次尝试。
    */
   const identityDrifted =
-    handoff !== null && status === "authenticated" && !!user && user.id !== (handoff.priorUserId ?? null);
+    handoff !== null &&
+    status === "authenticated" &&
+    !!user &&
+    user.id !== (handoff.priorUserId ?? null);
   /**
    * 出去这一趟期间，有人**登出**过。
    *
@@ -299,11 +302,7 @@ const AuthMfaDonePage = () => {
 
   /** 验证通过：落地会话并跳转，与登录页的成功路径一致。 */
   const land = useCallback(
-    async (
-      data: IamVerifyResult | undefined,
-      epoch: number,
-      priorSignoutEpoch?: string | null,
-    ) => {
+    async (data: IamVerifyResult | undefined, epoch: number, priorSignoutEpoch?: string | null) => {
       clearIamMfaHandoff();
       // **落地之前再看一眼登出代次。**
       //
@@ -668,13 +667,7 @@ const AuthMfaDonePage = () => {
           >
             {t("mfa.done.recoverySubmit")}
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            fullWidth
-            disabled={recoveryBusy}
-            onClick={retry}
-          >
+          <Button type="button" variant="ghost" fullWidth disabled={recoveryBusy} onClick={retry}>
             {t("mfa.done.backToIam")}
           </Button>
           {/* 恢复码也用不了时的最后一条出路，别把人困在这两个按钮之间。 */}
@@ -737,15 +730,23 @@ const AuthMfaDonePage = () => {
           profileOnly
             ? [
                 { label: t("mfa.done.retry"), onClick: () => void retryProfile() },
-                { label: t("mfa.done.backToLogin"), variant: "ghost" as const, onClick: backToLogin },
+                {
+                  label: t("mfa.done.backToLogin"),
+                  variant: "ghost" as const,
+                  onClick: backToLogin,
+                },
               ]
             : terminal
-            ? [{ label: t("mfa.done.backToLogin"), onClick: backToLogin }]
-            : [
-                { label: t("mfa.done.retry"), onClick: retry },
-                { label: t("mfa.done.useRecovery"), onClick: startRecovery },
-                { label: t("mfa.done.backToLogin"), variant: "ghost" as const, onClick: backToLogin },
-              ]
+              ? [{ label: t("mfa.done.backToLogin"), onClick: backToLogin }]
+              : [
+                  { label: t("mfa.done.retry"), onClick: retry },
+                  { label: t("mfa.done.useRecovery"), onClick: startRecovery },
+                  {
+                    label: t("mfa.done.backToLogin"),
+                    variant: "ghost" as const,
+                    onClick: backToLogin,
+                  },
+                ]
         }
       />
     );
@@ -779,19 +780,20 @@ const AuthMfaDonePage = () => {
           <>
             {t("mfa.done.desc")}
             {/* IAM 自称未通过时也照样回查——它只是提示，不是结论。 */}
-            {hintedFailure && (
-              <>
-                {" "}
-                {t("mfa.done.hintedFailure")}
-              </>
-            )}
+            {hintedFailure && <> {t("mfa.done.hintedFailure")}</>}
           </>
         )
       }
       actions={
         phase === "landing"
           ? undefined
-          : [{ label: t("mfa.done.useRecovery"), variant: "secondary" as const, onClick: startRecovery }]
+          : [
+              {
+                label: t("mfa.done.useRecovery"),
+                variant: "secondary" as const,
+                onClick: startRecovery,
+              },
+            ]
       }
     />
   );

@@ -36,12 +36,7 @@ export function TeamSection({ className, headingClassName }: TeamSectionProps) {
               rel="nofollow noopener noreferrer"
               aria-label={t("landing.teamMemberLink", { name, role })}
             >
-              <Avatar
-                name={name}
-                src={avatar}
-                size={AVATAR_SIZE}
-                className={styles.avatar}
-              />
+              <Avatar name={name} src={avatar} size={AVATAR_SIZE} className={styles.avatar} />
               <span className={styles.name}>{name}</span>
               <span className={styles.role}>{role}</span>
             </a>

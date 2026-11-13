@@ -94,11 +94,20 @@ export function useAdminAction() {
     // 请求已经提交 → 响应在网关丢了 → 前端显示失败 → 管理员关掉对话框去查状态 →
     // 再打开重试。此时若换了新键，后端会把它当成全新请求**再执行一次**。
     // 键只在**确认成功**后清除（run 里），或随浏览器会话结束自然失效。
-    setState({ pending: null, error: null, errorBody: null, stepUpRequired: false, staleValues: null });
+    setState({
+      pending: null,
+      error: null,
+      errorBody: null,
+      stepUpRequired: false,
+      staleValues: null,
+    });
   }, []);
 
   const run = useCallback(
-    async <T>(key: string, call: (idempotencyKey: string) => Promise<ApiResult<T>>): Promise<T | null> => {
+    async <T>(
+      key: string,
+      call: (idempotencyKey: string) => Promise<ApiResult<T>>,
+    ): Promise<T | null> => {
       // 同一个动作在成功之前**复用同一个幂等键**。
       //
       // 每次点击都换新键的话，「请求已经提交、响应在网关丢了 → 用户点第二次」
@@ -107,7 +116,13 @@ export function useAdminAction() {
       // 成功后清掉，下一次是真正的新意图。
       const idempotencyKey = takeIdempotencyKey(key);
 
-      setState({ pending: key, error: null, errorBody: null, stepUpRequired: false, staleValues: null });
+      setState({
+        pending: key,
+        error: null,
+        errorBody: null,
+        stepUpRequired: false,
+        staleValues: null,
+      });
       const res = await call(idempotencyKey);
       if (res.ok) {
         clearIdempotencyKey(key);

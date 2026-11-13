@@ -25,10 +25,21 @@ export interface FlagStripeProps {
  * 纯装饰，故整体 aria-hidden —— 条纹承载的「当前项」「页脚分界」等语义，
  * 由调用方以 aria-current / landmark 等真实语义属性表达，不依赖颜色传达（§7）。
  */
-export function FlagStripe({ variant = "full", rounded = false, scope, className, style }: FlagStripeProps) {
+export function FlagStripe({
+  variant = "full",
+  rounded = false,
+  scope,
+  className,
+  style,
+}: FlagStripeProps) {
   return (
     <span
-      className={cx(styles.stripe, variant === "mini" && styles.mini, rounded && styles.rounded, className)}
+      className={cx(
+        styles.stripe,
+        variant === "mini" && styles.mini,
+        rounded && styles.rounded,
+        className,
+      )}
       style={style}
       data-flag-stripe={scope}
       aria-hidden="true"

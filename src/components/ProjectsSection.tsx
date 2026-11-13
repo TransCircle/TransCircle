@@ -11,7 +11,19 @@ interface ProjectsSectionProps {
 }
 
 const ArrowIcon = () => (
-  <svg className={styles.arrow} width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+  <svg
+    className={styles.arrow}
+    width="14"
+    height="14"
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path d="M6 2h8v8" />
     <path d="M14 2 4 12" />
   </svg>
@@ -48,7 +60,9 @@ export function ProjectsSection({ className, headingClassName }: ProjectsSection
                   <span className={styles.title}>
                     <span className={styles.titleText}>
                       {title}
-                      {kind === "other" && <span className={styles.tag}>{t("landing.projectsOther")}</span>}
+                      {kind === "other" && (
+                        <span className={styles.tag}>{t("landing.projectsOther")}</span>
+                      )}
                     </span>
                     <ArrowIcon />
                   </span>

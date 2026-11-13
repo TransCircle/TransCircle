@@ -41,7 +41,8 @@
   font-size: var(--fs-sm);
   text-align: left;
   cursor: pointer;
-  transition: border-color var(--dur-1) var(--ease-standard),
+  transition:
+    border-color var(--dur-1) var(--ease-standard),
     background-color var(--dur-1) var(--ease-standard);
 }
 
@@ -97,7 +98,7 @@
 }
 
 .option.checked .dot::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 3px;
   border-radius: var(--r-pill);

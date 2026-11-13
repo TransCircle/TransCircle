@@ -4,7 +4,14 @@ import { useTranslation } from "react-i18next";
 import { api, type OffsetPage } from "../../api/client";
 import type { AdminUserListItem } from "../../api/types";
 import { Avatar } from "../../components/Avatar";
-import { AdminButton as Button, Alert, Pill, SearchField, Spinner, StatusBadge } from "../../components/ui";
+import {
+  AdminButton as Button,
+  Alert,
+  Pill,
+  SearchField,
+  Spinner,
+  StatusBadge,
+} from "../../components/ui";
 import { useFormatTs } from "../../utils/datetime";
 import { useAdmin } from "../../context/AdminContext";
 import { accountStatusTone, PERM } from "./shared/constants";
@@ -55,10 +62,9 @@ const UsersPage = () => {
     setLoading(true);
     setError(null);
     void (async () => {
-      const res = await api.get<OffsetPage<AdminUserListItem>>(
-        `/v1/admin/users?${requestSearch}`,
-        { plane: "user" },
-      );
+      const res = await api.get<OffsetPage<AdminUserListItem>>(`/v1/admin/users?${requestSearch}`, {
+        plane: "user",
+      });
       if (!alive) return;
       setLoading(false);
       if (res.ok) setPageData(res.data);
@@ -73,8 +79,7 @@ const UsersPage = () => {
 
   // 三者都可能为空（纯 Passkey 账户可以没有邮箱），兜一个可读占位。
   const nameOf = useCallback(
-    (u: AdminUserListItem) =>
-      u.displayName || u.username || u.email || t("admin.users.unnamed"),
+    (u: AdminUserListItem) => u.displayName || u.username || u.email || t("admin.users.unnamed"),
     [t],
   );
 
@@ -100,7 +105,9 @@ const UsersPage = () => {
             <span className={styles.cellText}>
               <span className={styles.cellName}>
                 {nameOf(u)}
-                {u.id === me?.userId && <span className={styles.tagSelf}>{t("admin.users.tagSelf")}</span>}
+                {u.id === me?.userId && (
+                  <span className={styles.tagSelf}>{t("admin.users.tagSelf")}</span>
+                )}
                 {u.id !== me?.userId && u.hasIamBinding && (
                   <span className={styles.tagStaff}>{t("admin.users.tagStaff")}</span>
                 )}
@@ -118,7 +125,11 @@ const UsersPage = () => {
         label: t("admin.users.col.status"),
         sortKey: "status",
         render: (u) => (
-          <StatusBadge tone={accountStatusTone(u.status)} label={t(`status.${u.status}`)} size="sm" />
+          <StatusBadge
+            tone={accountStatusTone(u.status)}
+            label={t(`status.${u.status}`)}
+            size="sm"
+          />
         ),
       },
       {
@@ -155,7 +166,9 @@ const UsersPage = () => {
         key: "last",
         label: t("admin.users.col.last"),
         sortKey: "last",
-        render: (u) => <span className={styles.num}>{fmt(u.lastActiveAt ?? u.lastLoginAt) || "—"}</span>,
+        render: (u) => (
+          <span className={styles.num}>{fmt(u.lastActiveAt ?? u.lastLoginAt) || "—"}</span>
+        ),
       },
       {
         key: "go",

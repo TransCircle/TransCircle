@@ -4,7 +4,8 @@ import { resolveRoutePolicy } from "./route-policy";
 import { absoluteUrl } from "./site";
 
 /** 首页的 robots 指令；与边缘 Worker 的 X-Robots-Tag 保持一致。 */
-export const INDEXABLE_ROBOTS = "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1";
+export const INDEXABLE_ROBOTS =
+  "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1";
 export const NOINDEX_ROBOTS = "noindex, nofollow";
 
 function upsertMeta(attr: "name" | "property", key: string, content: string | null): void {

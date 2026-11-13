@@ -75,17 +75,17 @@ export async function performRegistration(
     })),
     excludeCredentials: toDescriptors(options.excludeCredentials),
     authenticatorSelection: options.authenticatorSelection as
-      | AuthenticatorSelectionCriteria
-      | undefined,
+      AuthenticatorSelectionCriteria | undefined,
     attestation: options.attestation as AttestationConveyancePreference | undefined,
   };
 
-  const credential = (await navigator.credentials.create({ publicKey })) as PublicKeyCredential | null;
+  const credential = (await navigator.credentials.create({
+    publicKey,
+  })) as PublicKeyCredential | null;
   if (!credential) throw new Error("WEBAUTHN_NO_CREDENTIAL");
 
   const response = credential.response as AuthenticatorAttestationResponse;
-  const transports =
-    typeof response.getTransports === "function" ? response.getTransports() : [];
+  const transports = typeof response.getTransports === "function" ? response.getTransports() : [];
 
   return {
     id: credential.id,
