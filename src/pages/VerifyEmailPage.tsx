@@ -31,7 +31,9 @@ const VerifyEmailPage = () => {
   // 捕获一次性令牌后立即从地址栏抹去，避免经浏览器历史 / Referer 泄露。
   const [token] = useState(() => params.get("token") ?? "");
   useEffect(() => {
-    if (token) window.history.replaceState(null, "", window.location.pathname);
+    // 传 history.state 而非 null：React Router 把自己的 key/index 存在里面，
+    // 覆盖成 null 会让前进/后退与相对导航退化。
+    if (token) window.history.replaceState(window.history.state, "", window.location.pathname);
   }, [token]);
 
   const [phase, setPhase] = useState<Phase>(token ? "verifying" : "resend");

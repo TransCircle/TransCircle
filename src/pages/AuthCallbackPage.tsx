@@ -57,7 +57,9 @@ const AuthCallbackPage = () => {
     // 无论后面走哪条分支，片段里都可能带着一次性凭据（loginCode / mfaChallengeToken）。
     // **先无条件清掉**，再判断 —— 之前只在成功路径上清，缺令牌的失败分支会把它
     // 留在地址栏与浏览器历史里。
-    window.history.replaceState(null, "", window.location.pathname);
+    // 传 history.state 而非 null：React Router 把自己的 key/index 存在里面，
+    // 覆盖成 null 会让前进/后退与相对导航退化。
+    window.history.replaceState(window.history.state, "", window.location.pathname);
 
     if (status === "mfa_required") {
       if (!mfaChallengeToken) {

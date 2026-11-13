@@ -10,17 +10,30 @@ export function arrayBufferToBase64url(buffer: ArrayBuffer): string {
 }
 
 /**
+ * Decode a base64url string to its raw binary string.
+ *
+ * JWT 的 payload 段是**去掉 padding** 的 base64url，长度 `% 4` 在 {0,2,3} 之间。
+ * 浏览器的 `atob` 严格要求长度为 4 的倍数，不补 `=` 会抛 `InvalidCharacterError`
+ * （Node 的 `atob` 宽松，所以这个坑在 Node 里复现不出来）。
+ * 任何要解码 base64url 的地方都必须走这里，不要各自写一遍。
+ */
+export function base64urlDecode(s: string): string {
+  const base64 = s.replace(/-/g, "+").replace(/_/g, "/");
+  const remainder = base64.length % 4;
+  // `% 4 === 1` 不是合法 base64 长度，补几个 `=` 都解不出来，直接拒绝。
+  if (remainder === 1) throw new Error(`Invalid base64url length: ${s.length}`);
+  const padded = remainder === 0 ? base64 : base64 + "=".repeat(4 - remainder);
+  return atob(padded);
+}
+
+/**
  * Convert base64url string to ArrayBuffer.
  * Used for WebAuthn credential parsing (challenge, credential ID, signature).
  * Inverse of arrayBufferToBase64url.
  */
 export function base64urlToArrayBuffer(s: string): ArrayBuffer {
-  // Normalize base64url → base64: replace URL-safe chars and restore padding
-  const base64 = s.replace(/-/g, "+").replace(/_/g, "/");
-  const padding = 4 - (base64.length % 4);
-  const padded = padding < 4 ? base64 + "=".repeat(padding) : base64;
   try {
-    const binaryStr = atob(padded);
+    const binaryStr = base64urlDecode(s);
     const bytes = new Uint8Array(binaryStr.length);
     for (let i = 0; i < binaryStr.length; i++) {
       bytes[i] = binaryStr.charCodeAt(i);

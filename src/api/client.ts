@@ -17,6 +17,7 @@
 // 非 React 环境的兜底文案:直接用 i18n 单例(config 不反向依赖本模块,无循环);
 // 统一在错误发生时调用 i18n.t 惰性取值,跟随用户当前语言。
 import i18n from "../i18n/config";
+import { base64urlDecode } from "../utils/string";
 import type { MeProfile } from "./types";
 
 /** Pass 后端基址：默认相对路径（同源，经 Vite 代理到 :1146），可用 VITE_PASS_API_BASE 覆盖。 */
@@ -293,7 +294,7 @@ function subjectOf(token: string): string | null {
   try {
     const part = token.split(".")[1];
     if (!part) return null;
-    const json = atob(part.replace(/-/g, "+").replace(/_/g, "/"));
+    const json = base64urlDecode(part);
     const sub = (JSON.parse(json) as { sub?: unknown }).sub;
     return typeof sub === "string" ? sub : null;
   } catch {
