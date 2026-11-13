@@ -626,8 +626,8 @@ export function AppNav() {
             </Link>
           ))}
           <hr className={styles.drawerDivider} />
-          {identityUnconfirmed ? // 身份提示未证实：不提供账户/退出等可能失败的操作。
-          null : navUser ? (
+          {/* 身份提示未证实：不提供账户/退出等可能失败的操作。 */}
+          {identityUnconfirmed ? null : navUser ? (
             <>
               <Link
                 to="/account"
