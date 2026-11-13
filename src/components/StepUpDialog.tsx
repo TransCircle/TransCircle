@@ -66,7 +66,7 @@ export function StepUpDialog({ open, onClose, onVerified }: StepUpDialogProps) {
     return () => {
       alive = false;
     };
-  }, [open, startAttempt]);
+  }, [open, startAttempt, t]);
 
   const verify = async () => {
     if (!challenge || !method) return;

@@ -248,6 +248,9 @@ export function ImageCropper({ file, onApply, onCancel }: ImageCropperProps) {
   return (
     <div className={cs.cropper}>
       <div className={cs.stageWrap}>
+        {/* 裁剪区是自定义交互控件（指针拖拽 + 键盘方向键移动裁剪框），
+            不是静态图片，role=application 属于刻意声明的自定义交互角色。 */}
+        {/* eslint-disable jsx-a11y/no-interactive-element-to-noninteractive-role */}
         <canvas
           ref={canvasRef}
           className={cs.stage}
@@ -260,6 +263,7 @@ export function ImageCropper({ file, onApply, onCancel }: ImageCropperProps) {
           onPointerCancel={endDrag}
           onKeyDown={onKeyDown}
         />
+        {/* eslint-enable jsx-a11y/no-interactive-element-to-noninteractive-role */}
         <div className={cs.circleGuide} aria-hidden="true" />
       </div>
       <p className={cs.hint}>{t("account.profile.dragHint")}</p>

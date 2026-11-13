@@ -228,6 +228,9 @@ export function Select<V extends string = string>({
             {options.map((o, i) => {
               const isSelected = o.value === value
               return (
+                // 选项的键盘可达性由触发器上的组合框 + aria-activedescendant 承担，
+                // 选项本身不单独进 Tab 序列，因此这里的 click 不需要配对的 onKeyDown。
+                // eslint-disable-next-line jsx-a11y/click-events-have-key-events
                 <li
                   key={o.value}
                   id={optId(i)}

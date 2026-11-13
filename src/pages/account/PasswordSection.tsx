@@ -76,7 +76,6 @@ export function PasswordSection({ openRequest = 0, mustChange = false }: Passwor
   useEffect(() => {
     if (openRequest > 0) openEdit();
     // openEdit 只读常量 setter,不入依赖以免每次渲染重跑。
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openRequest]);
 
   const send = async (body: Record<string, unknown>) => {

@@ -126,7 +126,7 @@ export const TurnstileWidget = ({ onToken, onError, onExpire, ref }: TurnstileWi
     return () => {
       cancelled = true;
     };
-  }, [SITE_KEY]);
+  }, []);
 
   // ── Render the Turnstile widget ─────────────────────────────────────
   useEffect(() => {

@@ -508,7 +508,7 @@ export function AppNav() {
                     {/* 身份抬头：告诉用户「当前是谁」。管理后台不再在左栏底部重复画一遍头像，
                         角色信息（仅管理员）就挪到这里。触发器的 aria-label 已含名字，
                         这里对读屏隐藏，避免 role=menu 里混入非菜单项。 */}
-                    <li role="none" aria-hidden="true" className={styles.menuHeader}>
+                    <li aria-hidden="true" className={styles.menuHeader}>
                       <span className={styles.menuHeaderName}>{displayName}</span>
                       {adminRoleText && <span className={styles.menuHeaderMeta}>{adminRoleText}</span>}
                     </li>

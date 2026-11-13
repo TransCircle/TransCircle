@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.prerender/
+.wrangler/
+worker-configuration.d.ts
+pnpm-lock.yaml
+assets/
+public/
+design/
