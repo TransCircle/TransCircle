@@ -15,6 +15,16 @@ export function sanitizeRedirect(raw: string | null | undefined, fallback = "/")
   // 用 \p{Cc} 而不是 \u0000-\u001F 字面量：语义相同且多覆盖 C1 控制字符(0x80-0x9F),
   // 同时避开 no-control-regex —— 该规则防的是「误写」,这里是有意匹配。
   if (/\p{Cc}/u.test(raw)) return fallback;
+  // 百分号编码的控制字符 / 斜杠能绕过上面三条(/%09//evil.com、/%2F%2Fevil.com),
+  // 解码后重跑同样的判定。解码失败(非法 % 序列)同样拒绝。
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    return fallback;
+  }
+  if (/\p{Cc}/u.test(decoded)) return fallback;
+  if (decoded.startsWith("//") || decoded.includes("\\")) return fallback;
   try {
     // 确认解析后的 pathname 与原路径一致,防止 /%2Fevil.com 一类编码绕过。
     const pathPart = raw.split("?")[0]!;
